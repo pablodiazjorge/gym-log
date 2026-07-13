@@ -1,0 +1,130 @@
+<div class="py-4 space-y-4">
+  @if (session(); as session) {
+    <!-- Progress bar -->
+    <div class="space-y-2">
+      <div class="flex items-center justify-between text-sm">
+        <span class="text-slate-400">Ejercicio {{ currentExerciseIndex() + 1 }} de {{ exerciseCount() }}</span>
+        <span class="text-slate-500">{{ durationMinutes() }} min</span>
+      </div>
+      <div class="h-1.5 bg-slate-700 rounded-full overflow-hidden">
+        <div
+          class="h-full bg-emerald-500 rounded-full transition-all duration-300"
+          [style.width.%]="((currentExerciseIndex() + 1) / exerciseCount()) * 100"
+        ></div>
+      </div>
+    </div>
+
+    <!-- Summary view -->
+    @if (isSummary()) {
+      <div class="space-y-4">
+        <div class="bg-emerald-900/30 border border-emerald-700 rounded-2xl p-6 text-center">
+          <span class="text-4xl block mb-2">🎉</span>
+          <h2 class="text-xl font-bold text-emerald-300">¡Entrenamiento completado!</h2>
+          <p class="text-emerald-400/70 text-sm mt-1">
+            {{ dayType() }} {{ dayVariant() }} &middot; {{ durationMinutes() }} minutos
+          </p>
+        </div>
+
+        <!-- Exercise summary -->
+        <div class="space-y-2">
+          <h3 class="text-sm font-medium text-slate-400 uppercase tracking-wide">Resumen</h3>
+          @for (exercise of exercises(); track exercise.templateId) {
+            <div class="bg-slate-800/60 rounded-xl p-4">
+              <div class="flex items-center justify-between">
+                <p class="font-medium text-slate-200">{{ exercise.exerciseName }}</p>
+                @if (getMaxWeight(exercise) > 0) {
+                  <span class="text-emerald-400 font-bold">{{ getMaxWeight(exercise) }} kg</span>
+                }
+              </div>
+              <p class="text-xs text-slate-500 mt-1">
+                {{ getTotalSets(exercise).work }} series de trabajo
+                @if (getTotalSets(exercise).warmup > 0) {
+                  + {{ getTotalSets(exercise).warmup }} aproximación
+                }
+              </p>
+            </div>
+          }
+        </div>
+
+        <!-- Actions -->
+        <div class="flex gap-2">
+          <button
+            (click)="finishWorkout()"
+            class="flex-1 py-4 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold text-lg rounded-2xl transition-all"
+          >
+            Guardar y cerrar
+          </button>
+          <button
+            (click)="exportCurrentSession()"
+            class="py-4 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-2xl border border-slate-700 transition-colors"
+            title="Exportar sesión"
+          >
+            📤
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- Active workout -->
+    @if (!isSummary()) {
+      <!-- Exercise header -->
+      <div class="space-y-1">
+        <p class="text-xs text-slate-500 font-medium uppercase tracking-wide">
+          {{ dayType() === 'push' ? 'Push' : dayType() === 'pull' ? 'Pull' : 'Legs' }} &middot; {{ dayVariant() }}
+        </p>
+        <h2 class="text-xl font-bold text-slate-100">{{ currentExercise()?.exerciseName }}</h2>
+        <p class="text-sm text-slate-400">
+          {{ currentExercise()?.sets?.length ?? 0 }} series &middot;
+          @if (currentExercise()?.sets?.[0]?.isWarmup) {
+            Incluye series de aproximación
+          }
+        </p>
+      </div>
+
+      <!-- Sets -->
+      <div class="space-y-3">
+        @for (set of currentExercise()?.sets ?? []; track set.setNumber) {
+          <app-set-input
+            [set]="set"
+            [hasWarmup]="hasWarmupSets()"
+            [isLastSet]="$last"
+            (setCompleted)="onSetCompleted($event)"
+          ></app-set-input>
+        }
+      </div>
+
+      <!-- Navigation -->
+      <div class="flex gap-2 pt-2">
+        <button
+          (click)="goToPrevious()"
+          [disabled]="currentExerciseIndex() === 0"
+          class="flex-1 py-3 bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed text-slate-300 font-medium rounded-xl border border-slate-700 transition-colors"
+        >
+          ← Anterior
+        </button>
+        @if (!isLastExercise()) {
+          <button
+            (click)="goToNext()"
+            class="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium rounded-xl border border-slate-700 transition-colors"
+          >
+            Siguiente →
+          </button>
+        }
+      </div>
+
+      <!-- Discard -->
+      <button
+        (click)="discardWorkout()"
+        class="w-full py-2 text-sm text-slate-600 hover:text-red-400 transition-colors"
+      >
+        Descartar entrenamiento
+      </button>
+    }
+  }
+
+  @if (!session()) {
+    <div class="text-center py-12">
+      <p class="text-slate-400">Cargando entrenamiento...</p>
+    </div>
+  }
+</div>

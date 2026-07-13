@@ -1,0 +1,99 @@
+<div class="py-4 space-y-4">
+  @if (session(); as session) {
+    <!-- Header -->
+    <div class="space-y-1">
+      <p class="text-xs text-slate-500 font-medium uppercase tracking-wide">
+        {{ getDayLabel(session.dayType, session.dayVariant) }}
+      </p>
+      <h2 class="text-xl font-bold text-slate-100 capitalize">{{ formatDate(session.date) }}</h2>
+      <div class="flex items-center gap-3 text-sm text-slate-400">
+        <span>{{ session.exercises.length }} ejercicios</span>
+        @if (session.durationMinutes) {
+          <span>{{ session.durationMinutes }} min</span>
+        }
+        @if (session.bodyWeightKg) {
+          <span>{{ session.bodyWeightKg }} kg</span>
+        }
+        @if (!session.completed) {
+          <span class="text-amber-400 font-medium">Incompleta</span>
+        }
+      </div>
+      @if (session.notes) {
+        <p class="text-sm text-slate-500 italic mt-2">{{ session.notes }}</p>
+      }
+    </div>
+
+    <!-- Exercises -->
+    <div class="space-y-3">
+      @for (exercise of session.exercises; track exercise.templateId) {
+        <div class="bg-slate-800/60 rounded-2xl p-4 border border-slate-700/50">
+          <!-- Exercise header -->
+          <div class="flex items-center justify-between mb-3">
+            <p class="font-medium text-slate-200">{{ exercise.exerciseName }}</p>
+            @if (getMaxWeight(exercise) > 0) {
+              <span class="text-emerald-400 font-bold text-sm">{{ getMaxWeight(exercise) }} kg máx</span>
+            }
+          </div>
+
+          <!-- Sets table -->
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="text-slate-500 text-xs">
+                  <th class="text-left font-medium pb-2">#</th>
+                  <th class="text-left font-medium pb-2">Tipo</th>
+                  <th class="text-right font-medium pb-2">Peso</th>
+                  <th class="text-right font-medium pb-2">Reps</th>
+                  <th class="text-right font-medium pb-2">RIR</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (set of exercise.sets; track set.setNumber) {
+                  <tr class="border-t border-slate-700/50">
+                    <td class="py-2 text-slate-400">{{ set.setNumber }}</td>
+                    <td class="py-2">
+                      @if (set.isWarmup) {
+                        <span class="text-xs px-1.5 py-0.5 bg-amber-900/40 text-amber-400 rounded">Aprox</span>
+                      } @else {
+                        <span class="text-xs px-1.5 py-0.5 bg-slate-700 text-slate-400 rounded">Trabajo</span>
+                      }
+                    </td>
+                    <td class="py-2 text-right text-slate-200 font-medium">{{ set.weightKg }} kg</td>
+                    <td class="py-2 text-right text-slate-200">{{ set.reps }}</td>
+                    <td class="py-2 text-right text-slate-400">{{ set.rir }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Actions -->
+    <div class="flex gap-2 pt-2">
+      <button
+        (click)="exportSession()"
+        class="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium rounded-xl border border-slate-700 transition-colors"
+      >
+        📤 Exportar sesión
+      </button>
+      <button
+        (click)="deleteSession()"
+        class="py-3 px-4 bg-red-900/20 hover:bg-red-900/40 text-red-400 rounded-xl border border-red-900/30 transition-colors"
+        title="Eliminar sesión"
+      >
+        🗑️
+      </button>
+    </div>
+  }
+
+  @if (!session()) {
+    <div class="text-center py-12">
+      <p class="text-slate-400">Sesión no encontrada</p>
+      <a routerLink="/history" class="inline-block mt-4 py-2 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition-colors">
+        Volver al historial
+      </a>
+    </div>
+  }
+</div>

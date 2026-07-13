@@ -1,0 +1,82 @@
+<div class="py-4 space-y-4">
+  <div class="flex items-center justify-between">
+    <h2 class="text-lg font-bold text-slate-100">Historial de sesiones</h2>
+    @if (sessions().length > 0) {
+      <button
+        (click)="exportAll()"
+        class="py-2 px-3 text-sm bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl border border-slate-700 transition-colors"
+      >
+        📤 Exportar todo
+      </button>
+    }
+  </div>
+
+  @if (sortedSessions.length === 0) {
+    <div class="text-center py-12">
+      <span class="text-4xl block mb-3">📋</span>
+      <p class="text-slate-400">No hay sesiones guardadas aún</p>
+      <p class="text-slate-500 text-sm mt-1">Completa un entrenamiento y aparecerá aquí</p>
+      <a routerLink="/" class="inline-block mt-4 py-2 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition-colors">
+        Ir al inicio
+      </a>
+    </div>
+  }
+
+  @for (session of sortedSessions; track session.id) {
+    <a
+      [routerLink]="['/history', session.id]"
+      class="block bg-slate-800/60 hover:bg-slate-800 rounded-2xl p-4 border border-slate-700/50 transition-colors"
+    >
+      <div class="flex items-center gap-3">
+        <!-- Color badge -->
+        <div class="w-2 h-12 rounded-full {{ getDayColor(session.dayType) }} flex-shrink-0"></div>
+
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between">
+            <p class="font-medium text-slate-200 capitalize">{{ formatDate(session.date) }}</p>
+            <span class="text-xs px-2 py-0.5 rounded-full"
+              [class.bg-blue-900/50]="session.dayType === 'push'"
+              [class.text-blue-300]="session.dayType === 'push'"
+              [class.bg-emerald-900/50]="session.dayType === 'pull'"
+              [class.text-emerald-300]="session.dayType === 'pull'"
+              [class.bg-orange-900/50]="session.dayType === 'legs'"
+              [class.text-orange-300]="session.dayType === 'legs'"
+            >
+              {{ getDayLabel(session.dayType, session.dayVariant) }}
+            </span>
+          </div>
+
+          <div class="flex items-center gap-4 mt-2 text-sm text-slate-400">
+            <span>{{ session.exercises.length }} ejercicios</span>
+            @if (session.durationMinutes) {
+              <span>{{ session.durationMinutes }} min</span>
+            }
+            @if (getMaxWeight(session) > 0) {
+              <span class="text-slate-300 font-medium">Máx: {{ getMaxWeight(session) }} kg</span>
+            }
+          </div>
+
+          <!-- Exercise pills -->
+          <div class="flex flex-wrap gap-1 mt-2">
+            @for (ex of session.exercises; track ex.templateId) {
+              <span class="text-xs px-2 py-0.5 bg-slate-700/50 text-slate-400 rounded-full truncate max-w-[150px]">
+                {{ ex.exerciseName }}
+              </span>
+            }
+          </div>
+        </div>
+
+        <!-- Delete -->
+        <button
+          (click)="deleteSession(session.id, $event)"
+          class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-600 hover:text-red-400 hover:bg-red-900/20 transition-colors flex-shrink-0"
+          title="Eliminar sesión"
+        >
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+        </button>
+      </div>
+    </a>
+  }
+</div>

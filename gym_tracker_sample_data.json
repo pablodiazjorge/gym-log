@@ -1,0 +1,2176 @@
+{
+  "version": "1.0",
+  "exportDate": "2026-09-06T10:00:00+02:00",
+  "appName": "GymTracker",
+  "user": {
+    "name": "Pablo",
+    "age": 28,
+    "heightCm": 178,
+    "bodyWeightStartKg": 67.0,
+    "bodyWeightCurrentKg": 67.8,
+    "bodyFatStart": 15.0,
+    "goal": "lean_bulk"
+  },
+  "routine": {
+    "name": "PPL 5 días - Lean Bulk",
+    "description": "Push/Pull/Legs con énfasis en técnica y progresión controlada",
+    "currentPhase": "5_days_full_volume",
+    "startDate": "2026-07-15"
+  },
+  "sessions": [
+    {
+      "id": "ws-2026-07-15-push-001",
+      "date": "2026-07-15T18:30:00+02:00",
+      "dayType": "push",
+      "dayVariant": "A",
+      "durationMinutes": 42,
+      "bodyWeightKg": 67.0,
+      "notes": "Primer día. Pesos conservadores, enfocado en técnica.",
+      "completed": true,
+      "exercises": [
+        {
+          "templateId": "press-inclinado-maquina",
+          "exerciseName": "Press inclinado en máquina",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": true,
+              "weightKg": 15.0,
+              "reps": 12,
+              "rir": 3,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": true,
+              "weightKg": 20.0,
+              "reps": 10,
+              "rir": 3,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 3,
+              "isWarmup": false,
+              "weightKg": 22.5,
+              "reps": 12,
+              "rir": 3,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 4,
+              "isWarmup": false,
+              "weightKg": 22.5,
+              "reps": 11,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 5,
+              "isWarmup": false,
+              "weightKg": 22.5,
+              "reps": 10,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 6,
+              "isWarmup": false,
+              "weightKg": 20.0,
+              "reps": 12,
+              "rir": 1,
+              "completed": true,
+              "notes": "Bajé un poco para cerrar bien la técnica"
+            }
+          ]
+        },
+        {
+          "templateId": "pec-deck",
+          "exerciseName": "Pec Deck / Chest Fly Machine",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": false,
+              "weightKg": 25.0,
+              "reps": 15,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": false,
+              "weightKg": 25.0,
+              "reps": 14,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 3,
+              "isWarmup": false,
+              "weightKg": 25.0,
+              "reps": 12,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        },
+        {
+          "templateId": "triceps-polea-vertical",
+          "exerciseName": "Tríceps en polea vertical",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": false,
+              "weightKg": 12.5,
+              "reps": 15,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": false,
+              "weightKg": 12.5,
+              "reps": 14,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 3,
+              "isWarmup": false,
+              "weightKg": 12.5,
+              "reps": 12,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        },
+        {
+          "templateId": "elevaciones-laterales-banco-inclinado",
+          "exerciseName": "Elevaciones laterales en banco inclinado",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": false,
+              "weightKg": 6.0,
+              "reps": 15,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": false,
+              "weightKg": 6.0,
+              "reps": 14,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 3,
+              "isWarmup": false,
+              "weightKg": 6.0,
+              "reps": 12,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        },
+        {
+          "templateId": "rear-delt-fly",
+          "exerciseName": "Rear Delt Fly",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": false,
+              "weightKg": 10.0,
+              "reps": 15,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": false,
+              "weightKg": 10.0,
+              "reps": 15,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ws-2026-07-16-legs-001",
+      "date": "2026-07-16T18:00:00+02:00",
+      "dayType": "legs",
+      "dayVariant": "A",
+      "durationMinutes": 38,
+      "bodyWeightKg": 67.0,
+      "notes": "Primer día de piernas en 6 meses. Muy conservador.",
+      "completed": true,
+      "exercises": [
+        {
+          "templateId": "hack-squat-maquina",
+          "exerciseName": "Hack squat en máquina",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": true,
+              "weightKg": 30.0,
+              "reps": 12,
+              "rir": 3,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": true,
+              "weightKg": 40.0,
+              "reps": 10,
+              "rir": 3,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 3,
+              "isWarmup": false,
+              "weightKg": 50.0,
+              "reps": 12,
+              "rir": 3,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 4,
+              "isWarmup": false,
+              "weightKg": 50.0,
+              "reps": 12,
+              "rir": 3,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        },
+        {
+          "templateId": "curl-femoral-acostado",
+          "exerciseName": "Curl femoral acostado en máquina",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": false,
+              "weightKg": 20.0,
+              "reps": 15,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": false,
+              "weightKg": 20.0,
+              "reps": 15,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        },
+        {
+          "templateId": "prensa-inclinada-pies-altos",
+          "exerciseName": "Prensa inclinada (pies altos y anchos)",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": false,
+              "weightKg": 60.0,
+              "reps": 12,
+              "rir": 3,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": false,
+              "weightKg": 60.0,
+              "reps": 12,
+              "rir": 3,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        },
+        {
+          "templateId": "hip-thrust-maquina",
+          "exerciseName": "Hip thrust en máquina",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": false,
+              "weightKg": 40.0,
+              "reps": 12,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": false,
+              "weightKg": 40.0,
+              "reps": 12,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ws-2026-07-17-pull-001",
+      "date": "2026-07-17T18:15:00+02:00",
+      "dayType": "pull",
+      "dayVariant": "A",
+      "durationMinutes": 40,
+      "bodyWeightKg": 67.0,
+      "notes": "Primer pull. El antebrazo se cargó en el jalón. Necesito straps.",
+      "completed": true,
+      "exercises": [
+        {
+          "templateId": "jalon-pecho-agarre-ancho",
+          "exerciseName": "Jalón al pecho (agarre ancho, prono)",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": true,
+              "weightKg": 25.0,
+              "reps": 12,
+              "rir": 3,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": true,
+              "weightKg": 35.0,
+              "reps": 10,
+              "rir": 3,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 3,
+              "isWarmup": false,
+              "weightKg": 40.0,
+              "reps": 10,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 4,
+              "isWarmup": false,
+              "weightKg": 40.0,
+              "reps": 9,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 5,
+              "isWarmup": false,
+              "weightKg": 37.5,
+              "reps": 10,
+              "rir": 2,
+              "completed": true,
+              "notes": "Bajé por agarre"
+            },
+            {
+              "setNumber": 6,
+              "isWarmup": false,
+              "weightKg": 37.5,
+              "reps": 9,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        },
+        {
+          "templateId": "remo-t-agarre-neutro",
+          "exerciseName": "Remo en T con agarre neutro (ancho de hombros)",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": false,
+              "weightKg": 25.0,
+              "reps": 12,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": false,
+              "weightKg": 25.0,
+              "reps": 11,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 3,
+              "isWarmup": false,
+              "weightKg": 25.0,
+              "reps": 10,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        },
+        {
+          "templateId": "curl-biceps-banco-inclinado",
+          "exerciseName": "Curl de bíceps en banco inclinado",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": false,
+              "weightKg": 8.0,
+              "reps": 12,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": false,
+              "weightKg": 8.0,
+              "reps": 12,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 3,
+              "isWarmup": false,
+              "weightKg": 8.0,
+              "reps": 11,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 4,
+              "isWarmup": false,
+              "weightKg": 8.0,
+              "reps": 10,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        },
+        {
+          "templateId": "elevaciones-piernas-colgado",
+          "exerciseName": "Elevaciones de piernas colgado",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": false,
+              "weightKg": 0.0,
+              "reps": 15,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": false,
+              "weightKg": 0.0,
+              "reps": 14,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 3,
+              "isWarmup": false,
+              "weightKg": 0.0,
+              "reps": 12,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ws-2026-07-22-push-002",
+      "date": "2026-07-22T18:30:00+02:00",
+      "dayType": "push",
+      "dayVariant": "A",
+      "durationMinutes": 45,
+      "bodyWeightKg": 67.2,
+      "notes": "Mejor sensación que la semana pasada. Técnica más fluida.",
+      "completed": true,
+      "exercises": [
+        {
+          "templateId": "press-inclinado-maquina",
+          "exerciseName": "Press inclinado en máquina",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": true,
+              "weightKg": 15.0,
+              "reps": 12,
+              "rir": 3,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": true,
+              "weightKg": 20.0,
+              "reps": 10,
+              "rir": 3,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 3,
+              "isWarmup": false,
+              "weightKg": 25.0,
+              "reps": 12,
+              "rir": 3,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 4,
+              "isWarmup": false,
+              "weightKg": 25.0,
+              "reps": 12,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 5,
+              "isWarmup": false,
+              "weightKg": 25.0,
+              "reps": 11,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 6,
+              "isWarmup": false,
+              "weightKg": 25.0,
+              "reps": 10,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        },
+        {
+          "templateId": "pec-deck",
+          "exerciseName": "Pec Deck / Chest Fly Machine",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": false,
+              "weightKg": 27.5,
+              "reps": 15,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": false,
+              "weightKg": 27.5,
+              "reps": 14,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 3,
+              "isWarmup": false,
+              "weightKg": 27.5,
+              "reps": 13,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        },
+        {
+          "templateId": "triceps-polea-vertical",
+          "exerciseName": "Tríceps en polea vertical",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": false,
+              "weightKg": 12.5,
+              "reps": 15,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": false,
+              "weightKg": 12.5,
+              "reps": 15,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 3,
+              "isWarmup": false,
+              "weightKg": 12.5,
+              "reps": 14,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        },
+        {
+          "templateId": "elevaciones-laterales-banco-inclinado",
+          "exerciseName": "Elevaciones laterales en banco inclinado",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": false,
+              "weightKg": 6.0,
+              "reps": 15,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": false,
+              "weightKg": 6.0,
+              "reps": 15,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 3,
+              "isWarmup": false,
+              "weightKg": 6.0,
+              "reps": 14,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        },
+        {
+          "templateId": "rear-delt-fly",
+          "exerciseName": "Rear Delt Fly",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": false,
+              "weightKg": 10.0,
+              "reps": 15,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": false,
+              "weightKg": 10.0,
+              "reps": 15,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 3,
+              "isWarmup": false,
+              "weightKg": 10.0,
+              "reps": 14,
+              "rir": 1,
+              "completed": true,
+              "notes": "Añadí serie"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ws-2026-07-23-legs-002",
+      "date": "2026-07-23T18:00:00+02:00",
+      "dayType": "legs",
+      "dayVariant": "A",
+      "durationMinutes": 40,
+      "bodyWeightKg": 67.2,
+      "notes": "Agujetas de la semana pasada ya pasaron. Mejor rango en hack.",
+      "completed": true,
+      "exercises": [
+        {
+          "templateId": "hack-squat-maquina",
+          "exerciseName": "Hack squat en máquina",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": true,
+              "weightKg": 30.0,
+              "reps": 12,
+              "rir": 3,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": true,
+              "weightKg": 45.0,
+              "reps": 10,
+              "rir": 3,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 3,
+              "isWarmup": false,
+              "weightKg": 55.0,
+              "reps": 12,
+              "rir": 3,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 4,
+              "isWarmup": false,
+              "weightKg": 55.0,
+              "reps": 11,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        },
+        {
+          "templateId": "curl-femoral-acostado",
+          "exerciseName": "Curl femoral acostado en máquina",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": false,
+              "weightKg": 22.5,
+              "reps": 15,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": false,
+              "weightKg": 22.5,
+              "reps": 15,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        },
+        {
+          "templateId": "prensa-inclinada-pies-altos",
+          "exerciseName": "Prensa inclinada (pies altos y anchos)",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": false,
+              "weightKg": 70.0,
+              "reps": 12,
+              "rir": 3,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": false,
+              "weightKg": 70.0,
+              "reps": 12,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        },
+        {
+          "templateId": "hip-thrust-maquina",
+          "exerciseName": "Hip thrust en máquina",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": false,
+              "weightKg": 45.0,
+              "reps": 12,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": false,
+              "weightKg": 45.0,
+              "reps": 12,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ws-2026-07-24-pull-002",
+      "date": "2026-07-24T18:15:00+02:00",
+      "dayType": "pull",
+      "dayVariant": "B",
+      "durationMinutes": 42,
+      "bodyWeightKg": 67.2,
+      "notes": "Variante B. Usé straps en el jalón, mucho mejor.",
+      "completed": true,
+      "exercises": [
+        {
+          "templateId": "jalon-pecho-agarre-ancho",
+          "exerciseName": "Jalón al pecho (agarre ancho, prono)",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": true,
+              "weightKg": 25.0,
+              "reps": 12,
+              "rir": 3,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": true,
+              "weightKg": 35.0,
+              "reps": 10,
+              "rir": 3,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 3,
+              "isWarmup": false,
+              "weightKg": 42.5,
+              "reps": 10,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 4,
+              "isWarmup": false,
+              "weightKg": 42.5,
+              "reps": 10,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 5,
+              "isWarmup": false,
+              "weightKg": 42.5,
+              "reps": 9,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 6,
+              "isWarmup": false,
+              "weightKg": 40.0,
+              "reps": 10,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        },
+        {
+          "templateId": "remo-t-agarre-neutro",
+          "exerciseName": "Remo en T con agarre neutro (ancho de hombros)",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": false,
+              "weightKg": 27.5,
+              "reps": 12,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": false,
+              "weightKg": 27.5,
+              "reps": 12,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 3,
+              "isWarmup": false,
+              "weightKg": 27.5,
+              "reps": 11,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        },
+        {
+          "templateId": "curl-martillo",
+          "exerciseName": "Curl martillo",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": false,
+              "weightKg": 10.0,
+              "reps": 12,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": false,
+              "weightKg": 10.0,
+              "reps": 12,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 3,
+              "isWarmup": false,
+              "weightKg": 10.0,
+              "reps": 11,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 4,
+              "isWarmup": false,
+              "weightKg": 10.0,
+              "reps": 10,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        },
+        {
+          "templateId": "plancha-peso",
+          "exerciseName": "Plancha con peso",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": false,
+              "weightKg": 5.0,
+              "reps": 15,
+              "rir": 2,
+              "completed": true,
+              "notes": "Disco de 5kg sobre espalda"
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": false,
+              "weightKg": 5.0,
+              "reps": 15,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 3,
+              "isWarmup": false,
+              "weightKg": 5.0,
+              "reps": 14,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ws-2026-07-29-push-003",
+      "date": "2026-07-29T18:30:00+02:00",
+      "dayType": "push",
+      "dayVariant": "A",
+      "durationMinutes": 48,
+      "bodyWeightKg": 67.4,
+      "notes": "Última semana de adaptación. Pesos ya se sienten naturales.",
+      "completed": true,
+      "exercises": [
+        {
+          "templateId": "press-inclinado-maquina",
+          "exerciseName": "Press inclinado en máquina",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": true,
+              "weightKg": 15.0,
+              "reps": 12,
+              "rir": 3,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": true,
+              "weightKg": 22.5,
+              "reps": 10,
+              "rir": 3,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 3,
+              "isWarmup": false,
+              "weightKg": 27.5,
+              "reps": 12,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 4,
+              "isWarmup": false,
+              "weightKg": 27.5,
+              "reps": 11,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 5,
+              "isWarmup": false,
+              "weightKg": 27.5,
+              "reps": 11,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 6,
+              "isWarmup": false,
+              "weightKg": 27.5,
+              "reps": 10,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        },
+        {
+          "templateId": "pec-deck",
+          "exerciseName": "Pec Deck / Chest Fly Machine",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": false,
+              "weightKg": 30.0,
+              "reps": 15,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": false,
+              "weightKg": 30.0,
+              "reps": 14,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 3,
+              "isWarmup": false,
+              "weightKg": 30.0,
+              "reps": 13,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        },
+        {
+          "templateId": "triceps-polea-vertical",
+          "exerciseName": "Tríceps en polea vertical",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": false,
+              "weightKg": 15.0,
+              "reps": 15,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": false,
+              "weightKg": 15.0,
+              "reps": 14,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 3,
+              "isWarmup": false,
+              "weightKg": 15.0,
+              "reps": 12,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        },
+        {
+          "templateId": "elevaciones-laterales-banco-inclinado",
+          "exerciseName": "Elevaciones laterales en banco inclinado",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": false,
+              "weightKg": 7.0,
+              "reps": 15,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": false,
+              "weightKg": 7.0,
+              "reps": 14,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 3,
+              "isWarmup": false,
+              "weightKg": 7.0,
+              "reps": 12,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        },
+        {
+          "templateId": "rear-delt-fly",
+          "exerciseName": "Rear Delt Fly",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": false,
+              "weightKg": 12.5,
+              "reps": 15,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": false,
+              "weightKg": 12.5,
+              "reps": 15,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 3,
+              "isWarmup": false,
+              "weightKg": 12.5,
+              "reps": 14,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ws-2026-09-01-push-004",
+      "date": "2026-09-01T18:30:00+02:00",
+      "dayType": "push",
+      "dayVariant": "A",
+      "durationMinutes": 55,
+      "bodyWeightKg": 67.8,
+      "notes": "Primera semana a 5 días. Volumen completo. Me siento fuerte.",
+      "completed": true,
+      "exercises": [
+        {
+          "templateId": "press-inclinado-maquina",
+          "exerciseName": "Press inclinado en máquina",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": true,
+              "weightKg": 15.0,
+              "reps": 12,
+              "rir": 3,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": true,
+              "weightKg": 22.5,
+              "reps": 10,
+              "rir": 3,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 3,
+              "isWarmup": false,
+              "weightKg": 30.0,
+              "reps": 12,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 4,
+              "isWarmup": false,
+              "weightKg": 30.0,
+              "reps": 11,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 5,
+              "isWarmup": false,
+              "weightKg": 30.0,
+              "reps": 10,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 6,
+              "isWarmup": false,
+              "weightKg": 30.0,
+              "reps": 10,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        },
+        {
+          "templateId": "pec-deck",
+          "exerciseName": "Pec Deck / Chest Fly Machine",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": false,
+              "weightKg": 32.5,
+              "reps": 15,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": false,
+              "weightKg": 32.5,
+              "reps": 14,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 3,
+              "isWarmup": false,
+              "weightKg": 32.5,
+              "reps": 13,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        },
+        {
+          "templateId": "triceps-polea-vertical",
+          "exerciseName": "Tríceps en polea vertical",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": false,
+              "weightKg": 15.0,
+              "reps": 15,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": false,
+              "weightKg": 15.0,
+              "reps": 15,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 3,
+              "isWarmup": false,
+              "weightKg": 15.0,
+              "reps": 14,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        },
+        {
+          "templateId": "elevaciones-laterales-banco-inclinado",
+          "exerciseName": "Elevaciones laterales en banco inclinado",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": false,
+              "weightKg": 7.0,
+              "reps": 15,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": false,
+              "weightKg": 7.0,
+              "reps": 15,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 3,
+              "isWarmup": false,
+              "weightKg": 7.0,
+              "reps": 14,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        },
+        {
+          "templateId": "rear-delt-fly",
+          "exerciseName": "Rear Delt Fly",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": false,
+              "weightKg": 12.5,
+              "reps": 15,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": false,
+              "weightKg": 12.5,
+              "reps": 15,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 3,
+              "isWarmup": false,
+              "weightKg": 12.5,
+              "reps": 15,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ws-2026-09-02-pull-004",
+      "date": "2026-09-02T18:00:00+02:00",
+      "dayType": "pull",
+      "dayVariant": "A",
+      "durationMinutes": 52,
+      "bodyWeightKg": 67.8,
+      "notes": "Pull A. Jalón con straps desde el principio. Mucho mejor.",
+      "completed": true,
+      "exercises": [
+        {
+          "templateId": "jalon-pecho-agarre-ancho",
+          "exerciseName": "Jalón al pecho (agarre ancho, prono)",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": true,
+              "weightKg": 30.0,
+              "reps": 12,
+              "rir": 3,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": true,
+              "weightKg": 40.0,
+              "reps": 10,
+              "rir": 3,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 3,
+              "isWarmup": false,
+              "weightKg": 45.0,
+              "reps": 10,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 4,
+              "isWarmup": false,
+              "weightKg": 45.0,
+              "reps": 10,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 5,
+              "isWarmup": false,
+              "weightKg": 45.0,
+              "reps": 9,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 6,
+              "isWarmup": false,
+              "weightKg": 45.0,
+              "reps": 8,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        },
+        {
+          "templateId": "remo-t-agarre-neutro",
+          "exerciseName": "Remo en T con agarre neutro (ancho de hombros)",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": false,
+              "weightKg": 30.0,
+              "reps": 12,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": false,
+              "weightKg": 30.0,
+              "reps": 11,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 3,
+              "isWarmup": false,
+              "weightKg": 30.0,
+              "reps": 10,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        },
+        {
+          "templateId": "curl-biceps-banco-inclinado",
+          "exerciseName": "Curl de bíceps en banco inclinado",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": false,
+              "weightKg": 10.0,
+              "reps": 12,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": false,
+              "weightKg": 10.0,
+              "reps": 12,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 3,
+              "isWarmup": false,
+              "weightKg": 10.0,
+              "reps": 11,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 4,
+              "isWarmup": false,
+              "weightKg": 10.0,
+              "reps": 10,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        },
+        {
+          "templateId": "elevaciones-piernas-colgado",
+          "exerciseName": "Elevaciones de piernas colgado",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": false,
+              "weightKg": 0.0,
+              "reps": 15,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": false,
+              "weightKg": 0.0,
+              "reps": 15,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 3,
+              "isWarmup": false,
+              "weightKg": 0.0,
+              "reps": 14,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ws-2026-09-03-legs-004",
+      "date": "2026-09-03T18:00:00+02:00",
+      "dayType": "legs",
+      "dayVariant": "A",
+      "durationMinutes": 50,
+      "bodyWeightKg": 67.8,
+      "notes": "Legs. Ya subí a 4 series en hack. Piernas respondiendo bien.",
+      "completed": true,
+      "exercises": [
+        {
+          "templateId": "hack-squat-maquina",
+          "exerciseName": "Hack squat en máquina",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": true,
+              "weightKg": 30.0,
+              "reps": 12,
+              "rir": 3,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": true,
+              "weightKg": 45.0,
+              "reps": 10,
+              "rir": 3,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 3,
+              "isWarmup": false,
+              "weightKg": 60.0,
+              "reps": 10,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 4,
+              "isWarmup": false,
+              "weightKg": 60.0,
+              "reps": 10,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 5,
+              "isWarmup": false,
+              "weightKg": 60.0,
+              "reps": 9,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 6,
+              "isWarmup": false,
+              "weightKg": 60.0,
+              "reps": 8,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        },
+        {
+          "templateId": "prensa-inclinada-pies-altos",
+          "exerciseName": "Prensa inclinada (pies altos y anchos)",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": false,
+              "weightKg": 80.0,
+              "reps": 12,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": false,
+              "weightKg": 80.0,
+              "reps": 11,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 3,
+              "isWarmup": false,
+              "weightKg": 80.0,
+              "reps": 10,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        },
+        {
+          "templateId": "curl-femoral-acostado",
+          "exerciseName": "Curl femoral acostado en máquina",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": false,
+              "weightKg": 25.0,
+              "reps": 15,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": false,
+              "weightKg": 25.0,
+              "reps": 14,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 3,
+              "isWarmup": false,
+              "weightKg": 25.0,
+              "reps": 12,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        },
+        {
+          "templateId": "hip-thrust-maquina",
+          "exerciseName": "Hip thrust en máquina",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": false,
+              "weightKg": 50.0,
+              "reps": 12,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": false,
+              "weightKg": 50.0,
+              "reps": 12,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 3,
+              "isWarmup": false,
+              "weightKg": 50.0,
+              "reps": 11,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ws-2026-09-04-push-005",
+      "date": "2026-09-04T18:30:00+02:00",
+      "dayType": "push",
+      "dayVariant": "B",
+      "durationMinutes": 55,
+      "bodyWeightKg": 67.8,
+      "notes": "Push B. Tríceps con cuerda en vez de barra. Más cómodo en muñeca.",
+      "completed": true,
+      "exercises": [
+        {
+          "templateId": "press-inclinado-maquina",
+          "exerciseName": "Press inclinado en máquina",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": true,
+              "weightKg": 15.0,
+              "reps": 12,
+              "rir": 3,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": true,
+              "weightKg": 22.5,
+              "reps": 10,
+              "rir": 3,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 3,
+              "isWarmup": false,
+              "weightKg": 30.0,
+              "reps": 12,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 4,
+              "isWarmup": false,
+              "weightKg": 30.0,
+              "reps": 11,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 5,
+              "isWarmup": false,
+              "weightKg": 30.0,
+              "reps": 10,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 6,
+              "isWarmup": false,
+              "weightKg": 30.0,
+              "reps": 10,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        },
+        {
+          "templateId": "pec-deck",
+          "exerciseName": "Pec Deck / Chest Fly Machine",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": false,
+              "weightKg": 32.5,
+              "reps": 15,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": false,
+              "weightKg": 32.5,
+              "reps": 14,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 3,
+              "isWarmup": false,
+              "weightKg": 32.5,
+              "reps": 13,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        },
+        {
+          "templateId": "triceps-polea-vertical",
+          "exerciseName": "Tríceps en polea vertical (cuerda)",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": false,
+              "weightKg": 15.0,
+              "reps": 15,
+              "rir": 2,
+              "completed": true,
+              "notes": "Usé cuerda"
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": false,
+              "weightKg": 15.0,
+              "reps": 15,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 3,
+              "isWarmup": false,
+              "weightKg": 15.0,
+              "reps": 14,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        },
+        {
+          "templateId": "elevaciones-laterales-banco-inclinado",
+          "exerciseName": "Elevaciones laterales en banco inclinado",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": false,
+              "weightKg": 7.0,
+              "reps": 15,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": false,
+              "weightKg": 7.0,
+              "reps": 15,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 3,
+              "isWarmup": false,
+              "weightKg": 7.0,
+              "reps": 14,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        },
+        {
+          "templateId": "rear-delt-fly",
+          "exerciseName": "Rear Delt Fly",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": false,
+              "weightKg": 12.5,
+              "reps": 15,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": false,
+              "weightKg": 12.5,
+              "reps": 15,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 3,
+              "isWarmup": false,
+              "weightKg": 12.5,
+              "reps": 15,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ws-2026-09-05-pull-005",
+      "date": "2026-09-05T18:00:00+02:00",
+      "dayType": "pull",
+      "dayVariant": "B",
+      "durationMinutes": 50,
+      "bodyWeightKg": 67.8,
+      "notes": "Pull B. Remo en T ocupado, usé remo sentado en máquina. Bien igual.",
+      "completed": true,
+      "exercises": [
+        {
+          "templateId": "jalon-pecho-agarre-ancho",
+          "exerciseName": "Jalón al pecho (agarre cerrado/neutro)",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": true,
+              "weightKg": 30.0,
+              "reps": 12,
+              "rir": 3,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": true,
+              "weightKg": 40.0,
+              "reps": 10,
+              "rir": 3,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 3,
+              "isWarmup": false,
+              "weightKg": 45.0,
+              "reps": 10,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 4,
+              "isWarmup": false,
+              "weightKg": 45.0,
+              "reps": 10,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 5,
+              "isWarmup": false,
+              "weightKg": 45.0,
+              "reps": 9,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 6,
+              "isWarmup": false,
+              "weightKg": 45.0,
+              "reps": 8,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        },
+        {
+          "templateId": "remo-sentado-maquina",
+          "exerciseName": "Remo sentado en máquina (alternativa a T)",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": false,
+              "weightKg": 35.0,
+              "reps": 12,
+              "rir": 2,
+              "completed": true,
+              "notes": "Máquina T ocupada"
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": false,
+              "weightKg": 35.0,
+              "reps": 11,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 3,
+              "isWarmup": false,
+              "weightKg": 35.0,
+              "reps": 10,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        },
+        {
+          "templateId": "curl-martillo",
+          "exerciseName": "Curl martillo",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": false,
+              "weightKg": 10.0,
+              "reps": 12,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": false,
+              "weightKg": 10.0,
+              "reps": 12,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 3,
+              "isWarmup": false,
+              "weightKg": 10.0,
+              "reps": 11,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 4,
+              "isWarmup": false,
+              "weightKg": 10.0,
+              "reps": 10,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        },
+        {
+          "templateId": "crunch-maquina",
+          "exerciseName": "Crunch en máquina",
+          "sets": [
+            {
+              "setNumber": 1,
+              "isWarmup": false,
+              "weightKg": 25.0,
+              "reps": 15,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 2,
+              "isWarmup": false,
+              "weightKg": 25.0,
+              "reps": 15,
+              "rir": 2,
+              "completed": true,
+              "notes": ""
+            },
+            {
+              "setNumber": 3,
+              "isWarmup": false,
+              "weightKg": 25.0,
+              "reps": 14,
+              "rir": 1,
+              "completed": true,
+              "notes": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

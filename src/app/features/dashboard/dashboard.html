@@ -1,0 +1,88 @@
+<div class="py-6 space-y-6">
+  <!-- Resume banner -->
+  @if (hasSessionInProgress()) {
+    <div class="bg-amber-900/50 border border-amber-700 rounded-xl p-4">
+      <div class="flex items-center gap-3 mb-3">
+        <span class="text-2xl">⚠️</span>
+        <div>
+          <p class="text-amber-200 font-medium">Tienes una sesión sin terminar</p>
+          <p class="text-amber-400 text-sm">¿Quieres retomarla donde la dejaste?</p>
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <button
+          (click)="resumeWorkout()"
+          class="flex-1 py-3 px-4 bg-amber-600 hover:bg-amber-500 active:bg-amber-700 text-white font-semibold rounded-xl transition-colors"
+        >
+          Retomar sesión
+        </button>
+        <button
+          (click)="discardSession()"
+          class="py-3 px-4 bg-transparent border border-amber-700 text-amber-300 hover:bg-amber-900/50 rounded-xl transition-colors"
+        >
+          Descartar
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Day buttons -->
+  <div class="space-y-3">
+    <h2 class="text-sm font-medium text-slate-400 uppercase tracking-wide">Entrenar hoy</h2>
+    @for (day of trainingDays; track day.label) {
+      <button
+        (click)="startWorkout(day)"
+        class="w-full flex items-center gap-4 p-5 rounded-2xl text-left transition-all active:scale-[0.98] {{ getDayColor(day.dayType) }}"
+      >
+        <span class="text-3xl flex-shrink-0">{{ getDayEmoji(day.dayType) }}</span>
+        <div>
+          <p class="text-lg font-bold text-white">{{ day.label }}</p>
+          <p class="text-sm text-white/70">
+            {{ day.dayType === 'push' ? 'Pecho, hombro, tríceps' : day.dayType === 'pull' ? 'Espalda, bíceps, core' : 'Cuádriceps, femoral, glúteo' }}
+          </p>
+        </div>
+        <svg class="ml-auto w-5 h-5 text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+    }
+  </div>
+
+  <!-- Actions -->
+  <div class="border-t border-slate-700 pt-6 space-y-3">
+    <h2 class="text-sm font-medium text-slate-400 uppercase tracking-wide">Más opciones</h2>
+
+    <a
+      routerLink="/history"
+      class="flex items-center gap-4 p-4 bg-slate-800 hover:bg-slate-700 rounded-2xl transition-colors"
+    >
+      <span class="w-10 h-10 flex items-center justify-center bg-slate-700 rounded-xl text-lg">📋</span>
+      <div>
+        <p class="font-medium text-slate-200">Historial</p>
+            <p class="text-sm text-slate-400">{{ sessionCount() }} sesiones guardadas</p>
+      </div>
+      <svg class="ml-auto w-5 h-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+      </svg>
+    </a>
+
+    <div class="flex gap-2">
+      <button
+        (click)="exportAll()"
+        class="flex-1 py-3 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium rounded-xl border border-slate-700 transition-colors"
+      >
+        📤 Exportar datos
+      </button>
+
+      <label class="flex-1 py-3 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium rounded-xl border border-slate-700 text-center cursor-pointer transition-colors">
+        📥 Importar
+        <input
+          type="file"
+          accept=".json"
+          (change)="importData($event)"
+          class="hidden"
+        />
+      </label>
+    </div>
+  </div>
+</div>
