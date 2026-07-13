@@ -1,88 +1,106 @@
-<div class="py-6 space-y-6">
+<div class="min-h-screen bg-gray-950 text-white p-4 pb-24">
+  <!-- Header -->
+  <header class="mb-6">
+    <h1 class="text-2xl font-bold">Gym Tracker</h1>
+    <p class="text-gray-400 text-sm">PPL 5 días · Lean Bulk</p>
+  </header>
+
   <!-- Resume banner -->
   @if (hasSessionInProgress()) {
-    <div class="bg-amber-900/50 border border-amber-700 rounded-xl p-4">
-      <div class="flex items-center gap-3 mb-3">
-        <span class="text-2xl">⚠️</span>
-        <div>
-          <p class="text-amber-200 font-medium">Tienes una sesión sin terminar</p>
-          <p class="text-amber-400 text-sm">¿Quieres retomarla donde la dejaste?</p>
+    <div class="bg-amber-900/30 border border-amber-700/50 rounded-xl p-4 mb-6">
+      <div class="flex items-start gap-3">
+        <svg class="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+        </svg>
+        <div class="flex-1">
+          <p class="font-semibold text-amber-100">Sesión sin terminar</p>
+          <p class="text-sm text-amber-200/70 mb-3">¿Quieres retomarla donde la dejaste?</p>
+          <div class="flex gap-2">
+            <button (click)="resumeWorkout()"
+              class="flex-1 bg-amber-600 hover:bg-amber-500 text-white font-medium py-2.5 px-4 rounded-lg min-h-[48px] transition-colors">
+              Retomar
+            </button>
+            <button (click)="discardSession()"
+              class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium py-2.5 px-4 rounded-lg min-h-[48px] transition-colors">
+              Descartar
+            </button>
+          </div>
         </div>
-      </div>
-      <div class="flex gap-2">
-        <button
-          (click)="resumeWorkout()"
-          class="flex-1 py-3 px-4 bg-amber-600 hover:bg-amber-500 active:bg-amber-700 text-white font-semibold rounded-xl transition-colors"
-        >
-          Retomar sesión
-        </button>
-        <button
-          (click)="discardSession()"
-          class="py-3 px-4 bg-transparent border border-amber-700 text-amber-300 hover:bg-amber-900/50 rounded-xl transition-colors"
-        >
-          Descartar
-        </button>
       </div>
     </div>
   }
 
-  <!-- Day buttons -->
-  <div class="space-y-3">
-    <h2 class="text-sm font-medium text-slate-400 uppercase tracking-wide">Entrenar hoy</h2>
-    @for (day of trainingDays; track day.label) {
-      <button
-        (click)="startWorkout(day)"
-        class="w-full flex items-center gap-4 p-5 rounded-2xl text-left transition-all active:scale-[0.98] {{ getDayColor(day.dayType) }}"
-      >
-        <span class="text-3xl flex-shrink-0">{{ getDayEmoji(day.dayType) }}</span>
-        <div>
-          <p class="text-lg font-bold text-white">{{ day.label }}</p>
-          <p class="text-sm text-white/70">
-            {{ day.dayType === 'push' ? 'Pecho, hombro, tríceps' : day.dayType === 'pull' ? 'Espalda, bíceps, core' : 'Cuádriceps, femoral, glúteo' }}
-          </p>
-        </div>
-        <svg class="ml-auto w-5 h-5 text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-        </svg>
-      </button>
-    }
-  </div>
-
-  <!-- Actions -->
-  <div class="border-t border-slate-700 pt-6 space-y-3">
-    <h2 class="text-sm font-medium text-slate-400 uppercase tracking-wide">Más opciones</h2>
-
-    <a
-      routerLink="/history"
-      class="flex items-center gap-4 p-4 bg-slate-800 hover:bg-slate-700 rounded-2xl transition-colors"
-    >
-      <span class="w-10 h-10 flex items-center justify-center bg-slate-700 rounded-xl text-lg">📋</span>
-      <div>
-        <p class="font-medium text-slate-200">Historial</p>
-            <p class="text-sm text-slate-400">{{ sessionCount() }} sesiones guardadas</p>
-      </div>
-      <svg class="ml-auto w-5 h-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-      </svg>
-    </a>
-
-    <div class="flex gap-2">
-      <button
-        (click)="exportAll()"
-        class="flex-1 py-3 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium rounded-xl border border-slate-700 transition-colors"
-      >
-        📤 Exportar datos
-      </button>
-
-      <label class="flex-1 py-3 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium rounded-xl border border-slate-700 text-center cursor-pointer transition-colors">
-        📥 Importar
-        <input
-          type="file"
-          accept=".json"
-          (change)="importData($event)"
-          class="hidden"
-        />
-      </label>
+  <!-- Stats -->
+  <div class="grid grid-cols-2 gap-3 mb-6">
+    <div class="bg-gray-900 border border-gray-800 rounded-xl p-4">
+      <p class="text-xs uppercase tracking-wide text-gray-500 font-medium">Sesiones</p>
+      <p class="text-2xl font-bold text-white mt-0.5">{{ totalSessions() }}</p>
+    </div>
+    <div class="bg-gray-900 border border-gray-800 rounded-xl p-4">
+      <p class="text-xs uppercase tracking-wide text-gray-500 font-medium">Último</p>
+      @if (lastSession(); as s) {
+        <p class="text-lg font-semibold text-white mt-0.5">
+          {{ s.dayType === 'push' ? 'Push' : s.dayType === 'pull' ? 'Pull' : 'Legs' }}
+          <span class="text-gray-500 font-normal">{{ s.dayVariant }}</span>
+        </p>
+      } @else {
+        <p class="text-lg text-gray-600 mt-0.5">—</p>
+      }
     </div>
   </div>
+
+  <!-- Training days -->
+  <div class="mb-6">
+    <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Rutina semanal</h2>
+    <div class="grid grid-cols-1 gap-3">
+      @for (day of trainingDays; track day.label) {
+        <button (click)="startWorkout(day)"
+          class="w-full bg-gray-900 border border-gray-800 hover:border-gray-700 rounded-xl p-4 text-left transition-colors">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
+              [style.background]="getAccentColor(day.dayType) + '20'">
+              {{ getDayEmoji(day.dayType) }}
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex justify-between items-center mb-1">
+                <h3 class="font-semibold text-white">{{ day.label }}</h3>
+                <svg class="w-5 h-5 text-gray-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                </svg>
+              </div>
+              <p class="text-sm text-gray-400 truncate">{{ getMuscleLabel(day.dayType) }}</p>
+            </div>
+          </div>
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Bottom actions -->
+  <div class="flex gap-3">
+    <a routerLink="/history"
+      class="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-medium py-3 px-4 rounded-xl min-h-[48px] flex items-center justify-center gap-2 transition-colors">
+      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      Historial
+    </a>
+    <button (click)="exportAll()"
+      class="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-medium py-3 px-4 rounded-xl min-h-[48px] flex items-center justify-center gap-2 transition-colors">
+      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+      </svg>
+      Exportar
+    </button>
+    <button (click)="triggerImport()"
+      class="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-medium py-3 px-4 rounded-xl min-h-[48px] flex items-center justify-center gap-2 transition-colors">
+      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+      </svg>
+      Importar
+    </button>
+  </div>
+
+  <!-- Hidden file input -->
+  <input #fileInput type="file" accept=".json" (change)="importData($event)" class="hidden" />
 </div>

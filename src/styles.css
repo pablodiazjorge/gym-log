@@ -1,46 +1,47 @@
 @import "tailwindcss";
 
-/* Dark theme by default */
-:root {
-  color-scheme: dark;
-  --color-bg-primary: #0f172a;
-  --color-bg-secondary: #1e293b;
-  --color-bg-tertiary: #334155;
-  --color-text-primary: #f1f5f9;
-  --color-text-secondary: #94a3b8;
-  --color-accent: #22c55e;
-  --color-accent-hover: #16a34a;
-  --color-danger: #ef4444;
-  --color-warning: #f59e0b;
+@layer base {
+  body {
+    @apply bg-gray-950 text-white antialiased;
+    -webkit-tap-highlight-color: transparent;
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  /* Hide number input spinners */
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
+    font-size: 16px;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
 }
 
-* {
-  box-sizing: border-box;
+@layer components {
+  .card {
+    @apply bg-gray-900 border border-gray-800 rounded-xl;
+  }
+}
+.truncate-line {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-html, body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  background-color: var(--color-bg-primary);
-  color: var(--color-text-primary);
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  -webkit-tap-highlight-color: transparent;
+.safe-bottom {
+  padding-bottom: var(--safe-bottom);
 }
 
-/* Touch-friendly: ensure inputs are large enough */
-input[type="number"] {
-  font-size: 16px; /* prevents iOS zoom on focus */
+/* ─── Tap highlight override ─── */
+.tap-active:active {
+  transform: scale(0.97);
+  transition: transform 0.1s ease;
 }
 
-/* Scrollbar styling for dark mode */
-::-webkit-scrollbar {
-  width: 6px;
-}
-::-webkit-scrollbar-track {
-  background: var(--color-bg-primary);
-}
-::-webkit-scrollbar-thumb {
-  background: var(--color-bg-tertiary);
-  border-radius: 3px;
-}

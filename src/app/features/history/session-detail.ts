@@ -23,14 +23,16 @@ export class SessionDetail {
 
   formatDate(iso: string): string {
     const d = new Date(iso);
-    return d.toLocaleDateString('es-ES', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    return d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  }
+
+  getAccentColor(dayType: string): string {
+    switch (dayType) {
+      case 'push': return '#3b82f6';
+      case 'pull': return '#10b981';
+      case 'legs': return '#f59e0b';
+      default: return '#71717a';
+    }
   }
 
   getDayLabel(dayType: string, variant: string): string {
@@ -44,8 +46,7 @@ export class SessionDetail {
 
   getMaxWeight(exercise: WorkoutExercise): number {
     const workSets = exercise.sets.filter((s) => !s.isWarmup);
-    if (workSets.length === 0) return 0;
-    return Math.max(...workSets.map((s) => s.weightKg));
+    return workSets.length > 0 ? Math.max(...workSets.map((s) => s.weightKg)) : 0;
   }
 
   getWorkSets(exercise: WorkoutExercise): number {
@@ -59,7 +60,7 @@ export class SessionDetail {
   deleteSession(): void {
     const s = this.session();
     if (!s) return;
-    if (confirm('¿Eliminar esta sesión definitivamente?')) {
+    if (confirm('¿Eliminar esta sesión?')) {
       this.storage.deleteSession(s.id);
       this.router.navigate(['/history']);
     }
@@ -67,8 +68,6 @@ export class SessionDetail {
 
   exportSession(): void {
     const s = this.session();
-    if (s) {
-      this.exportService.exportSession(s);
-    }
+    if (s) this.exportService.exportSession(s);
   }
 }

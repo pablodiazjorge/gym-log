@@ -1,46 +1,44 @@
-<div class="py-4 space-y-4">
+<div class="min-h-screen bg-gray-950 text-white p-4 pb-24">
   @if (session(); as session) {
     <!-- Header -->
-    <div class="space-y-1">
-      <p class="text-xs text-slate-500 font-medium uppercase tracking-wide">
-        {{ getDayLabel(session.dayType, session.dayVariant) }}
-      </p>
-      <h2 class="text-xl font-bold text-slate-100 capitalize">{{ formatDate(session.date) }}</h2>
-      <div class="flex items-center gap-3 text-sm text-slate-400">
-        <span>{{ session.exercises.length }} ejercicios</span>
-        @if (session.durationMinutes) {
-          <span>{{ session.durationMinutes }} min</span>
-        }
-        @if (session.bodyWeightKg) {
-          <span>{{ session.bodyWeightKg }} kg</span>
-        }
+    <div class="mb-6">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="text-xs px-2 py-1 rounded font-medium"
+          [style.background]="getAccentColor(session.dayType) + '20'"
+          [style.color]="getAccentColor(session.dayType)">
+          {{ getDayLabel(session.dayType, session.dayVariant) }}
+        </span>
         @if (!session.completed) {
-          <span class="text-amber-400 font-medium">Incompleta</span>
+          <span class="text-xs px-2 py-1 rounded bg-amber-900/30 text-amber-400 font-medium">Incompleta</span>
         }
       </div>
+      <h2 class="text-xl font-bold text-white">{{ formatDate(session.date) }}</h2>
+      <div class="flex items-center gap-3 mt-1 text-sm text-gray-400">
+        <span>{{ session.exercises.length }} ejercicios</span>
+        @if (session.durationMinutes) { <span>{{ session.durationMinutes }} min</span> }
+        @if (session.bodyWeightKg) { <span>{{ session.bodyWeightKg }} kg</span> }
+      </div>
       @if (session.notes) {
-        <p class="text-sm text-slate-500 italic mt-2">{{ session.notes }}</p>
+        <p class="text-sm text-gray-500 italic mt-1">{{ session.notes }}</p>
       }
     </div>
 
     <!-- Exercises -->
-    <div class="space-y-3">
+    <div class="space-y-3 mb-6">
       @for (exercise of session.exercises; track exercise.templateId) {
-        <div class="bg-slate-800/60 rounded-2xl p-4 border border-slate-700/50">
-          <!-- Exercise header -->
-          <div class="flex items-center justify-between mb-3">
-            <p class="font-medium text-slate-200">{{ exercise.exerciseName }}</p>
+        <div class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+          <div class="flex items-center justify-between p-4 pb-2">
+            <p class="text-sm font-medium text-gray-200">{{ exercise.exerciseName }}</p>
             @if (getMaxWeight(exercise) > 0) {
-              <span class="text-emerald-400 font-bold text-sm">{{ getMaxWeight(exercise) }} kg máx</span>
+              <span class="text-emerald-400 font-bold text-sm">{{ getMaxWeight(exercise) }} kg</span>
             }
           </div>
 
-          <!-- Sets table -->
-          <div class="overflow-x-auto">
-            <table class="w-full text-sm">
+          <div class="px-4 pb-3 overflow-x-auto">
+            <table class="w-full text-xs">
               <thead>
-                <tr class="text-slate-500 text-xs">
-                  <th class="text-left font-medium pb-2">#</th>
+                <tr class="text-gray-500">
+                  <th class="text-left font-medium pb-2 w-6">#</th>
                   <th class="text-left font-medium pb-2">Tipo</th>
                   <th class="text-right font-medium pb-2">Peso</th>
                   <th class="text-right font-medium pb-2">Reps</th>
@@ -49,18 +47,18 @@
               </thead>
               <tbody>
                 @for (set of exercise.sets; track set.setNumber) {
-                  <tr class="border-t border-slate-700/50">
-                    <td class="py-2 text-slate-400">{{ set.setNumber }}</td>
+                  <tr class="border-t border-gray-800/50">
+                    <td class="py-2 text-gray-500">{{ set.setNumber }}</td>
                     <td class="py-2">
                       @if (set.isWarmup) {
-                        <span class="text-xs px-1.5 py-0.5 bg-amber-900/40 text-amber-400 rounded">Aprox</span>
+                        <span class="text-[10px] px-1.5 py-0.5 bg-amber-900/30 text-amber-400 rounded">Aprox</span>
                       } @else {
-                        <span class="text-xs px-1.5 py-0.5 bg-slate-700 text-slate-400 rounded">Trabajo</span>
+                        <span class="text-[10px] px-1.5 py-0.5 bg-gray-800 text-gray-500 rounded">Trabajo</span>
                       }
                     </td>
-                    <td class="py-2 text-right text-slate-200 font-medium">{{ set.weightKg }} kg</td>
-                    <td class="py-2 text-right text-slate-200">{{ set.reps }}</td>
-                    <td class="py-2 text-right text-slate-400">{{ set.rir }}</td>
+                    <td class="py-2 text-right text-gray-200 font-medium tabular-nums">{{ set.weightKg }} kg</td>
+                    <td class="py-2 text-right text-gray-200 tabular-nums">{{ set.reps }}</td>
+                    <td class="py-2 text-right text-gray-500 tabular-nums">{{ set.rir }}</td>
                   </tr>
                 }
               </tbody>
@@ -71,28 +69,28 @@
     </div>
 
     <!-- Actions -->
-    <div class="flex gap-2 pt-2">
-      <button
-        (click)="exportSession()"
-        class="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium rounded-xl border border-slate-700 transition-colors"
-      >
-        📤 Exportar sesión
+    <div class="flex gap-2">
+      <button (click)="exportSession()"
+        class="flex-1 py-3 bg-gray-800 hover:bg-gray-700 text-white text-sm font-medium rounded-xl min-h-[48px] flex items-center justify-center gap-2 transition-colors">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+        </svg>
+        Exportar
       </button>
-      <button
-        (click)="deleteSession()"
-        class="py-3 px-4 bg-red-900/20 hover:bg-red-900/40 text-red-400 rounded-xl border border-red-900/30 transition-colors"
-        title="Eliminar sesión"
-      >
-        🗑️
+      <button (click)="deleteSession()"
+        class="py-3 px-4 bg-rose-600/10 hover:bg-rose-600/20 text-rose-400 rounded-xl border border-rose-500/20 min-h-[48px] flex items-center justify-center transition-colors">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+        </svg>
       </button>
     </div>
   }
 
   @if (!session()) {
-    <div class="text-center py-12">
-      <p class="text-slate-400">Sesión no encontrada</p>
-      <a routerLink="/history" class="inline-block mt-4 py-2 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition-colors">
-        Volver al historial
+    <div class="text-center py-16">
+      <p class="text-gray-500 text-sm">Sesión no encontrada</p>
+      <a routerLink="/history" class="inline-block mt-3 py-2 px-4 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm rounded-xl transition-colors">
+        ← Volver al historial
       </a>
     </div>
   }

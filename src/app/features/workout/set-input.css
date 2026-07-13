@@ -1,1 +1,3 @@
-/* SetInput styles — keep minimal, Tailwind handles the rest */
+:host {
+  display: block;
+}

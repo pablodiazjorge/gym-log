@@ -1,82 +1,81 @@
-<div class="py-4 space-y-4">
-  <div class="flex items-center justify-between">
-    <h2 class="text-lg font-bold text-slate-100">Historial de sesiones</h2>
-    @if (sessions().length > 0) {
-      <button
-        (click)="exportAll()"
-        class="py-2 px-3 text-sm bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl border border-slate-700 transition-colors"
-      >
-        📤 Exportar todo
-      </button>
-    }
-  </div>
+<div class="min-h-screen bg-gray-950 text-white p-4 pb-24">
+  <header class="mb-6">
+    <h1 class="text-2xl font-bold">Historial</h1>
+    <p class="text-gray-400 text-sm">{{ sessions().length }} sesiones registradas</p>
+  </header>
 
   @if (sortedSessions.length === 0) {
-    <div class="text-center py-12">
-      <span class="text-4xl block mb-3">📋</span>
-      <p class="text-slate-400">No hay sesiones guardadas aún</p>
-      <p class="text-slate-500 text-sm mt-1">Completa un entrenamiento y aparecerá aquí</p>
-      <a routerLink="/" class="inline-block mt-4 py-2 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition-colors">
-        Ir al inicio
-      </a>
+    <div class="text-center py-16">
+      <svg class="w-12 h-12 text-gray-700 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      <p class="text-gray-400 text-sm">No hay sesiones aún</p>
+      <p class="text-gray-600 text-xs mt-1">Completa un entrenamiento y aparecerá aquí</p>
     </div>
   }
 
-  @for (session of sortedSessions; track session.id) {
-    <a
-      [routerLink]="['/history', session.id]"
-      class="block bg-slate-800/60 hover:bg-slate-800 rounded-2xl p-4 border border-slate-700/50 transition-colors"
-    >
-      <div class="flex items-center gap-3">
-        <!-- Color badge -->
-        <div class="w-2 h-12 rounded-full {{ getDayColor(session.dayType) }} flex-shrink-0"></div>
+  <div class="space-y-3">
+    @for (session of sortedSessions; track session.id) {
+      <a [routerLink]="['/history', session.id]"
+        class="block bg-gray-900 border border-gray-800 hover:border-gray-700 rounded-xl overflow-hidden transition-colors">
+        <div class="flex items-stretch">
+          <!-- Color bar -->
+          <div class="w-1 flex-shrink-0" [style.background]="getAccentColor(session.dayType)"></div>
 
-        <div class="flex-1 min-w-0">
-          <div class="flex items-center justify-between">
-            <p class="font-medium text-slate-200 capitalize">{{ formatDate(session.date) }}</p>
-            <span class="text-xs px-2 py-0.5 rounded-full"
-              [class.bg-blue-900/50]="session.dayType === 'push'"
-              [class.text-blue-300]="session.dayType === 'push'"
-              [class.bg-emerald-900/50]="session.dayType === 'pull'"
-              [class.text-emerald-300]="session.dayType === 'pull'"
-              [class.bg-orange-900/50]="session.dayType === 'legs'"
-              [class.text-orange-300]="session.dayType === 'legs'"
-            >
-              {{ getDayLabel(session.dayType, session.dayVariant) }}
-            </span>
-          </div>
-
-          <div class="flex items-center gap-4 mt-2 text-sm text-slate-400">
-            <span>{{ session.exercises.length }} ejercicios</span>
-            @if (session.durationMinutes) {
-              <span>{{ session.durationMinutes }} min</span>
-            }
-            @if (getMaxWeight(session) > 0) {
-              <span class="text-slate-300 font-medium">Máx: {{ getMaxWeight(session) }} kg</span>
-            }
-          </div>
-
-          <!-- Exercise pills -->
-          <div class="flex flex-wrap gap-1 mt-2">
-            @for (ex of session.exercises; track ex.templateId) {
-              <span class="text-xs px-2 py-0.5 bg-slate-700/50 text-slate-400 rounded-full truncate max-w-[150px]">
-                {{ ex.exerciseName }}
+          <div class="flex-1 p-4 min-w-0">
+            <div class="flex items-center justify-between gap-2">
+              <p class="text-sm font-semibold text-gray-200">{{ formatDate(session.date) }}</p>
+              <span class="text-[10px] px-1.5 py-0.5 rounded font-medium flex-shrink-0"
+                [style.background]="getAccentColor(session.dayType) + '20'"
+                [style.color]="getAccentColor(session.dayType)">
+                {{ getDayLabel(session.dayType, session.dayVariant) }}
               </span>
-            }
-          </div>
-        </div>
+            </div>
 
-        <!-- Delete -->
-        <button
-          (click)="deleteSession(session.id, $event)"
-          class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-600 hover:text-red-400 hover:bg-red-900/20 transition-colors flex-shrink-0"
-          title="Eliminar sesión"
-        >
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-          </svg>
-        </button>
-      </div>
-    </a>
+            <div class="flex items-center gap-3 mt-1.5 text-xs text-gray-500">
+              <span>{{ session.exercises.length }} ejercicios</span>
+              @if (session.durationMinutes) {
+                <span>{{ session.durationMinutes }} min</span>
+              }
+              @if (getMaxWeight(session) > 0) {
+                <span class="text-gray-400 font-medium">Máx {{ getMaxWeight(session) }} kg</span>
+              }
+            </div>
+
+            <!-- Exercise pills -->
+            <div class="flex flex-wrap gap-1 mt-2">
+              @for (ex of session.exercises | slice:0:4; track ex.templateId) {
+                <span class="text-[10px] px-1.5 py-0.5 bg-gray-800 text-gray-500 rounded truncate max-w-[120px]">
+                  {{ ex.exerciseName }}
+                </span>
+              }
+              @if (session.exercises.length > 4) {
+                <span class="text-[10px] text-gray-600">+{{ session.exercises.length - 4 }}</span>
+              }
+            </div>
+          </div>
+
+          <!-- Delete -->
+          <button (click)="deleteSession(session.id, $event)"
+            class="w-10 flex items-center justify-center text-gray-700 hover:text-rose-400 hover:bg-rose-400/5 transition-colors flex-shrink-0">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            </svg>
+          </button>
+        </div>
+      </a>
+    }
+  </div>
+
+  @if (sessions().length > 0) {
+    <div class="mt-4">
+      <button (click)="exportAll()"
+        class="w-full bg-gray-800 hover:bg-gray-700 text-white font-medium py-3 px-4 rounded-xl min-h-[48px] flex items-center justify-center gap-2 transition-colors">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+        </svg>
+        Exportar todo
+      </button>
+    </div>
   }
 </div>

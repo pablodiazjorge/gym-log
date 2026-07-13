@@ -25,7 +25,8 @@ export class Header {
   readonly title = computed(() => {
     const url = this.router.url;
     if (url === '/') return 'Gym Tracker';
-    if (url.startsWith('/workout')) return 'Entrenamiento';
+    if (url.startsWith('/workout')) return 'Entreno';
+    if (url.startsWith('/history') && url.split('/').length > 2) return 'Detalle';
     if (url.startsWith('/history')) return 'Historial';
     return 'Gym Tracker';
   });

@@ -9,27 +9,21 @@ import { WorkoutSet } from '../../core/models/workout.model';
   styleUrl: './set-input.css',
 })
 export class SetInput {
-  // Inputs
   readonly set = input.required<WorkoutSet>();
   readonly hasWarmup = input(false);
-  readonly isLastSet = input(false);
 
-  // Outputs
   readonly setCompleted = output<WorkoutSet>();
 
-  // RIR options
   readonly rirOptions = [0, 1, 2, 3, 4, 5];
 
   adjustWeight(delta: number): void {
-    const current = this.set();
-    const newWeight = Math.max(0, +(current.weightKg + delta).toFixed(1));
-    current.weightKg = newWeight;
+    const s = this.set();
+    s.weightKg = Math.max(0, +(s.weightKg + delta).toFixed(1));
   }
 
   adjustReps(delta: number): void {
-    const current = this.set();
-    const newReps = Math.max(0, current.reps + delta);
-    current.reps = newReps;
+    const s = this.set();
+    s.reps = Math.max(0, s.reps + delta);
   }
 
   setRir(value: number): void {
@@ -41,13 +35,9 @@ export class SetInput {
   }
 
   completeSet(): void {
-    const current = this.set();
-    current.completed = true;
-    this.setCompleted.emit({ ...current });
-
-    // Vibración si está disponible
-    if (navigator.vibrate) {
-      navigator.vibrate(50);
-    }
+    const s = this.set();
+    s.completed = true;
+    this.setCompleted.emit({ ...s });
+    if (navigator.vibrate) navigator.vibrate(30);
   }
 }

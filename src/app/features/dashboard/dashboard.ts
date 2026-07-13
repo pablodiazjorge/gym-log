@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, viewChild, ElementRef } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { RoutineService } from '../../core/services/routine.service';
 import { StorageService } from '../../core/services/storage.service';
@@ -14,37 +14,43 @@ import { DayInfo } from '../../core/models/workout.model';
 export class Dashboard {
   private readonly router = inject(Router);
   private readonly routineService = inject(RoutineService);
-  private readonly storage = inject(StorageService);
+  readonly storage = inject(StorageService);
   private readonly exportService = inject(ExportService);
 
-  readonly trainingDays: DayInfo[] = this.routineService.getTrainingDays();
-  readonly hasSessionInProgress = computed(() => this.storage.currentSession() !== null);
-  readonly sessionCount = computed(() => this.storage.sessions().length);
+  readonly fileInput = viewChild<ElementRef<HTMLInputElement>>('fileInput');
 
-  /** Color mapping for day types */
-  getDayColor(dayType: string): string {
+  readonly trainingDays = this.routineService.getTrainingDays();
+  readonly hasSessionInProgress = computed(() => this.storage.currentSession() !== null);
+  readonly totalSessions = computed(() => this.storage.sessions().length);
+  readonly lastSession = computed(() => {
+    const sessions = this.storage.sessions();
+    return sessions.length > 0 ? sessions[sessions.length - 1] : null;
+  });
+
+  getAccentColor(dayType: string): string {
     switch (dayType) {
-      case 'push':
-        return 'bg-blue-600 hover:bg-blue-500 active:bg-blue-700';
-      case 'pull':
-        return 'bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700';
-      case 'legs':
-        return 'bg-orange-600 hover:bg-orange-500 active:bg-orange-700';
-      default:
-        return 'bg-slate-600 hover:bg-slate-500';
+      case 'push': return '#3b82f6';
+      case 'pull': return '#10b981';
+      case 'legs': return '#f59e0b';
+      default: return '#71717a';
     }
   }
 
   getDayEmoji(dayType: string): string {
     switch (dayType) {
-      case 'push':
-        return '💪';
-      case 'pull':
-        return '🏋️';
-      case 'legs':
-        return '🦵';
-      default:
-        return '🏃';
+      case 'push': return '💪';
+      case 'pull': return '🏋️';
+      case 'legs': return '🦵';
+      default: return '🏃';
+    }
+  }
+
+  getMuscleLabel(dayType: string): string {
+    switch (dayType) {
+      case 'push': return 'Pecho, hombro, tríceps';
+      case 'pull': return 'Espalda, bíceps, core';
+      case 'legs': return 'Cuádriceps, femoral, glúteo';
+      default: return '';
     }
   }
 
@@ -55,9 +61,7 @@ export class Dashboard {
   resumeWorkout(): void {
     const session = this.storage.currentSession();
     if (session) {
-      this.router.navigate(['/workout', session.dayType, session.dayVariant], {
-        queryParams: { resume: 'true' },
-      });
+      this.router.navigate(['/workout', session.dayType, session.dayVariant], { queryParams: { resume: 'true' } });
     }
   }
 
@@ -65,15 +69,18 @@ export class Dashboard {
     this.storage.clearCurrentSession();
   }
 
-  async exportAll(): Promise<void> {
+  exportAll(): void {
     this.exportService.exportAll(this.storage.sessions());
+  }
+
+  triggerImport(): void {
+    this.fileInput()?.nativeElement.click();
   }
 
   async importData(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
-
     try {
       const sessions = await this.exportService.importFromFile(file);
       const count = this.storage.importSessions(sessions);
@@ -81,7 +88,6 @@ export class Dashboard {
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Error al importar');
     } finally {
-      // Reset input para permitir re-importar el mismo archivo
       input.value = '';
     }
   }
