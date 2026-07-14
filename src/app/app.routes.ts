@@ -17,4 +17,8 @@ export const routes: Routes = [
     path: 'history/:sessionId',
     loadComponent: () => import('./features/history/session-detail').then((m) => m.SessionDetail),
   },
+  {
+    path: 'analysis',
+    loadComponent: () => import('./features/analysis/analysis').then((m) => m.Analysis),
+  },
 ];

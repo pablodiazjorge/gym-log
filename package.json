@@ -18,6 +18,8 @@
     "@angular/platform-browser": "^22.0.0",
     "@angular/router": "^22.0.0",
     "@tailwindcss/postcss": "^4.3.2",
+    "chart.js": "^4.5.1",
+    "html-to-image": "^1.11.13",
     "postcss": "^8.5.19",
     "rxjs": "~7.8.0",
     "tailwindcss": "^4.3.2",
