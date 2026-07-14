@@ -14,8 +14,6 @@ export class SetInput {
 
   readonly setCompleted = output<WorkoutSet>();
 
-  readonly rirOptions = [0, 1, 2, 3, 4, 5];
-
   adjustWeight(delta: number): void {
     const s = this.set();
     s.weightKg = Math.max(0, +(s.weightKg + delta).toFixed(1));
@@ -26,8 +24,9 @@ export class SetInput {
     s.reps = Math.max(0, s.reps + delta);
   }
 
-  setRir(value: number): void {
-    this.set().rir = value;
+  adjustRir(delta: number): void {
+    const s = this.set();
+    s.rir = Math.max(0, +(s.rir + delta).toFixed(1));
   }
 
   toggleWarmup(): void {

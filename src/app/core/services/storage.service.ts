@@ -53,11 +53,19 @@ export class StorageService {
     this.persistSessions();
   }
 
-  /** Busca la última sesión completada de un dayType (para pre-fill) */
-  getLastSessionForDay(dayType: 'push' | 'pull' | 'legs'): WorkoutSession | undefined {
-    return this.sessions()
+  /** Busca la última sesión completada de un dayType (y opcionalmente dayVariant) para pre-fill */
+  getLastSessionForDay(dayType: 'push' | 'pull' | 'legs', dayVariant?: 'A' | 'B'): WorkoutSession | undefined {
+    const matching = this.sessions()
       .filter((s) => s.dayType === dayType && s.completed)
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    // Prefiere misma variante si se especifica (útil para Pull A vs Pull B)
+    if (dayVariant) {
+      const sameVariant = matching.find((s) => s.dayVariant === dayVariant);
+      if (sameVariant) return sameVariant;
+    }
+
+    return matching[0];
   }
 
   private persistSessions(): void {

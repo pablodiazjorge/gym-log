@@ -62,7 +62,7 @@
         <label class="block text-xs text-gray-500 text-center mb-1">Peso</label>
         <div class="flex items-center justify-between">
           <button (click)="adjustWeight(-2.5)"
-            class="w-10 h-10 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center justify-center text-lg font-bold text-white min-h-[40px] transition-colors">
+            class="w-7 h-7 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center justify-center text-sm font-bold text-white min-h-[28px] transition-colors">
             −
           </button>
           <div class="flex-1 text-center">
@@ -72,7 +72,7 @@
             <span class="text-xs text-gray-500">kg</span>
           </div>
           <button (click)="adjustWeight(0.5)"
-            class="w-10 h-10 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center justify-center text-lg font-bold text-white min-h-[40px] transition-colors">
+            class="w-7 h-7 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center justify-center text-sm font-bold text-white min-h-[28px] transition-colors">
             +
           </button>
         </div>
@@ -83,7 +83,7 @@
         <label class="block text-xs text-gray-500 text-center mb-1">Reps</label>
         <div class="flex items-center justify-between">
           <button (click)="adjustReps(-1)"
-            class="w-10 h-10 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center justify-center text-lg font-bold text-white min-h-[40px] transition-colors">
+            class="w-7 h-7 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center justify-center text-sm font-bold text-white min-h-[28px] transition-colors">
             −
           </button>
           <div class="flex-1 text-center">
@@ -92,7 +92,7 @@
               class="w-full bg-transparent text-center text-lg font-bold text-white focus:outline-none tabular-nums" />
           </div>
           <button (click)="adjustReps(1)"
-            class="w-10 h-10 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center justify-center text-lg font-bold text-white min-h-[40px] transition-colors">
+            class="w-7 h-7 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center justify-center text-sm font-bold text-white min-h-[28px] transition-colors">
             +
           </button>
         </div>
@@ -101,17 +101,20 @@
       <!-- RIR -->
       <div class="bg-gray-800 rounded-lg p-2">
         <label class="block text-xs text-gray-500 text-center mb-1">RIR</label>
-        <div class="grid grid-cols-3 gap-1">
-          @for (rir of rirOptions; track rir) {
-            <button (click)="setRir(rir)"
-              class="w-full h-8 rounded-md text-xs font-bold transition-colors"
-              [class.bg-emerald-600]="set().rir === rir"
-              [class.text-white]="set().rir === rir"
-              [class.bg-gray-700]="set().rir !== rir"
-              [class.text-gray-300]="set().rir !== rir"
-              [class.hover:bg-gray-600]="set().rir !== rir"
-            >{{ rir }}</button>
-          }
+        <div class="flex items-center justify-between">
+          <button (click)="adjustRir(-0.5)"
+            class="w-7 h-7 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center justify-center text-sm font-bold text-white min-h-[28px] transition-colors">
+            −
+          </button>
+          <div class="flex-1 text-center">
+            <input type="number" [ngModel]="set().rir" (ngModelChange)="set().rir = $event"
+              step="0.5" min="0"
+              class="w-full bg-transparent text-center text-lg font-bold text-white focus:outline-none tabular-nums" />
+          </div>
+          <button (click)="adjustRir(0.5)"
+            class="w-7 h-7 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center justify-center text-sm font-bold text-white min-h-[28px] transition-colors">
+            +
+          </button>
         </div>
       </div>
     </div>

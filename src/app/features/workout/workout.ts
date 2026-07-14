@@ -92,7 +92,7 @@ export class Workout {
 
   private createNewSession(dayType: 'push' | 'pull' | 'legs', variant: 'A' | 'B'): void {
     const templates = this.routineService.getExercisesForDay(dayType, variant);
-    const lastSession = this.storage.getLastSessionForDay(dayType);
+    const lastSession = this.storage.getLastSessionForDay(dayType, variant);
     const exercises: WorkoutExercise[] = templates.map((template) => {
       const lastExercise = lastSession?.exercises.find((ex) => ex.templateId === template.id);
       const totalSets = template.targetSets + (template.hasWarmupSets ? (template.warmupSets ?? 0) : 0);
