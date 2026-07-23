@@ -7,10 +7,11 @@ import { WorkoutSession, WorkoutExercise, WorkoutSet } from '../../core/models/w
 import { SetInput } from './set-input';
 
 import { NgClass } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-workout',
-  imports: [SetInput, NgClass],
+  imports: [SetInput, NgClass, FormsModule],
   templateUrl: './workout.html',
   styleUrl: './workout.css',
 })
