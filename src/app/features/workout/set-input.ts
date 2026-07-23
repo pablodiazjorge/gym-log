@@ -39,4 +39,14 @@ export class SetInput {
     this.setCompleted.emit({ ...s });
     if (navigator.vibrate) navigator.vibrate(30);
   }
+
+  skipSet(): void {
+    const s = this.set();
+    s.skipped = true;
+    s.weightKg = 0;
+    s.reps = 0;
+    s.completed = true;
+    this.setCompleted.emit({ ...s });
+    if (navigator.vibrate) navigator.vibrate(30);
+  }
 }

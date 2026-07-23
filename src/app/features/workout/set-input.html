@@ -1,33 +1,49 @@
 <!-- COMPLETED SET: compact summary -->
 @if (set().completed) {
   <div class="flex items-center gap-3 py-3 px-4 rounded-xl border"
-    [class.bg-emerald-500/5]="!set().isWarmup"
-    [class.border-emerald-500/20]="!set().isWarmup"
-    [class.bg-amber-900/10]="set().isWarmup"
-    [class.border-amber-700/20]="set().isWarmup">
+    [class.bg-rose-500/5]="set().skipped"
+    [class.border-rose-500/20]="set().skipped"
+    [class.bg-emerald-500/5]="!set().skipped && !set().isWarmup"
+    [class.border-emerald-500/20]="!set().skipped && !set().isWarmup"
+    [class.bg-amber-900/10]="!set().skipped && set().isWarmup"
+    [class.border-amber-700/20]="!set().skipped && set().isWarmup">
     <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
-      [class.bg-emerald-500/20]="!set().isWarmup"
-      [class.text-emerald-300]="!set().isWarmup"
-      [class.bg-amber-900/40]="set().isWarmup"
-      [class.text-amber-400]="set().isWarmup"
+      [class.bg-rose-500/20]="set().skipped"
+      [class.text-rose-300]="set().skipped"
+      [class.bg-emerald-500/20]="!set().skipped && !set().isWarmup"
+      [class.text-emerald-300]="!set().skipped && !set().isWarmup"
+      [class.bg-amber-900/40]="!set().skipped && set().isWarmup"
+      [class.text-amber-400]="!set().skipped && set().isWarmup"
     >{{ set().setNumber }}</span>
 
-    @if (set().isWarmup) {
+    @if (set().skipped) {
+      <span class="text-xs px-1.5 py-0.5 rounded bg-rose-900/40 text-rose-400 font-medium flex-shrink-0">No realizada</span>
+    } @else if (set().isWarmup) {
       <span class="text-xs px-1.5 py-0.5 rounded bg-amber-900/40 text-amber-400 font-medium flex-shrink-0">Aprox</span>
     }
 
     <span class="flex-1 text-sm tabular-nums">
-      <span class="text-white font-semibold">{{ set().weightKg }}</span>
-      <span class="text-gray-500"> kg × </span>
-      <span class="text-white font-semibold">{{ set().reps }}</span>
-      <span class="text-gray-500"> reps</span>
+      @if (set().skipped) {
+        <span class="text-gray-500 line-through">—</span>
+      } @else {
+        <span class="text-white font-semibold">{{ set().weightKg }}</span>
+        <span class="text-gray-500"> kg × </span>
+        <span class="text-white font-semibold">{{ set().reps }}</span>
+        <span class="text-gray-500"> reps</span>
+      }
     </span>
 
     <span class="text-xs text-gray-500 flex-shrink-0">RIR {{ set().rir }}</span>
 
-    <svg class="w-5 h-5 text-emerald-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-    </svg>
+    @if (set().skipped) {
+      <svg class="w-5 h-5 text-rose-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+    } @else {
+      <svg class="w-5 h-5 text-emerald-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+      </svg>
+    }
   </div>
 }
 
@@ -145,6 +161,14 @@
           <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
         </svg>
         Serie completada
+      </button>
+
+      <button (click)="skipSet()"
+        class="w-full bg-gray-800 hover:bg-rose-900/30 text-gray-400 hover:text-rose-300 font-medium py-2.5 rounded-xl min-h-[44px] transition-colors flex items-center justify-center gap-1.5">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+        No realizada
       </button>
     </div>
   </div>

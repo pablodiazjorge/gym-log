@@ -106,7 +106,7 @@ export class Workout {
           weightKg: lastSet?.weightKg ?? 0,
           reps: lastSet?.reps ?? template.targetRepsMin,
           rir: lastSet?.rir ?? 2,
-          completed: false, notes: '',
+          completed: false, skipped: false, notes: '',
         });
       }
       return { templateId: template.id, exerciseName: template.name, sets };

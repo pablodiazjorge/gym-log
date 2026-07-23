@@ -108,7 +108,10 @@
             </svg>
             Anterior
           </button>
-          <span class="text-sm text-gray-500">{{ durationMinutes() }} min</span>
+          <button (click)="goToSummary()"
+            class="text-sm text-gray-500 hover:text-gray-300 min-h-[48px] px-2 transition-colors">
+            {{ durationMinutes() }} min · Terminar
+          </button>
           @if (!isLastExercise()) {
             <button (click)="goToNext()"
               class="text-sm text-gray-400 hover:text-white flex items-center gap-1 min-h-[48px] px-3 transition-colors">
@@ -118,17 +121,13 @@
               </svg>
             </button>
           } @else {
-            @if (currentExerciseDone()) {
-              <button (click)="goToSummary()"
-                class="text-sm text-emerald-400 hover:text-emerald-300 font-medium flex items-center gap-1 min-h-[48px] px-3 transition-colors">
-                Finalizar
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-                </svg>
-              </button>
-            } @else {
-              <span class="text-sm text-gray-500 px-3 min-h-[48px] flex items-center">Completado</span>
-            }
+            <button (click)="goToSummary()"
+              class="text-sm text-emerald-400 hover:text-emerald-300 font-medium flex items-center gap-1 min-h-[48px] px-3 transition-colors">
+              Finalizar
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+              </svg>
+            </button>
           }
         </div>
         <button (click)="discardWorkout()"

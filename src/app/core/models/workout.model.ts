@@ -23,6 +23,7 @@ export interface WorkoutSet {
   reps: number;
   rir: number; // Reps In Reserve (0-5)
   completed: boolean;
+  skipped: boolean;
   notes?: string;
 }
 
