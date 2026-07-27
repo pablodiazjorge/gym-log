@@ -32,6 +32,7 @@ export class Dashboard {
       case 'push': return '#3b82f6';
       case 'pull': return '#10b981';
       case 'legs': return '#f59e0b';
+      case 'abs': return '#ec4899';
       default: return '#71717a';
     }
   }
@@ -41,6 +42,7 @@ export class Dashboard {
       case 'push': return '💪';
       case 'pull': return '🏋️';
       case 'legs': return '🦵';
+      case 'abs': return '🪨';
       default: return '🏃';
     }
   }
@@ -48,8 +50,9 @@ export class Dashboard {
   getMuscleLabel(dayType: string): string {
     switch (dayType) {
       case 'push': return 'Pecho, hombro, tríceps';
-      case 'pull': return 'Espalda, bíceps, core';
-      case 'legs': return 'Cuádriceps, femoral, glúteo';
+      case 'pull': return 'Espalda, bíceps';
+      case 'legs': return 'Cuádriceps, isquios, glúteo, femoral, gemelos';
+      case 'abs': return 'Abdominales';
       default: return '';
     }
   }

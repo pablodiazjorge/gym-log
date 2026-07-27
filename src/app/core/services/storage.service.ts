@@ -54,7 +54,7 @@ export class StorageService {
   }
 
   /** Busca la última sesión completada de un dayType (y opcionalmente dayVariant) para pre-fill */
-  getLastSessionForDay(dayType: 'push' | 'pull' | 'legs', dayVariant?: 'A' | 'B'): WorkoutSession | undefined {
+  getLastSessionForDay(dayType: 'push' | 'pull' | 'legs' | 'abs', dayVariant?: 'A' | 'B'): WorkoutSession | undefined {
     const matching = this.sessions()
       .filter((s) => s.dayType === dayType && s.completed)
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());

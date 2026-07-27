@@ -31,17 +31,19 @@ export class SessionDetail {
       case 'push': return '#3b82f6';
       case 'pull': return '#10b981';
       case 'legs': return '#f59e0b';
+      case 'abs': return '#ec4899';
       default: return '#71717a';
     }
   }
 
-  getDayLabel(dayType: string, variant: string): string {
-    const map: Record<string, Record<string, string>> = {
-      push: { A: 'Push A', B: 'Push B' },
-      pull: { A: 'Pull A', B: 'Pull B' },
-      legs: { A: 'Legs A', B: 'Legs B' },
+  getDayLabel(dayType: string, _variant: string): string {
+    const map: Record<string, string> = {
+      push: 'Push',
+      pull: 'Pull',
+      legs: 'Legs',
+      abs: 'Abs',
     };
-    return map[dayType]?.[variant] ?? `${dayType} ${variant}`;
+    return map[dayType] ?? dayType;
   }
 
   getMaxWeight(exercise: WorkoutExercise): number {

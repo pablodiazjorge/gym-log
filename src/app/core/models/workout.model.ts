@@ -4,7 +4,7 @@
 export interface ExerciseTemplate {
   id: string; // slug único: "press-inclinado-maquina"
   name: string;
-  category: 'push' | 'pull' | 'legs';
+  category: 'push' | 'pull' | 'legs' | 'abs';
   dayVariant?: 'A' | 'B'; // undefined = se repite igual en ambas variantes
   order: number;
   targetSets: number;
@@ -12,6 +12,9 @@ export interface ExerciseTemplate {
   targetRepsMax: number;
   hasWarmupSets: boolean;
   warmupSets?: number;
+  targetRirMin?: number; // RIR objetivo mínimo para las series de trabajo
+  targetRirMax?: number; // RIR objetivo máximo
+  choiceGroup?: string; // si varios ejercicios comparten choiceGroup, son alternativas (elegir uno)
   notes?: string;
 }
 
@@ -21,6 +24,7 @@ export interface WorkoutSet {
   isWarmup: boolean;
   weightKg: number;
   reps: number;
+  partialReps?: number; // repeticiones parciales extra (brazos bloqueados, rango reducido, etc.)
   rir: number; // Reps In Reserve (0-5)
   completed: boolean;
   skipped: boolean;
@@ -38,7 +42,7 @@ export interface WorkoutExercise {
 export interface WorkoutSession {
   id: string;
   date: string; // ISO 8601
-  dayType: 'push' | 'pull' | 'legs';
+  dayType: 'push' | 'pull' | 'legs' | 'abs';
   dayVariant: 'A' | 'B';
   exercises: WorkoutExercise[];
   durationMinutes?: number;
@@ -49,10 +53,12 @@ export interface WorkoutSession {
 
 /** Información de un día de la semana mapeado a la rutina */
 export interface DayInfo {
-  weekday: number; // 1=Lunes..6=Sábado, 0=Domingo
-  label: string; // "Lunes Push"
-  dayType: 'push' | 'pull' | 'legs';
+  weekday: number; // 1-4 para los 4 tipos de sesión
+  label: string; // "Push"
+  dayType: 'push' | 'pull' | 'legs' | 'abs';
   dayVariant: 'A' | 'B';
+  muscleLabel?: string; // "Pecho, hombro, tríceps"
+  emoji?: string; // "💪"
 }
 
 /** Estructura del JSON de exportación */

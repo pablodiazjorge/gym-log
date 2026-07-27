@@ -1,4 +1,64 @@
 <div class="min-h-screen bg-gray-950 text-white flex flex-col">
+  <!-- Exercise selection screen -->
+  @if (isSelecting()) {
+    <div class="flex-1 flex flex-col items-center justify-center p-6">
+      <div class="w-full max-w-md">
+        <div class="text-center mb-8">
+          <h1 class="text-2xl font-bold mb-2">
+            {{ dayType() === 'push' ? '💪 Push' : dayType() === 'pull' ? '🏋️ Pull' : dayType() === 'legs' ? '🦵 Legs' : '🪨 Abs' }}
+          </h1>
+          <p class="text-gray-400 text-sm">Elige el ejercicio antes de empezar</p>
+        </div>
+
+        <div class="space-y-6">
+          @for (group of choiceGroups(); track group.groupId) {
+            <div>
+              <label class="block text-sm font-semibold text-gray-300 mb-3">{{ group.label }}</label>
+              <div class="space-y-2">
+                @for (option of group.options; track option.id) {
+                  <button
+                    (click)="selectExercise(group.groupId, option.id)"
+                    class="w-full text-left p-4 rounded-xl border transition-all"
+                    [class.border-pink-500]="selectedChoices()[group.groupId] === option.id && dayType() === 'abs'"
+                    [class.border-amber-500]="selectedChoices()[group.groupId] === option.id && dayType() === 'legs'"
+                    [class.bg-pink-500/10]="selectedChoices()[group.groupId] === option.id && dayType() === 'abs'"
+                    [class.bg-amber-500/10]="selectedChoices()[group.groupId] === option.id && dayType() === 'legs'"
+                    [class.border-gray-800]="selectedChoices()[group.groupId] !== option.id"
+                    [class.bg-gray-900]="selectedChoices()[group.groupId] !== option.id"
+                    [class.hover:border-gray-600]="selectedChoices()[group.groupId] !== option.id">
+                    <p class="font-medium text-white">{{ option.name }}</p>
+                    <p class="text-xs text-gray-500 mt-0.5">
+                      {{ option.targetSets }} series × {{ option.targetRepsMin }}-{{ option.targetRepsMax }} reps
+                      @if (option.hasWarmupSets) { · {{ option.warmupSets }} aprox }
+                    </p>
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        </div>
+
+        <button (click)="confirmSelection()"
+          [disabled]="!allChoicesSelected()"
+          class="w-full mt-8 py-4 rounded-xl font-bold text-white transition-colors min-h-[48px]"
+          [class.bg-amber-600]="dayType() === 'legs' && allChoicesSelected()"
+          [class.hover:bg-amber-500]="dayType() === 'legs' && allChoicesSelected()"
+          [class.bg-pink-600]="dayType() === 'abs' && allChoicesSelected()"
+          [class.hover:bg-pink-500]="dayType() === 'abs' && allChoicesSelected()"
+          [class.bg-gray-800]="!allChoicesSelected()"
+          [class.text-gray-500]="!allChoicesSelected()"
+          [class.cursor-not-allowed]="!allChoicesSelected()">
+          Empezar entrenamiento
+        </button>
+
+        <button (click)="goHome()"
+          class="w-full mt-3 py-3 text-gray-500 hover:text-gray-300 text-sm transition-colors">
+          Volver
+        </button>
+      </div>
+    </div>
+  }
+
   @if (session(); as session) {
     <!-- Progress dots -->
     <div class="flex items-center justify-center gap-1.5 px-4 pt-3 pb-2">
@@ -24,7 +84,7 @@
           </div>
           <h2 class="text-2xl font-bold text-white">¡Entrenamiento completado!</h2>
           <p class="text-gray-400 mt-1 text-sm">
-            {{ dayType() === 'push' ? 'Push' : dayType() === 'pull' ? 'Pull' : 'Legs' }} {{ dayVariant() }} · {{ durationMinutes() }} min
+            {{ dayType() === 'push' ? 'Push' : dayType() === 'pull' ? 'Pull' : dayType() === 'legs' ? 'Legs' : 'Abs' }} · {{ durationMinutes() }} min
           </p>
         </div>
         <div class="space-y-2">
@@ -80,7 +140,7 @@
           </button>
           <div class="text-center">
             <p class="text-xs font-semibold uppercase tracking-wider" [ngClass]="accentTextClass">
-              {{ dayType() === 'push' ? 'Push' : dayType() === 'pull' ? 'Pull' : 'Legs' }} · {{ dayVariant() }}
+              {{ dayType() === 'push' ? 'Push' : dayType() === 'pull' ? 'Pull' : dayType() === 'legs' ? 'Legs' : 'Abs' }}
             </p>
             <h1 class="text-lg font-bold">Ejercicio {{ currentExerciseIndex() + 1 }}/{{ exerciseCount() }}</h1>
           </div>

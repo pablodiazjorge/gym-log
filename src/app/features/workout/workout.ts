@@ -3,7 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { RoutineService } from '../../core/services/routine.service';
 import { StorageService } from '../../core/services/storage.service';
 import { ExportService } from '../../core/services/export.service';
-import { WorkoutSession, WorkoutExercise, WorkoutSet } from '../../core/models/workout.model';
+import { WorkoutSession, WorkoutExercise, WorkoutSet, ExerciseTemplate } from '../../core/models/workout.model';
 import { SetInput } from './set-input';
 
 import { NgClass } from '@angular/common';
@@ -22,12 +22,17 @@ export class Workout {
   private readonly storage = inject(StorageService);
   private readonly exportService = inject(ExportService);
 
-  readonly dayType = signal<'push' | 'pull' | 'legs'>('push');
+  readonly dayType = signal<'push' | 'pull' | 'legs' | 'abs'>('push');
   readonly dayVariant = signal<'A' | 'B'>('A');
   readonly currentExerciseIndex = signal(0);
   readonly session = signal<WorkoutSession | null>(null);
   readonly isSummary = signal(false);
   readonly startTime = signal(Date.now());
+
+  // ─── Selection phase ───
+  readonly choiceGroups = signal<{ groupId: string; label: string; options: ExerciseTemplate[] }[]>([]);
+  readonly selectedChoices = signal<Record<string, string>>({}); // groupId → templateId
+  readonly isSelecting = computed(() => this.choiceGroups().length > 0 && !this.session());
 
   readonly exercises = computed(() => this.session()?.exercises ?? []);
   readonly currentExercise = computed(() => this.exercises()[this.currentExerciseIndex()] ?? null);
@@ -49,6 +54,7 @@ export class Workout {
       case 'push': return 'border-blue-500/30';
       case 'pull': return 'border-emerald-500/30';
       case 'legs': return 'border-amber-500/30';
+      case 'abs': return 'border-pink-500/30';
       default: return 'border-zinc-700';
     }
   }
@@ -58,6 +64,7 @@ export class Workout {
       case 'push': return 'from-blue-500/5 to-transparent';
       case 'pull': return 'from-emerald-500/5 to-transparent';
       case 'legs': return 'from-amber-500/5 to-transparent';
+      case 'abs': return 'from-pink-500/5 to-transparent';
       default: return 'from-zinc-800 to-transparent';
     }
   }
@@ -67,6 +74,7 @@ export class Workout {
       case 'push': return 'text-blue-400';
       case 'pull': return 'text-emerald-400';
       case 'legs': return 'text-amber-400';
+      case 'abs': return 'text-pink-400';
       default: return 'text-zinc-400';
     }
   }
@@ -76,28 +84,81 @@ export class Workout {
       case 'push': return 'bg-blue-500';
       case 'pull': return 'bg-emerald-500';
       case 'legs': return 'bg-amber-500';
+      case 'abs': return 'bg-pink-500';
       default: return 'bg-zinc-500';
     }
   }
 
   constructor() {
     this.route.params.subscribe((params) => {
-      const dayType = params['dayType'] as 'push' | 'pull' | 'legs';
+      const dayType = params['dayType'] as 'push' | 'pull' | 'legs' | 'abs';
       const variant = params['variant'] as 'A' | 'B';
       const resume = this.route.snapshot.queryParams['resume'] === 'true';
       this.dayType.set(dayType);
       this.dayVariant.set(variant);
-      resume ? this.loadExistingSession() : this.createNewSession(dayType, variant);
+      this.session.set(null);
+      this.isSummary.set(false);
+      this.selectedChoices.set({});
+      if (resume) {
+        this.loadExistingSession();
+      } else {
+        this.initWorkflow(dayType, variant);
+      }
     });
   }
 
-  private createNewSession(dayType: 'push' | 'pull' | 'legs', variant: 'A' | 'B'): void {
+  /** Inicia el flujo: si hay choices que elegir, muestra selector; si no, crea la sesión directamente */
+  private initWorkflow(dayType: 'push' | 'pull' | 'legs' | 'abs', variant: 'A' | 'B'): void {
+    const choices = this.routineService.getChoicesForDay(dayType, variant);
+    if (choices.length > 0) {
+      this.choiceGroups.set(choices);
+      // Inicializar selecciones vacías
+      const init: Record<string, string> = {};
+      for (const c of choices) init[c.groupId] = '';
+      this.selectedChoices.set(init);
+    } else {
+      this.choiceGroups.set([]);
+      this.createNewSession(dayType, variant);
+    }
+  }
+
+  /** El usuario selecciona un ejercicio de un choiceGroup */
+  selectExercise(groupId: string, templateId: string): void {
+    this.selectedChoices.update((prev) => ({ ...prev, [groupId]: templateId }));
+  }
+
+  /** Confirma las selecciones y crea la sesión */
+  confirmSelection(): void {
+    const dayType = this.dayType();
+    const variant = this.dayVariant();
+    const selected = this.selectedChoices();
+    const selectedIds = new Set(Object.values(selected).filter(Boolean));
+
+    const allTemplates = this.routineService.getExercisesForDay(dayType, variant);
+    // Filtrar: solo ejercicios sin choiceGroup, o cuyo id esté en los seleccionados
+    const filtered = allTemplates.filter((t) => !t.choiceGroup || selectedIds.has(t.id));
+
+    this.createNewSessionFromTemplates(dayType, variant, filtered);
+  }
+
+  /** ¿Están todos los choice groups seleccionados? */
+  readonly allChoicesSelected = computed(() => {
+    const sel = this.selectedChoices();
+    return Object.values(sel).every((id) => id !== '');
+  });
+
+  private createNewSession(dayType: 'push' | 'pull' | 'legs' | 'abs', variant: 'A' | 'B'): void {
     const templates = this.routineService.getExercisesForDay(dayType, variant);
+    this.createNewSessionFromTemplates(dayType, variant, templates);
+  }
+
+  private createNewSessionFromTemplates(dayType: 'push' | 'pull' | 'legs' | 'abs', variant: 'A' | 'B', templates: ExerciseTemplate[]): void {
     const lastSession = this.storage.getLastSessionForDay(dayType, variant);
     const exercises: WorkoutExercise[] = templates.map((template) => {
       const lastExercise = lastSession?.exercises.find((ex) => ex.templateId === template.id);
       const totalSets = template.targetSets + (template.hasWarmupSets ? (template.warmupSets ?? 0) : 0);
       const warmupCount = template.hasWarmupSets ? (template.warmupSets ?? 0) : 0;
+      const defaultRir = template.targetRirMin ?? 2;
       const sets: WorkoutSet[] = [];
       for (let i = 0; i < totalSets; i++) {
         const isWarmup = i < warmupCount;
@@ -106,7 +167,8 @@ export class Workout {
           setNumber: i + 1, isWarmup,
           weightKg: lastSet?.weightKg ?? 0,
           reps: lastSet?.reps ?? template.targetRepsMin,
-          rir: lastSet?.rir ?? 2,
+          partialReps: lastSet?.partialReps ?? 0,
+          rir: lastSet?.rir ?? defaultRir,
           completed: false, skipped: false, notes: '',
         });
       }
@@ -142,12 +204,9 @@ export class Workout {
     const s = this.session();
     if (!s) return;
 
-    // Usar el ejercicio actual — el auto-avance de 500ms es suficiente
-    // si los sets se completan a velocidad normal (toggle, no bot)
     const exercise = this.exercises()[this.currentExerciseIndex()];
     const idx = exercise.sets.findIndex((st) => st.setNumber === updatedSet.setNumber);
     if (idx >= 0) exercise.sets[idx] = updatedSet;
-    // Crear nueva referencia del array para propagar señales Angular
     this.session.update((prev) => ({ ...prev!, exercises: [...prev!.exercises] }));
     this.storage.saveCurrentSession(s);
     const allDone = exercise.sets.every((st) => st.completed);
@@ -168,6 +227,8 @@ export class Workout {
   discardWorkout(): void {
     if (confirm('¿Descartar este entrenamiento?')) { this.storage.clearCurrentSession(); this.router.navigate(['/']); }
   }
+
+  goHome(): void { this.router.navigate(['/']); }
 
   exportCurrentSession(): void {
     const s = this.session();

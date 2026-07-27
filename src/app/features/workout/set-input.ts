@@ -29,6 +29,11 @@ export class SetInput {
     s.rir = Math.max(0, +(s.rir + delta).toFixed(1));
   }
 
+  adjustPartialReps(delta: number): void {
+    const s = this.set();
+    s.partialReps = Math.max(0, (s.partialReps ?? 0) + delta);
+  }
+
   toggleWarmup(): void {
     this.set().isWarmup = !this.set().isWarmup;
   }

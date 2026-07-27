@@ -40,7 +40,7 @@
       <p class="text-xs uppercase tracking-wide text-gray-500 font-medium">Último</p>
       @if (lastSession(); as s) {
         <p class="text-lg font-semibold text-white mt-0.5">
-          {{ s.dayType === 'push' ? 'Push' : s.dayType === 'pull' ? 'Pull' : 'Legs' }}
+          {{ s.dayType === 'push' ? 'Push' : s.dayType === 'pull' ? 'Pull' : s.dayType === 'legs' ? 'Legs' : 'Abs' }}
           <span class="text-gray-500 font-normal">{{ s.dayVariant }}</span>
         </p>
       } @else {
@@ -51,7 +51,7 @@
 
   <!-- Training days -->
   <div class="mb-6">
-    <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Rutina semanal</h2>
+    <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Sesiones</h2>
     <div class="grid grid-cols-1 gap-3">
       @for (day of trainingDays; track day.label) {
         <button (click)="startWorkout(day)"
@@ -77,35 +77,39 @@
   </div>
 
   <!-- Bottom actions -->
-  <div class="flex gap-3">
-    <a routerLink="/history"
-      class="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-medium py-3 px-4 rounded-xl min-h-[48px] flex items-center justify-center gap-2 transition-colors">
-      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-      </svg>
-      Historial
-    </a>
-    <a routerLink="/analysis"
-      class="flex-1 bg-gray-800 hover:bg-gray-700 text-emerald-400 font-medium py-3 px-4 rounded-xl min-h-[48px] flex items-center justify-center gap-2 transition-colors">
-      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-      </svg>
-      Análisis
-    </a>
-    <button (click)="exportAll()"
-      class="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-medium py-3 px-4 rounded-xl min-h-[48px] flex items-center justify-center gap-2 transition-colors">
-      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-      </svg>
-      Exportar
-    </button>
-    <button (click)="triggerImport()"
-      class="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-medium py-3 px-4 rounded-xl min-h-[48px] flex items-center justify-center gap-2 transition-colors">
-      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
-      </svg>
-      Importar
-    </button>
+  <div class="space-y-3">
+    <div class="flex gap-3">
+      <a routerLink="/history"
+        class="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-medium py-3 px-4 rounded-xl min-h-[48px] flex items-center justify-center gap-2 transition-colors">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        Historial
+      </a>
+      <a routerLink="/analysis"
+        class="flex-1 bg-gray-800 hover:bg-gray-700 text-emerald-400 font-medium py-3 px-4 rounded-xl min-h-[48px] flex items-center justify-center gap-2 transition-colors">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+        </svg>
+        Análisis
+      </a>
+    </div>
+    <div class="flex gap-3">
+      <button (click)="exportAll()"
+        class="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-medium py-3 px-4 rounded-xl min-h-[48px] flex items-center justify-center gap-2 transition-colors">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+        </svg>
+        Exportar
+      </button>
+      <button (click)="triggerImport()"
+        class="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-medium py-3 px-4 rounded-xl min-h-[48px] flex items-center justify-center gap-2 transition-colors">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+        </svg>
+        Importar
+      </button>
+    </div>
   </div>
 
   <!-- Hidden file input -->

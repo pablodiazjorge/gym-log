@@ -30,6 +30,11 @@
         <span class="text-gray-500"> kg × </span>
         <span class="text-white font-semibold">{{ set().reps }}</span>
         <span class="text-gray-500"> reps</span>
+        @if ((set().partialReps ?? 0) > 0) {
+          <span class="text-gray-500"> + </span>
+          <span class="text-violet-400 font-semibold">{{ set().partialReps }}</span>
+          <span class="text-violet-500 text-xs"> parc.</span>
+        }
       }
     </span>
 
@@ -134,6 +139,28 @@
         </div>
       </div>
     </div>
+
+    <!-- Parciales (opcional, solo series de trabajo) -->
+    @if (!set().isWarmup) {
+      <div class="px-4 pb-2">
+        <div class="bg-violet-900/20 border border-violet-800/30 rounded-lg p-2 flex items-center justify-between">
+          <span class="text-xs text-violet-400 font-medium">Parciales</span>
+          <div class="flex items-center gap-3">
+            <button (click)="adjustPartialReps(-1)"
+              class="w-7 h-7 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center justify-center text-sm font-bold text-white min-h-[28px] transition-colors">
+              −
+            </button>
+            <input type="number" [ngModel]="set().partialReps ?? 0" (ngModelChange)="set().partialReps = $event"
+              step="1" min="0"
+              class="w-12 bg-transparent text-center text-base font-bold text-violet-300 focus:outline-none tabular-nums" />
+            <button (click)="adjustPartialReps(1)"
+              class="w-7 h-7 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center justify-center text-sm font-bold text-white min-h-[28px] transition-colors">
+              +
+            </button>
+          </div>
+        </div>
+      </div>
+    }
 
     <!-- Warmup toggle + Complete button -->
     <div class="px-4 pb-3 space-y-2">

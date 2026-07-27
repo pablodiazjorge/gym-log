@@ -2,23 +2,23 @@ import { Injectable } from '@angular/core';
 import { DayInfo, ExerciseTemplate } from '../models/workout.model';
 
 /**
- * Servicio con la rutina PPL 5 días hardcoded.
- * No editable desde la UI — si la rutina cambia, se modifica aquí.
+ * Servicio con la rutina PPL + Abs hardcoded.
+ * 4 tipos de sesión: Push, Pull, Legs, Abs.
+ * Cada una puede tener ejercicios a elegir al inicio.
  */
 @Injectable({ providedIn: 'root' })
 export class RoutineService {
-  // ─── Días de la semana mapeados a tipo de entrenamiento ───
-  private readonly weekSchedule: Record<number, { dayType: 'push' | 'pull' | 'legs'; dayVariant: 'A' | 'B'; label: string }> = {
-    1: { dayType: 'push', dayVariant: 'A', label: 'Lunes Push' },
-    3: { dayType: 'pull', dayVariant: 'A', label: 'Miércoles Pull' },
-    4: { dayType: 'legs', dayVariant: 'A', label: 'Jueves Legs' },
-    5: { dayType: 'push', dayVariant: 'A', label: 'Viernes Push' },
-    6: { dayType: 'pull', dayVariant: 'B', label: 'Sábado Pull' },
-  };
+  // ─── Tipos de sesión disponibles ───
+  private readonly sessionTypes: { dayType: 'push' | 'pull' | 'legs' | 'abs'; dayVariant: 'A'; label: string; muscleLabel: string; emoji: string }[] = [
+    { dayType: 'push', dayVariant: 'A', label: 'Push', muscleLabel: 'Pecho, hombro, tríceps', emoji: '💪' },
+    { dayType: 'pull', dayVariant: 'A', label: 'Pull', muscleLabel: 'Espalda, bíceps', emoji: '🏋️' },
+    { dayType: 'legs', dayVariant: 'A', label: 'Legs', muscleLabel: 'Cuádriceps, isquios, glúteo, femoral, gemelos', emoji: '🦵' },
+    { dayType: 'abs', dayVariant: 'A', label: 'Abs', muscleLabel: 'Abdominales', emoji: '🪨' },
+  ];
 
   // ─── Ejercicios de la rutina ───
   private readonly allExercises: ExerciseTemplate[] = [
-    // ── PUSH (A y B idénticos) ──
+    // ── PUSH (elegir: press inclinado o press plano) ──
     {
       id: 'press-inclinado-maquina',
       name: 'Press inclinado en máquina',
@@ -29,6 +29,19 @@ export class RoutineService {
       targetRepsMax: 12,
       hasWarmupSets: true,
       warmupSets: 2,
+      choiceGroup: 'push-main',
+    },
+    {
+      id: 'press-plano',
+      name: 'Press plano',
+      category: 'push',
+      order: 1,
+      targetSets: 4,
+      targetRepsMin: 10,
+      targetRepsMax: 12,
+      hasWarmupSets: true,
+      warmupSets: 2,
+      choiceGroup: 'push-main',
     },
     {
       id: 'pec-deck',
@@ -71,10 +84,10 @@ export class RoutineService {
       hasWarmupSets: false,
     },
 
-    // ── PULL ──
+    // ── PULL (elegir: jalón pecho barra o mag neutro; curl banco inclinado o martillo) ──
     {
       id: 'jalon-pecho-agarre-ancho',
-      name: 'Jalón al pecho (agarre ancho, prono)',
+      name: 'Jalón al pecho (barra y straps, agarre ancho, prono)',
       category: 'pull',
       order: 1,
       targetSets: 4,
@@ -82,6 +95,19 @@ export class RoutineService {
       targetRepsMax: 10,
       hasWarmupSets: true,
       warmupSets: 2,
+      choiceGroup: 'pull-main',
+    },
+    {
+      id: 'jalon-pecho-agarre-mag-neutro',
+      name: 'Jalón al pecho (agarre MAG ancho, neutro)',
+      category: 'pull',
+      order: 1,
+      targetSets: 4,
+      targetRepsMin: 8,
+      targetRepsMax: 10,
+      hasWarmupSets: true,
+      warmupSets: 2,
+      choiceGroup: 'pull-main',
     },
     {
       id: 'remo-t-agarre-neutro',
@@ -93,54 +119,30 @@ export class RoutineService {
       targetRepsMax: 12,
       hasWarmupSets: false,
     },
-    // Pull A exclusivos
     {
       id: 'curl-biceps-banco-inclinado',
       name: 'Curl de bíceps en banco inclinado',
       category: 'pull',
-      dayVariant: 'A',
       order: 3,
       targetSets: 4,
       targetRepsMin: 10,
       targetRepsMax: 12,
       hasWarmupSets: false,
+      choiceGroup: 'pull-curl',
     },
-    {
-      id: 'elevaciones-piernas-colgado',
-      name: 'Elevaciones de piernas colgado',
-      category: 'pull',
-      dayVariant: 'A',
-      order: 4,
-      targetSets: 3,
-      targetRepsMin: 12,
-      targetRepsMax: 15,
-      hasWarmupSets: false,
-    },
-    // Pull B exclusivos
     {
       id: 'curl-martillo',
       name: 'Curl martillo',
       category: 'pull',
-      dayVariant: 'B',
       order: 3,
       targetSets: 4,
       targetRepsMin: 10,
       targetRepsMax: 12,
       hasWarmupSets: false,
-    },
-    {
-      id: 'plancha-peso',
-      name: 'Plancha con peso',
-      category: 'pull',
-      dayVariant: 'B',
-      order: 4,
-      targetSets: 3,
-      targetRepsMin: 12,
-      targetRepsMax: 15,
-      hasWarmupSets: false,
+      choiceGroup: 'pull-curl',
     },
 
-    // ── LEGS ──
+    // ── LEGS (ejercicio principal a elegir: hack squat o prensa inclinada) ──
     {
       id: 'hack-squat-maquina',
       name: 'Hack squat en máquina',
@@ -151,69 +153,180 @@ export class RoutineService {
       targetRepsMax: 10,
       hasWarmupSets: true,
       warmupSets: 2,
+      targetRirMin: 1,
+      targetRirMax: 2,
+      choiceGroup: 'legs-main',
     },
     {
-      id: 'prensa-inclinada-pies-altos',
-      name: 'Prensa inclinada (pies altos y anchos)',
+      id: 'prensa-inclinada',
+      name: 'Prensa inclinada',
+      category: 'legs',
+      order: 1,
+      targetSets: 4,
+      targetRepsMin: 8,
+      targetRepsMax: 10,
+      hasWarmupSets: true,
+      warmupSets: 2,
+      targetRirMin: 1,
+      targetRirMax: 2,
+      choiceGroup: 'legs-main',
+    },
+    {
+      id: 'curl-femoral-sentado',
+      name: 'Curl femoral sentado',
       category: 'legs',
       order: 2,
-      targetSets: 3,
-      targetRepsMin: 10,
-      targetRepsMax: 12,
-      hasWarmupSets: false,
-    },
-    {
-      id: 'curl-femoral-acostado',
-      name: 'Curl femoral acostado en máquina',
-      category: 'legs',
-      order: 3,
       targetSets: 3,
       targetRepsMin: 12,
       targetRepsMax: 15,
       hasWarmupSets: false,
+      targetRirMin: 1,
+      targetRirMax: 2,
     },
     {
-      id: 'hip-thrust-maquina',
-      name: 'Hip thrust en máquina',
+      id: 'hip-thrust',
+      name: 'Hip thrust',
       category: 'legs',
-      order: 4,
+      order: 3,
       targetSets: 3,
       targetRepsMin: 10,
       targetRepsMax: 12,
       hasWarmupSets: false,
+      targetRirMin: 1,
+      targetRirMax: 2,
+    },
+    {
+      id: 'abductor-maquina',
+      name: 'Abductor en máquina',
+      category: 'legs',
+      order: 4,
+      targetSets: 3,
+      targetRepsMin: 15,
+      targetRepsMax: 20,
+      hasWarmupSets: false,
+      targetRirMin: 2,
+      targetRirMax: 2,
+    },
+    {
+      id: 'elevacion-gemelos-maquina-pie',
+      name: 'Elevación de gemelos en máquina de pie',
+      category: 'legs',
+      order: 5,
+      targetSets: 2,
+      targetRepsMin: 15,
+      targetRepsMax: 20,
+      hasWarmupSets: false,
+      targetRirMin: 1,
+      targetRirMax: 1,
+    },
+
+    // ── ABS (elegir un ejercicio) ──
+    {
+      id: 'abs-colgado-barra',
+      name: 'Abs colgado de barra',
+      category: 'abs',
+      order: 1,
+      targetSets: 4,
+      targetRepsMin: 8,
+      targetRepsMax: 15,
+      hasWarmupSets: true,
+      warmupSets: 2,
+      choiceGroup: 'abs-main',
+    },
+    {
+      id: 'crunch-polea',
+      name: 'Crunch con polea',
+      category: 'abs',
+      order: 1,
+      targetSets: 4,
+      targetRepsMin: 8,
+      targetRepsMax: 15,
+      hasWarmupSets: true,
+      warmupSets: 2,
+      choiceGroup: 'abs-main',
+    },
+    {
+      id: 'dragon-flight',
+      name: 'Dragon flight',
+      category: 'abs',
+      order: 1,
+      targetSets: 4,
+      targetRepsMin: 6,
+      targetRepsMax: 12,
+      hasWarmupSets: true,
+      warmupSets: 2,
+      choiceGroup: 'abs-main',
     },
   ];
 
   // ─── Métodos públicos ───
 
-  /** Devuelve los ejercicios para un día y variante, ordenados */
-  getExercisesForDay(dayType: 'push' | 'pull' | 'legs', dayVariant: 'A' | 'B'): ExerciseTemplate[] {
+  /** Devuelve TODOS los ejercicios candidatos para una sesión (incluye alternativas de choiceGroup sin filtrar) */
+  getExercisesForDay(dayType: 'push' | 'pull' | 'legs' | 'abs', _variant: 'A' | 'B'): ExerciseTemplate[] {
     return this.allExercises
-      .filter((ex) => {
-        if (ex.category !== dayType) return false;
-        // Si el ejercicio tiene dayVariant, debe coincidir; si no, aparece en ambas variantes
-        if (ex.dayVariant && ex.dayVariant !== dayVariant) return false;
-        return true;
-      })
+      .filter((ex) => ex.category === dayType)
       .sort((a, b) => a.order - b.order);
   }
 
-  /** Dado un día de la semana (1=Lunes..6=Sábado), devuelve la info del día de entrenamiento */
-  getDayInfo(weekday: number): DayInfo | null {
-    const info = this.weekSchedule[weekday];
-    if (!info) return null;
-    return {
-      weekday,
-      ...info,
-    };
+  /**
+   * Devuelve los grupos de elección para una sesión.
+   * Si no hay choices, devuelve array vacío.
+   */
+  getChoicesForDay(dayType: 'push' | 'pull' | 'legs' | 'abs', dayVariant: 'A' | 'B'): { groupId: string; label: string; options: ExerciseTemplate[] }[] {
+    const all = this.getExercisesForDay(dayType, dayVariant);
+    const choiceMap = new Map<string, ExerciseTemplate[]>();
+
+    for (const ex of all) {
+      if (ex.choiceGroup) {
+        const group = choiceMap.get(ex.choiceGroup) ?? [];
+        group.push(ex);
+        choiceMap.set(ex.choiceGroup, group);
+      }
+    }
+
+    return [...choiceMap.entries()].map(([groupId, options]) => ({
+      groupId,
+      label: this.getChoiceLabel(groupId),
+      options,
+    }));
   }
 
-  /** Lista de todos los días de entrenamiento de la semana */
+  /** Etiqueta legible para un grupo de elección */
+  private getChoiceLabel(groupId: string): string {
+    switch (groupId) {
+      case 'push-main': return 'Ejercicio principal de pecho';
+      case 'pull-main': return 'Ejercicio principal de espalda';
+      case 'pull-curl': return 'Ejercicio de bíceps';
+      case 'legs-main': return 'Ejercicio principal de pierna';
+      case 'abs-main': return 'Ejercicio de abdominales';
+      default: return 'Elige ejercicio';
+    }
+  }
+
+  /** Lista de los 4 tipos de sesión disponibles */
   getTrainingDays(): DayInfo[] {
-    return Object.entries(this.weekSchedule).map(([weekday, info]) => ({
-      weekday: Number(weekday),
-      ...info,
+    return this.sessionTypes.map((st, i) => ({
+      weekday: i + 1,
+      dayType: st.dayType,
+      dayVariant: st.dayVariant,
+      label: st.label,
+      muscleLabel: st.muscleLabel,
+      emoji: st.emoji,
     }));
+  }
+
+  /** Dado un día de la semana (1-4), devuelve la info de la sesión */
+  getDayInfo(weekday: number): DayInfo | null {
+    const st = this.sessionTypes[weekday - 1];
+    if (!st) return null;
+    return {
+      weekday,
+      dayType: st.dayType,
+      dayVariant: st.dayVariant,
+      label: st.label,
+      muscleLabel: st.muscleLabel,
+      emoji: st.emoji,
+    };
   }
 
   /** Busca un template por su id */

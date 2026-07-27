@@ -61,7 +61,7 @@ export interface GlobalMetrics {
   totalSessions: number;
   totalExercises: number;
   totalSets: number;
-  totalWorkoutsByDayType: { push: number; pull: number; legs: number };
+  totalWorkoutsByDayType: { push: number; pull: number; legs: number; abs: number };
 
   // Frecuencia
   avgSessionsPerWeek: number;
@@ -160,23 +160,27 @@ export class AnalyticsService {
     const pushData: number[] = [];
     const pullData: number[] = [];
     const legsData: number[] = [];
+    const absData: number[] = [];
 
     for (const session of sorted) {
       labels.push(session.date);
       let pushVol = 0;
       let pullVol = 0;
       let legsVol = 0;
+      let absVol = 0;
 
       for (const exercise of session.exercises) {
         const vol = this.getWorkSets(exercise).reduce((sum, s) => sum + this.getSetVolume(s), 0);
         if (session.dayType === 'push') pushVol += vol;
         else if (session.dayType === 'pull') pullVol += vol;
-        else legsVol += vol;
+        else if (session.dayType === 'legs') legsVol += vol;
+        else absVol += vol;
       }
 
       pushData.push(pushVol);
       pullData.push(pullVol);
       legsData.push(legsVol);
+      absData.push(absVol);
     }
 
     return {
@@ -185,6 +189,7 @@ export class AnalyticsService {
         { label: 'Push', data: pushData, backgroundColor: '#10b981' },
         { label: 'Pull', data: pullData, backgroundColor: '#3b82f6' },
         { label: 'Legs', data: legsData, backgroundColor: '#f59e0b' },
+        { label: 'Abs', data: absData, backgroundColor: '#ec4899' },
       ],
     };
   }
@@ -528,7 +533,7 @@ export class AnalyticsService {
     const totalSessions = completed.length;
 
     // Conteo por dayType
-    const totalWorkoutsByDayType = { push: 0, pull: 0, legs: 0 };
+    const totalWorkoutsByDayType = { push: 0, pull: 0, legs: 0, abs: 0 };
     const uniqueExercises = new Set<string>();
     let totalSets = 0;
 
@@ -558,7 +563,7 @@ export class AnalyticsService {
     let consistencyScore = 100;
     if (completed.length >= 4) {
       const typeGaps: number[] = [];
-      for (const type of ['push', 'pull', 'legs'] as const) {
+      for (const type of ['push', 'pull', 'legs', 'abs'] as const) {
         const typeSessions = completed.filter((s) => s.dayType === type);
         for (let i = 1; i < typeSessions.length; i++) {
           const gap =
@@ -585,7 +590,7 @@ export class AnalyticsService {
       if (!weeklyMap.has(monday)) {
         weeklyMap.set(monday, {
           total: 0,
-          breakdown: { push: 0, pull: 0, legs: 0 },
+          breakdown: { push: 0, pull: 0, legs: 0, abs: 0 },
         });
       }
       const entry = weeklyMap.get(monday)!;
@@ -647,7 +652,7 @@ export class AnalyticsService {
       const recent4 = weeklyVolume.slice(-4);
       const prev4 = weeklyVolume.slice(-8, -4);
       if (prev4.length >= 2) {
-        for (const type of ['push', 'pull', 'legs'] as const) {
+        for (const type of ['push', 'pull', 'legs', 'abs'] as const) {
           const recentAvg =
             recent4.reduce(
               (s, w) => s + (w.dayTypeBreakdown[type] ?? 0),
@@ -659,7 +664,7 @@ export class AnalyticsService {
           if (prevAvg > 0 && recentAvg < prevAvg * 0.8) {
             const pct = Math.round((1 - recentAvg / prevAvg) * 100);
             warningFlags.push(
-              `Volumen de ${type === 'push' ? 'push' : type === 'pull' ? 'pull' : 'piernas'} bajó ${pct}%`,
+              `Volumen de ${type === 'push' ? 'push' : type === 'pull' ? 'pull' : type === 'legs' ? 'piernas' : 'abs'} bajó ${pct}%`,
             );
           }
         }
