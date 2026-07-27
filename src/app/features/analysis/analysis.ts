@@ -75,21 +75,6 @@ export class Analysis implements AfterViewInit, OnDestroy {
     return bw.length > 0 ? bw[bw.length - 1].weight : '—';
   });
 
-  // Variant comparison for Pull
-  readonly pullComparison = computed(() => {
-    const gm = this.globalMetrics();
-    return {
-      pullA: {
-        avgVolume: gm.variantComparison.pullA.avgVolume,
-        avgWeight: gm.variantComparison.pullA.avgWeight,
-      },
-      pullB: {
-        avgVolume: gm.variantComparison.pullB.avgVolume,
-        avgWeight: gm.variantComparison.pullB.avgWeight,
-      },
-      winner: gm.variantComparison.pullWinner,
-    };
-  });
 
   private readonly viewReady = signal(false);
   private weightChart: Chart | null = null;

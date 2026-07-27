@@ -28,7 +28,7 @@
               <span class="text-[10px] px-1.5 py-0.5 rounded font-medium flex-shrink-0"
                 [style.background]="getAccentColor(session.dayType) + '20'"
                 [style.color]="getAccentColor(session.dayType)">
-                {{ getDayLabel(session.dayType, session.dayVariant) }}
+                {{ getDayLabel(session.dayType, session.dayVariant, session.date) }}
               </span>
             </div>
 

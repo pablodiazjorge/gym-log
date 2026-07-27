@@ -92,7 +92,7 @@ export class Workout {
   constructor() {
     this.route.params.subscribe((params) => {
       const dayType = params['dayType'] as 'push' | 'pull' | 'legs' | 'abs';
-      const variant = params['variant'] as 'A' | 'B';
+      const variant: 'A' | 'B' = 'A';
       const resume = this.route.snapshot.queryParams['resume'] === 'true';
       this.dayType.set(dayType);
       this.dayVariant.set(variant);

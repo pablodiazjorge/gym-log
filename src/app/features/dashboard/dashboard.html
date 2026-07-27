@@ -41,7 +41,7 @@
       @if (lastSession(); as s) {
         <p class="text-lg font-semibold text-white mt-0.5">
           {{ s.dayType === 'push' ? 'Push' : s.dayType === 'pull' ? 'Pull' : s.dayType === 'legs' ? 'Legs' : 'Abs' }}
-          <span class="text-gray-500 font-normal">{{ s.dayVariant }}</span>
+          <span class="text-gray-500 font-normal text-sm"> ({{ getDayName(s.date) }})</span>
         </p>
       } @else {
         <p class="text-lg text-gray-600 mt-0.5">—</p>

@@ -120,29 +120,6 @@
     }
   </section>
 
-  <!-- Comparativa A vs B (Pull) -->
-  <section class="mb-6 bg-gray-900 border border-gray-800 rounded-xl p-4">
-    <h2 class="text-lg font-semibold mb-4">Pull A vs Pull B</h2>
-    <div class="flex items-center justify-between mb-3">
-      <div class="text-center flex-1">
-        <p class="text-sm text-gray-400">Pull A (Miércoles)</p>
-        <p class="text-xl font-bold">{{ pullComparison().pullA.avgVolume | number:'1.0-0' }}</p>
-        <p class="text-xs text-gray-500">vol. promedio</p>
-      </div>
-      <div class="text-2xl font-bold text-gray-600">VS</div>
-      <div class="text-center flex-1">
-        <p class="text-sm text-gray-400">Pull B (Sábado)</p>
-        <p class="text-xl font-bold">{{ pullComparison().pullB.avgVolume | number:'1.0-0' }}</p>
-        <p class="text-xs text-gray-500">vol. promedio</p>
-      </div>
-    </div>
-    <div class="text-center">
-      <span class="inline-block bg-emerald-900/30 text-emerald-400 text-sm font-medium px-3 py-1 rounded-full">
-        Gana: {{ pullComparison().winner === 'A' ? 'Pull A' : pullComparison().winner === 'B' ? 'Pull B' : 'Empate' }}
-      </span>
-    </div>
-  </section>
-
   <!-- Resumen global -->
   <section class="mb-6 bg-gray-900 border border-gray-800 rounded-xl p-4">
     <h2 class="text-lg font-semibold mb-4">Resumen global</h2>

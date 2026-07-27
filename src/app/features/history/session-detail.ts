@@ -36,14 +36,24 @@ export class SessionDetail {
     }
   }
 
-  getDayLabel(dayType: string, _variant: string): string {
+  getDayLabel(dayType: string, _variant: string, date?: string): string {
     const map: Record<string, string> = {
       push: 'Push',
       pull: 'Pull',
       legs: 'Legs',
       abs: 'Abs',
     };
-    return map[dayType] ?? dayType;
+    const label = map[dayType] ?? dayType;
+    if (date) {
+      const dayName = this.getDayName(date);
+      return `${label} (${dayName})`;
+    }
+    return label;
+  }
+
+  private getDayName(iso: string): string {
+    const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+    return days[new Date(iso).getDay()];
   }
 
   getMaxWeight(exercise: WorkoutExercise): number {

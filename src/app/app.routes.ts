@@ -6,7 +6,7 @@ export const routes: Routes = [
     loadComponent: () => import('./features/dashboard/dashboard').then((m) => m.Dashboard),
   },
   {
-    path: 'workout/:dayType/:variant',
+    path: 'workout/:dayType',
     loadComponent: () => import('./features/workout/workout').then((m) => m.Workout),
   },
   {

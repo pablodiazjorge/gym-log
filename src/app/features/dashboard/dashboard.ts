@@ -57,14 +57,19 @@ export class Dashboard {
     }
   }
 
+  getDayName(iso: string): string {
+    const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+    return days[new Date(iso).getDay()];
+  }
+
   startWorkout(day: DayInfo): void {
-    this.router.navigate(['/workout', day.dayType, day.dayVariant]);
+    this.router.navigate(['/workout', day.dayType]);
   }
 
   resumeWorkout(): void {
     const session = this.storage.currentSession();
     if (session) {
-      this.router.navigate(['/workout', session.dayType, session.dayVariant], { queryParams: { resume: 'true' } });
+      this.router.navigate(['/workout', session.dayType], { queryParams: { resume: 'true' } });
     }
   }
 
