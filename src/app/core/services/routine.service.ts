@@ -44,6 +44,18 @@ export class RoutineService {
       choiceGroup: 'push-main',
     },
     {
+      id: 'press-inclinado-smith',
+      name: 'Press inclinado Smith',
+      category: 'push',
+      order: 1,
+      targetSets: 4,
+      targetRepsMin: 10,
+      targetRepsMax: 12,
+      hasWarmupSets: true,
+      warmupSets: 2,
+      choiceGroup: 'push-main',
+    },
+    {
       id: 'pec-deck',
       name: 'Pec Deck / Chest Fly Machine',
       category: 'push',
