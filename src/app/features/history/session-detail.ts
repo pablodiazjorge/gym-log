@@ -32,6 +32,7 @@ export class SessionDetail {
       case 'pull': return '#10b981';
       case 'legs': return '#f59e0b';
       case 'abs': return '#ec4899';
+      case 'additional': return '#a855f7';
       default: return '#71717a';
     }
   }
@@ -42,6 +43,7 @@ export class SessionDetail {
       pull: 'Pull',
       legs: 'Legs',
       abs: 'Abs',
+      additional: 'Extra',
     };
     const label = map[dayType] ?? dayType;
     if (date) {

@@ -341,6 +341,11 @@ export class RoutineService {
     };
   }
 
+  /** Devuelve TODOS los ejercicios de todas las categorías */
+  getAllExercises(): ExerciseTemplate[] {
+    return [...this.allExercises].sort((a, b) => a.category.localeCompare(b.category) || a.order - b.order);
+  }
+
   /** Busca un template por su id */
   getTemplateById(id: string): ExerciseTemplate | undefined {
     return this.allExercises.find((ex) => ex.id === id);

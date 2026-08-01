@@ -76,6 +76,27 @@
     </div>
   </div>
 
+  <!-- Additional Exercise card -->
+  <div class="mb-6">
+    <button (click)="startAdditional()"
+      class="w-full bg-gradient-to-r from-violet-900/20 to-fuchsia-900/20 border border-violet-700/30 hover:border-violet-500/50 rounded-xl p-4 text-left transition-all">
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 bg-violet-500/10">
+          🏃
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex justify-between items-center mb-1">
+            <h3 class="font-semibold text-white">Ejercicio adicional</h3>
+            <svg class="w-5 h-5 text-violet-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+            </svg>
+          </div>
+          <p class="text-sm text-violet-300/60 truncate">Añade cualquier ejercicio libre</p>
+        </div>
+      </div>
+    </button>
+  </div>
+
   <!-- Bottom actions -->
   <div class="space-y-3">
     <div class="flex gap-3">

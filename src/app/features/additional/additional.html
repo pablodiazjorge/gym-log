@@ -1,0 +1,257 @@
+<div class="min-h-screen bg-gray-950 text-white flex flex-col">
+  <!-- ===== PHASE 1: SELECT EXERCISE ===== -->
+  @if (phase() === 'select') {
+    <div class="flex-1 flex flex-col p-4">
+      <div class="text-center mb-6">
+        <h1 class="text-2xl font-bold mb-1">🏃 Ejercicio adicional</h1>
+        <p class="text-gray-400 text-sm">Elige un ejercicio para añadir a tu registro</p>
+      </div>
+
+      <!-- Category filter tabs -->
+      <div class="flex gap-2 overflow-x-auto pb-3 mb-4 scrollbar-hide">
+        @for (cat of categories; track cat.value) {
+          <button (click)="categoryFilter.set(cat.value)"
+            class="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all"
+            [class.bg-gray-800]="categoryFilter() === cat.value"
+            [class.text-white]="categoryFilter() === cat.value"
+            [class.bg-gray-900]="categoryFilter() !== cat.value"
+            [class.text-gray-400]="categoryFilter() !== cat.value"
+            [class.border]="categoryFilter() !== cat.value"
+            [class.border-gray-800]="categoryFilter() !== cat.value"
+            [class.hover:border-gray-600]="categoryFilter() !== cat.value">
+            <span>{{ cat.emoji }}</span>
+            <span>{{ cat.label }}</span>
+          </button>
+        }
+      </div>
+
+      <!-- Exercise list -->
+      <div class="flex-1 overflow-y-auto space-y-2">
+        @for (exercise of filteredExercises(); track exercise.id) {
+          <button (click)="selectExercise(exercise.id)"
+            class="w-full text-left p-4 rounded-xl border transition-all"
+            [class]="selectedTemplateId() === exercise.id
+              ? getCategoryAccent(exercise.category) + ' border-2'
+              : 'border-gray-800 bg-gray-900 hover:border-gray-600'">
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex-1 min-w-0">
+                <p class="font-medium text-white truncate">{{ exercise.name }}</p>
+                <p class="text-xs text-gray-500 mt-0.5">
+                  {{ exercise.targetSets }} series × {{ exercise.targetRepsMin }}-{{ exercise.targetRepsMax }} reps
+                  @if (exercise.hasWarmupSets) { · {{ exercise.warmupSets }} aprox }
+                </p>
+              </div>
+              <span class="text-xs px-2 py-0.5 rounded font-medium flex-shrink-0"
+                [class]="getCategoryBadge(exercise.category)">
+                {{ getCategoryLabel(exercise.category) }}
+              </span>
+            </div>
+          </button>
+        }
+
+        @if (filteredExercises().length === 0) {
+          <div class="text-center py-12">
+            <p class="text-gray-500 text-sm">No hay ejercicios en esta categoría</p>
+          </div>
+        }
+      </div>
+
+      <!-- Confirm button -->
+      <div class="pt-4 space-y-3 pb-20">
+        <button (click)="confirmExercise()"
+          [disabled]="!selectedTemplateId()"
+          class="w-full py-4 rounded-xl font-bold text-white transition-colors min-h-[48px]"
+          [class]="getAccentBtnClass()">
+          {{ selectedTemplateId() ? 'Empezar → ' + (selectedTemplate()?.name ?? '') : 'Selecciona un ejercicio' }}
+        </button>
+        <button (click)="goHome()"
+          class="w-full py-3 text-gray-500 hover:text-gray-300 text-sm transition-colors">
+          Volver
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- ===== PHASE 2: WORKOUT (add sets) ===== -->
+  @if (phase() === 'workout' && selectedTemplate(); as template) {
+    <!-- Header -->
+    <header class="bg-gray-900/95 backdrop-blur border-b border-gray-800 px-4 py-3 sticky top-0 z-10">
+      <div class="flex items-center justify-between mb-1">
+        <button (click)="backToSelect()"
+          class="p-2 -ml-2 text-gray-400 hover:text-white min-h-[48px] min-w-[48px] transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+          </svg>
+        </button>
+        <div class="text-center">
+          <span class="text-xs px-2 py-0.5 rounded font-medium" [class]="getCategoryBadge(template.category)">
+            {{ getCategoryLabel(template.category) }}
+          </span>
+        </div>
+        <button (click)="discardWorkout()"
+          class="p-2 -mr-2 text-gray-500 hover:text-rose-400 min-h-[48px] min-w-[48px] transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+          </svg>
+        </button>
+      </div>
+      <h1 class="text-lg font-bold text-center">{{ template.name }}</h1>
+      <p class="text-sm text-gray-400 text-center">
+        {{ completedSets() }}/{{ totalSets() }} series · {{ durationMinutes() }} min
+      </p>
+    </header>
+
+    <!-- Completed sets list -->
+    <main class="flex-1 overflow-y-auto p-4 space-y-3">
+      @for (set of sets(); track set.setNumber; let i = $index) {
+        <div class="flex items-center gap-3 py-3 px-4 rounded-xl border"
+          [class.bg-rose-500/5]="set.skipped"
+          [class.border-rose-500/20]="set.skipped"
+          [class.bg-emerald-500/5]="!set.skipped && !set.isWarmup"
+          [class.border-emerald-500/20]="!set.skipped && !set.isWarmup"
+          [class.bg-amber-900/10]="!set.skipped && set.isWarmup"
+          [class.border-amber-700/20]="!set.skipped && set.isWarmup">
+          <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+            [class.bg-rose-500/20]="set.skipped"
+            [class.text-rose-300]="set.skipped"
+            [class.bg-emerald-500/20]="!set.skipped && !set.isWarmup"
+            [class.text-emerald-300]="!set.skipped && !set.isWarmup"
+            [class.bg-amber-900/40]="!set.skipped && set.isWarmup"
+            [class.text-amber-400]="!set.skipped && set.isWarmup">
+            {{ set.setNumber }}
+          </span>
+
+          @if (set.skipped) {
+            <span class="text-xs px-1.5 py-0.5 rounded bg-rose-900/40 text-rose-400 font-medium flex-shrink-0">Saltada</span>
+          } @else if (set.isWarmup) {
+            <span class="text-xs px-1.5 py-0.5 rounded bg-amber-900/40 text-amber-400 font-medium flex-shrink-0">Aprox</span>
+          }
+
+          <span class="flex-1 text-sm tabular-nums">
+            @if (set.skipped) {
+              <span class="text-gray-500 line-through">—</span>
+            } @else {
+              <span class="text-white font-semibold">{{ set.weightKg }}</span>
+              <span class="text-gray-500"> kg × </span>
+              <span class="text-white font-semibold">{{ set.reps }}</span>
+              <span class="text-gray-500"> reps</span>
+              @if ((set.partialReps ?? 0) > 0) {
+                <span class="text-gray-500"> + </span>
+                <span class="text-violet-400 font-semibold">{{ set.partialReps }}</span>
+                <span class="text-violet-500 text-xs"> parc.</span>
+              }
+            }
+          </span>
+
+          <span class="text-xs text-gray-500 flex-shrink-0">RIR {{ set.rir }}</span>
+
+          <button (click)="removeSet(i)"
+            class="p-1 text-gray-600 hover:text-rose-400 transition-colors min-h-[32px] min-w-[32px] flex items-center justify-center">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+      }
+
+      @if (sets().length === 0) {
+        <div class="text-center py-16">
+          <p class="text-4xl mb-4">📝</p>
+          <p class="text-gray-500 text-sm">Añade tu primera serie abajo</p>
+        </div>
+      }
+    </main>
+
+    <!-- Add set form (fixed at bottom) -->
+    <footer class="bg-gray-900/95 backdrop-blur border-t border-gray-800 px-4 py-3 sticky bottom-0 pb-16">
+      <!-- Warmup toggle -->
+      <div class="flex items-center gap-2 mb-3">
+        <button (click)="toggleWarmup()"
+          class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+          [class.bg-amber-900/40]="currentIsWarmup()"
+          [class.text-amber-400]="currentIsWarmup()"
+          [class.bg-gray-800]="!currentIsWarmup()"
+          [class.text-gray-400]="!currentIsWarmup()">
+          <span>{{ currentIsWarmup() ? '🔥 Aproximación' : '💪 Trabajo' }}</span>
+        </button>
+      </div>
+
+      <!-- 3-column grid: Weight | Reps | RIR -->
+      <div class="grid grid-cols-3 gap-3 mb-3">
+        <!-- PESO -->
+        <div class="bg-gray-800 rounded-lg p-2">
+          <label class="block text-xs text-gray-500 text-center mb-1">Peso</label>
+          <div class="flex items-center justify-between">
+            <button (click)="adjustWeight(-2.5)"
+              class="w-7 h-7 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center justify-center text-sm font-bold text-white min-h-[28px] transition-colors">−</button>
+            <div class="flex-1 text-center">
+              <input type="number" [ngModel]="currentWeight()" (ngModelChange)="currentWeight.set($event)"
+                step="0.5" min="0"
+                class="w-full bg-transparent text-center text-lg font-bold text-white focus:outline-none tabular-nums" />
+              <span class="text-xs text-gray-500">kg</span>
+            </div>
+            <button (click)="adjustWeight(0.5)"
+              class="w-7 h-7 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center justify-center text-sm font-bold text-white min-h-[28px] transition-colors">+</button>
+          </div>
+        </div>
+
+        <!-- REPS -->
+        <div class="bg-gray-800 rounded-lg p-2">
+          <label class="block text-xs text-gray-500 text-center mb-1">Reps</label>
+          <div class="flex items-center justify-between">
+            <button (click)="adjustReps(-1)"
+              class="w-7 h-7 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center justify-center text-sm font-bold text-white min-h-[28px] transition-colors">−</button>
+            <div class="flex-1 text-center">
+              <input type="number" [ngModel]="currentReps()" (ngModelChange)="currentReps.set($event)"
+                min="0"
+                class="w-full bg-transparent text-center text-lg font-bold text-white focus:outline-none tabular-nums" />
+            </div>
+            <button (click)="adjustReps(1)"
+              class="w-7 h-7 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center justify-center text-sm font-bold text-white min-h-[28px] transition-colors">+</button>
+          </div>
+        </div>
+
+        <!-- RIR -->
+        <div class="bg-gray-800 rounded-lg p-2">
+          <label class="block text-xs text-gray-500 text-center mb-1">RIR</label>
+          <div class="flex items-center justify-between">
+            <button (click)="adjustRir(-0.5)"
+              class="w-7 h-7 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center justify-center text-sm font-bold text-white min-h-[28px] transition-colors">−</button>
+            <div class="flex-1 text-center">
+              <input type="number" [ngModel]="currentRir()" (ngModelChange)="currentRir.set($event)"
+                step="0.5" min="0"
+                class="w-full bg-transparent text-center text-lg font-bold text-white focus:outline-none tabular-nums" />
+            </div>
+            <button (click)="adjustRir(0.5)"
+              class="w-7 h-7 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center justify-center text-sm font-bold text-white min-h-[28px] transition-colors">+</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Partial reps -->
+      <div class="flex items-center gap-3 mb-3">
+        <span class="text-xs text-gray-500">Parciales:</span>
+        <button (click)="adjustPartialReps(-1)"
+          class="w-7 h-7 bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center justify-center text-sm font-bold text-white transition-colors">−</button>
+        <span class="text-sm font-semibold text-violet-400 w-6 text-center tabular-nums">{{ currentPartialReps() }}</span>
+        <button (click)="adjustPartialReps(1)"
+          class="w-7 h-7 bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center justify-center text-sm font-bold text-white transition-colors">+</button>
+      </div>
+
+      <!-- Add set button -->
+      <button (click)="addSet()"
+        class="w-full py-3.5 rounded-xl font-bold text-white transition-colors min-h-[48px]"
+        [class]="getAccentBtnClass()">
+        + Añadir serie {{ nextSetNumber() }}
+      </button>
+
+      <!-- Finish button -->
+      @if (sets().length > 0) {
+        <button (click)="finishWorkout()"
+          class="w-full mt-3 py-3 bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30 font-medium rounded-xl text-sm transition-colors">
+          ✅ Guardar y cerrar ({{ totalSets() }} series)
+        </button>
+      }
+    </footer>
+  }
+</div>

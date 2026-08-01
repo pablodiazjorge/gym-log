@@ -61,7 +61,7 @@ export interface GlobalMetrics {
   totalSessions: number;
   totalExercises: number;
   totalSets: number;
-  totalWorkoutsByDayType: { push: number; pull: number; legs: number; abs: number };
+  totalWorkoutsByDayType: { push: number; pull: number; legs: number; abs: number; additional: number };
 
   // Frecuencia
   avgSessionsPerWeek: number;
@@ -533,7 +533,7 @@ export class AnalyticsService {
     const totalSessions = completed.length;
 
     // Conteo por dayType
-    const totalWorkoutsByDayType = { push: 0, pull: 0, legs: 0, abs: 0 };
+    const totalWorkoutsByDayType = { push: 0, pull: 0, legs: 0, abs: 0, additional: 0 };
     const uniqueExercises = new Set<string>();
     let totalSets = 0;
 

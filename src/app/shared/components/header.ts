@@ -28,6 +28,7 @@ export class Header {
     if (url.startsWith('/workout')) return 'Entreno';
     if (url.startsWith('/history') && url.split('/').length > 2) return 'Detalle';
     if (url.startsWith('/history')) return 'Historial';
+    if (url.startsWith('/additional')) return 'Ejercicio adicional';
     return 'Gym Tracker';
   });
 

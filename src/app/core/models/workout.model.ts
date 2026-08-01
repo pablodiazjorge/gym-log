@@ -42,7 +42,7 @@ export interface WorkoutExercise {
 export interface WorkoutSession {
   id: string;
   date: string; // ISO 8601
-  dayType: 'push' | 'pull' | 'legs' | 'abs';
+  dayType: 'push' | 'pull' | 'legs' | 'abs' | 'additional';
   dayVariant: 'A' | 'B';
   exercises: WorkoutExercise[];
   durationMinutes?: number;

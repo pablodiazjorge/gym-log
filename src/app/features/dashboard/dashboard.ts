@@ -66,6 +66,10 @@ export class Dashboard {
     this.router.navigate(['/workout', day.dayType]);
   }
 
+  startAdditional(): void {
+    this.router.navigate(['/additional']);
+  }
+
   resumeWorkout(): void {
     const session = this.storage.currentSession();
     if (session) {
