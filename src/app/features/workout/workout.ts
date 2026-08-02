@@ -141,10 +141,10 @@ export class Workout {
     this.createNewSessionFromTemplates(dayType, variant, filtered);
   }
 
-  /** ¿Están todos los choice groups seleccionados? */
-  readonly allChoicesSelected = computed(() => {
+  /** ¿Hay al menos un ejercicio seleccionado? */
+  readonly hasAnySelection = computed(() => {
     const sel = this.selectedChoices();
-    return Object.values(sel).every((id) => id !== '');
+    return Object.values(sel).some((id) => id !== '');
   });
 
   private createNewSession(dayType: 'push' | 'pull' | 'legs' | 'abs', variant: 'A' | 'B'): void {

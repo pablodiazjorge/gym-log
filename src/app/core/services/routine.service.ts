@@ -182,6 +182,7 @@ export class RoutineService {
       targetRirMin: 1,
       targetRirMax: 2,
       choiceGroup: 'legs-main',
+      notes: 'Pies bajos, alineados con hombros. Rango controlado, lumbar apoyado.',
     },
     {
       id: 'curl-femoral-sentado',
@@ -194,6 +195,21 @@ export class RoutineService {
       hasWarmupSets: false,
       targetRirMin: 1,
       targetRirMax: 2,
+      choiceGroup: 'legs-femoral',
+    },
+    {
+      id: 'rdl-una-pierna',
+      name: 'RDL a una pierna',
+      category: 'legs',
+      order: 2,
+      targetSets: 3,
+      targetRepsMin: 10,
+      targetRepsMax: 12,
+      hasWarmupSets: false,
+      targetRirMin: 2,
+      targetRirMax: 2,
+      choiceGroup: 'legs-femoral',
+      notes: 'Torso recto, pierna trasera como contrapeso.',
     },
     {
       id: 'hip-thrust',
@@ -206,30 +222,60 @@ export class RoutineService {
       hasWarmupSets: false,
       targetRirMin: 1,
       targetRirMax: 2,
+      choiceGroup: 'legs-glute',
     },
     {
       id: 'abductor-maquina',
       name: 'Abductor en máquina',
       category: 'legs',
-      order: 4,
+      order: 3,
       targetSets: 3,
       targetRepsMin: 15,
       targetRepsMax: 20,
       hasWarmupSets: false,
       targetRirMin: 2,
       targetRirMax: 2,
+      choiceGroup: 'legs-glute',
+      notes: 'Inclinado 10-20° hacia adelante. Pausa en contracción.',
     },
     {
       id: 'elevacion-gemelos-maquina-pie',
       name: 'Elevación de gemelos en máquina de pie',
       category: 'legs',
-      order: 5,
+      order: 4,
       targetSets: 2,
       targetRepsMin: 15,
       targetRepsMax: 20,
       hasWarmupSets: false,
       targetRirMin: 1,
       targetRirMax: 1,
+      choiceGroup: 'legs-calves',
+    },
+    {
+      id: 'elevacion-gemelos-sentado',
+      name: 'Elevación de gemelos sentado',
+      category: 'legs',
+      order: 4,
+      targetSets: 2,
+      targetRepsMin: 15,
+      targetRepsMax: 20,
+      hasWarmupSets: false,
+      targetRirMin: 1,
+      targetRirMax: 1,
+      choiceGroup: 'legs-calves',
+    },
+    {
+      id: 'bulgara-smith',
+      name: 'Búlgara Smith',
+      category: 'legs',
+      order: 5,
+      targetSets: 3,
+      targetRepsMin: 8,
+      targetRepsMax: 12,
+      hasWarmupSets: false,
+      targetRirMin: 1,
+      targetRirMax: 2,
+      choiceGroup: 'legs-bulgara',
     },
 
     // ── ABS (elegir un ejercicio) ──
@@ -310,6 +356,10 @@ export class RoutineService {
       case 'pull-main': return 'Ejercicio principal de espalda';
       case 'pull-curl': return 'Ejercicio de bíceps';
       case 'legs-main': return 'Ejercicio principal de pierna';
+      case 'legs-femoral': return 'Ejercicio de femoral';
+      case 'legs-glute': return 'Ejercicio de glúteo';
+      case 'legs-calves': return 'Ejercicio de gemelos';
+      case 'legs-bulgara': return 'Búlgara (extra)';
       case 'abs-main': return 'Ejercicio de abdominales';
       default: return 'Elige ejercicio';
     }
