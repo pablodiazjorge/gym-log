@@ -18,13 +18,14 @@ export class Additional {
   private readonly storage = inject(StorageService);
   private readonly router = inject(Router);
 
-  // ─── Phases: 'select' | 'workout' | 'summary' ───
-  readonly phase = signal<'select' | 'workout' | 'summary'>('select');
+  // ─── Phases: 'select' | 'workout' ───
+  readonly phase = signal<'select' | 'workout'>('select');
 
   // ─── Exercise selection phase ───
   readonly allExercises = this.routineService.getAllExercises();
   readonly categoryFilter = signal<Category | 'all'>('all');
-  readonly selectedTemplateId = signal<string>('');
+  /** IDs de los ejercicios seleccionados (multi-select) */
+  readonly selectedTemplateIds = signal<string[]>([]);
 
   readonly categories: { value: Category | 'all'; label: string; emoji: string }[] = [
     { value: 'all', label: 'Todos', emoji: '🏋️' },
@@ -40,15 +41,36 @@ export class Additional {
     return this.allExercises.filter((ex) => ex.category === cat);
   });
 
-  readonly selectedTemplate = computed(() =>
-    this.allExercises.find((ex) => ex.id === this.selectedTemplateId()) ?? null,
+  /** Templates seleccionados, en orden */
+  readonly selectedTemplates = computed(() =>
+    this.selectedTemplateIds()
+      .map((id) => this.allExercises.find((ex) => ex.id === id))
+      .filter((t): t is ExerciseTemplate => !!t),
   );
 
   // ─── Workout phase ───
-  readonly sets = signal<WorkoutSet[]>([]);
-  readonly nextSetNumber = computed(() => this.sets().length + 1);
+  /** Sets por ejercicio: Record<templateId, WorkoutSet[]> */
+  readonly exercisesData = signal<Record<string, WorkoutSet[]>>({});
+  /** Índice del ejercicio actual */
+  readonly currentExerciseIndex = signal(0);
   readonly startTime = signal(Date.now());
   readonly durationMinutes = computed(() => Math.round((Date.now() - this.startTime()) / 60000));
+
+  /** Template del ejercicio actual */
+  readonly currentTemplate = computed(() => {
+    const templates = this.selectedTemplates();
+    const idx = this.currentExerciseIndex();
+    return templates[idx] ?? null;
+  });
+
+  /** Sets del ejercicio actual */
+  readonly currentSets = computed(() => {
+    const t = this.currentTemplate();
+    if (!t) return [];
+    return this.exercisesData()[t.id] ?? [];
+  });
+
+  readonly nextSetNumber = computed(() => this.currentSets().length + 1);
 
   // Current set being edited
   readonly currentWeight = signal(0);
@@ -57,15 +79,22 @@ export class Additional {
   readonly currentPartialReps = signal(0);
   readonly currentIsWarmup = signal(false);
 
-  readonly completedSets = computed(() => this.sets().filter((s) => s.completed).length);
-  readonly totalSets = computed(() => this.sets().length);
-  readonly allSetsDone = computed(() => this.sets().length > 0 && this.sets().every((s) => s.completed));
+  readonly completedSets = computed(() => this.currentSets().filter((s) => s.completed).length);
+  readonly totalSets = computed(() => this.currentSets().length);
 
-  // Max weight across completed work sets
-  readonly maxWeight = computed(() => {
-    const workSets = this.sets().filter((s) => s.completed && !s.isWarmup && !s.skipped);
-    return workSets.length > 0 ? Math.max(...workSets.map((s) => s.weightKg)) : 0;
+  /** Si hay al menos una serie en cualquier ejercicio */
+  readonly hasAnySets = computed(() => {
+    const data = this.exercisesData();
+    return Object.values(data).some((sets) => sets.length > 0);
   });
+
+  /** Número total de ejercicios en la rutina */
+  readonly totalExercises = computed(() => this.selectedTemplates().length);
+
+  /** Si estamos en el último ejercicio */
+  readonly isLastExercise = computed(() =>
+    this.currentExerciseIndex() >= this.selectedTemplates().length - 1,
+  );
 
   // ─── Category helpers ───
   getCategoryLabel(cat: string): string {
@@ -109,7 +138,7 @@ export class Additional {
   }
 
   getAccentBtnClass(): string {
-    const t = this.selectedTemplate();
+    const t = this.currentTemplate();
     if (!t) return 'bg-gray-800 text-gray-500 cursor-not-allowed';
     switch (t.category) {
       case 'push': return 'bg-blue-600 hover:bg-blue-500';
@@ -120,25 +149,81 @@ export class Additional {
     }
   }
 
-  // ─── Actions ───
-
-  selectExercise(templateId: string): void {
-    this.selectedTemplateId.set(templateId);
+  /** Obtiene clase de acento por categoría */
+  getAccentClassByCategory(cat: string): string {
+    switch (cat) {
+      case 'push': return 'bg-blue-600 hover:bg-blue-500';
+      case 'pull': return 'bg-emerald-600 hover:bg-emerald-500';
+      case 'legs': return 'bg-amber-600 hover:bg-amber-500';
+      case 'abs': return 'bg-pink-600 hover:bg-pink-500';
+      default: return 'bg-gray-600';
+    }
   }
 
-  confirmExercise(): void {
+  // ─── Selection actions ───
+
+  /** Toggle de selección múltiple */
+  toggleExercise(templateId: string): void {
+    this.selectedTemplateIds.update((ids) => {
+      if (ids.includes(templateId)) {
+        return ids.filter((id) => id !== templateId);
+      }
+      return [...ids, templateId];
+    });
+  }
+
+  /** Confirma selección e inicia la rutina */
+  confirmExercises(): void {
+    if (this.selectedTemplateIds().length === 0) return;
+    // Inicializar datos vacíos para cada ejercicio
+    const data: Record<string, WorkoutSet[]> = {};
+    for (const id of this.selectedTemplateIds()) {
+      data[id] = [];
+    }
+    this.exercisesData.set(data);
+    this.currentExerciseIndex.set(0);
     this.phase.set('workout');
     this.startTime.set(Date.now());
   }
 
   backToSelect(): void {
-    if (this.sets().length > 0 && !confirm('¿Volver atrás? Perderás las series que hayas añadido.')) return;
+    if (this.hasAnySets() && !confirm('¿Volver atrás? Perderás todas las series que hayas añadido.')) return;
     this.phase.set('select');
-    this.sets.set([]);
+    this.exercisesData.set({});
+    this.currentExerciseIndex.set(0);
+    this.selectedTemplateIds.set([]);
     this.resetCurrentSet();
   }
 
+  // ─── Workout navigation ───
+
+  goToExercise(index: number): void {
+    if (index >= 0 && index < this.totalExercises()) {
+      this.currentExerciseIndex.set(index);
+      this.resetCurrentSet();
+    }
+  }
+
+  nextExercise(): void {
+    if (!this.isLastExercise()) {
+      this.currentExerciseIndex.update((i) => i + 1);
+      this.resetCurrentSet();
+    }
+  }
+
+  previousExercise(): void {
+    if (this.currentExerciseIndex() > 0) {
+      this.currentExerciseIndex.update((i) => i - 1);
+      this.resetCurrentSet();
+    }
+  }
+
+  // ─── Set management ───
+
   addSet(): void {
+    const t = this.currentTemplate();
+    if (!t) return;
+
     const s: WorkoutSet = {
       setNumber: this.nextSetNumber(),
       isWarmup: this.currentIsWarmup(),
@@ -149,16 +234,26 @@ export class Additional {
       completed: true,
       skipped: false,
     };
-    this.sets.update((prev) => [...prev, s]);
+
+    this.exercisesData.update((data) => ({
+      ...data,
+      [t.id]: [...(data[t.id] ?? []), s],
+    }));
     this.resetCurrentSet();
     if (navigator.vibrate) navigator.vibrate(30);
   }
 
   removeSet(index: number): void {
-    this.sets.update((prev) => {
-      const updated = prev.filter((_, i) => i !== index);
-      // Re-number sets
-      return updated.map((s, i) => ({ ...s, setNumber: i + 1 }));
+    const t = this.currentTemplate();
+    if (!t) return;
+
+    this.exercisesData.update((data) => {
+      const current = data[t.id] ?? [];
+      const updated = current.filter((_, i) => i !== index);
+      return {
+        ...data,
+        [t.id]: updated.map((s, i) => ({ ...s, setNumber: i + 1 })),
+      };
     });
   }
 
@@ -193,21 +288,28 @@ export class Additional {
   // ─── Finish / Save ───
 
   finishWorkout(): void {
-    const t = this.selectedTemplate();
-    if (!t || this.sets().length === 0) return;
+    if (!this.hasAnySets()) return;
 
-    const exercise: WorkoutExercise = {
-      templateId: t.id,
-      exerciseName: t.name,
-      sets: this.sets(),
-    };
+    const exercises: WorkoutExercise[] = this.selectedTemplates()
+      .map((t) => {
+        const sets = this.exercisesData()[t.id] ?? [];
+        if (sets.length === 0) return null; // skip exercises with no sets
+        return {
+          templateId: t.id,
+          exerciseName: t.name,
+          sets,
+        } as WorkoutExercise;
+      })
+      .filter((e): e is WorkoutExercise => !!e);
+
+    if (exercises.length === 0) return;
 
     const session: WorkoutSession = {
       id: `ws-${new Date().toISOString().slice(0, 10)}-additional-${String(Date.now()).slice(-4)}`,
       date: new Date().toISOString(),
       dayType: 'additional',
       dayVariant: 'A',
-      exercises: [exercise],
+      exercises,
       durationMinutes: this.durationMinutes(),
       completed: true,
     };
@@ -217,7 +319,7 @@ export class Additional {
   }
 
   discardWorkout(): void {
-    if (confirm('¿Descartar este ejercicio adicional?')) {
+    if (confirm('¿Descartar esta rutina adicional?')) {
       this.router.navigate(['/']);
     }
   }

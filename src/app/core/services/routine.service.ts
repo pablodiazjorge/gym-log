@@ -96,7 +96,7 @@ export class RoutineService {
       hasWarmupSets: false,
     },
 
-    // ── PULL (elegir: jalón pecho barra o mag neutro; curl banco inclinado o martillo) ──
+    // ── PULL (elegir: jalón pecho barra o mag neutro o dominadas o jalón 1 mano; curl banco inclinado o martillo) ──
     {
       id: 'jalon-pecho-agarre-ancho',
       name: 'Jalón al pecho (barra y straps, agarre ancho, prono)',
@@ -120,6 +120,32 @@ export class RoutineService {
       hasWarmupSets: true,
       warmupSets: 2,
       choiceGroup: 'pull-main',
+    },
+    {
+      id: 'dominadas-agarre-prono',
+      name: 'Dominadas con agarre prono',
+      category: 'pull',
+      order: 1,
+      targetSets: 4,
+      targetRepsMin: 6,
+      targetRepsMax: 10,
+      hasWarmupSets: true,
+      warmupSets: 2,
+      choiceGroup: 'pull-main',
+      notes: 'Agarre prono ancho. Si no llegas a 6, usar banda elástica o lastre negativo.',
+    },
+    {
+      id: 'jalon-lat-1-mano',
+      name: 'Jalón lat (1 mano)',
+      category: 'pull',
+      order: 1,
+      targetSets: 4,
+      targetRepsMin: 8,
+      targetRepsMax: 12,
+      hasWarmupSets: true,
+      warmupSets: 2,
+      choiceGroup: 'pull-main',
+      notes: 'Agarrar el asa individual. Tirar hacia el pecho, codo pegado al cuerpo.',
     },
     {
       id: 'remo-t-agarre-neutro',
@@ -154,7 +180,7 @@ export class RoutineService {
       choiceGroup: 'pull-curl',
     },
 
-    // ── LEGS (ejercicio principal a elegir: hack squat o prensa inclinada) ──
+    // ── LEGS (ejercicio principal a elegir: hack squat, prensa inclinada o sentadillas lastradas) ──
     {
       id: 'hack-squat-maquina',
       name: 'Hack squat en máquina',
@@ -183,6 +209,21 @@ export class RoutineService {
       targetRirMax: 2,
       choiceGroup: 'legs-main',
       notes: 'Pies bajos, alineados con hombros. Rango controlado, lumbar apoyado.',
+    },
+    {
+      id: 'sentadillas-lastradas-casa',
+      name: 'Sentadillas lastradas (casa)',
+      category: 'legs',
+      order: 1,
+      targetSets: 4,
+      targetRepsMin: 10,
+      targetRepsMax: 15,
+      hasWarmupSets: true,
+      warmupSets: 2,
+      targetRirMin: 1,
+      targetRirMax: 2,
+      choiceGroup: 'legs-main',
+      notes: 'Con mochila lastrada o mancuernas en casa. Rango profundo controlado.',
     },
     {
       id: 'curl-femoral-sentado',

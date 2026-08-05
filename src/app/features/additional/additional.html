@@ -1,10 +1,16 @@
 <div class="min-h-screen bg-gray-950 text-white flex flex-col">
-  <!-- ===== PHASE 1: SELECT EXERCISE ===== -->
+  <!-- ===== PHASE 1: SELECT EXERCISES (multi-select) ===== -->
   @if (phase() === 'select') {
     <div class="flex-1 flex flex-col p-4">
       <div class="text-center mb-6">
-        <h1 class="text-2xl font-bold mb-1">🏃 Ejercicio adicional</h1>
-        <p class="text-gray-400 text-sm">Elige un ejercicio para añadir a tu registro</p>
+        <h1 class="text-2xl font-bold mb-1">🏋️ Rutina adicional</h1>
+        <p class="text-gray-400 text-sm">
+          @if (selectedTemplateIds().length === 0) {
+            Elige uno o varios ejercicios para crear tu rutina
+          } @else {
+            <span class="text-violet-400 font-medium">{{ selectedTemplateIds().length }} ejercicio(s) seleccionado(s)</span>
+          }
+        </p>
       </div>
 
       <!-- Category filter tabs -->
@@ -25,27 +31,36 @@
         }
       </div>
 
-      <!-- Exercise list -->
+      <!-- Exercise list with checkboxes -->
       <div class="flex-1 overflow-y-auto space-y-2">
         @for (exercise of filteredExercises(); track exercise.id) {
-          <button (click)="selectExercise(exercise.id)"
-            class="w-full text-left p-4 rounded-xl border transition-all"
-            [class]="selectedTemplateId() === exercise.id
+          <button (click)="toggleExercise(exercise.id)"
+            class="w-full text-left p-4 rounded-xl border transition-all flex items-center gap-3"
+            [class]="selectedTemplateIds().includes(exercise.id)
               ? getCategoryAccent(exercise.category) + ' border-2'
               : 'border-gray-800 bg-gray-900 hover:border-gray-600'">
-            <div class="flex items-start justify-between gap-3">
-              <div class="flex-1 min-w-0">
-                <p class="font-medium text-white truncate">{{ exercise.name }}</p>
-                <p class="text-xs text-gray-500 mt-0.5">
-                  {{ exercise.targetSets }} series × {{ exercise.targetRepsMin }}-{{ exercise.targetRepsMax }} reps
-                  @if (exercise.hasWarmupSets) { · {{ exercise.warmupSets }} aprox }
-                </p>
-              </div>
-              <span class="text-xs px-2 py-0.5 rounded font-medium flex-shrink-0"
-                [class]="getCategoryBadge(exercise.category)">
-                {{ getCategoryLabel(exercise.category) }}
-              </span>
+            <!-- Checkbox -->
+            <span class="w-6 h-6 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-colors"
+              [class.bg-violet-600]="selectedTemplateIds().includes(exercise.id)"
+              [class.border-violet-600]="selectedTemplateIds().includes(exercise.id)"
+              [class.border-gray-600]="!selectedTemplateIds().includes(exercise.id)">
+              @if (selectedTemplateIds().includes(exercise.id)) {
+                <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                </svg>
+              }
+            </span>
+            <div class="flex-1 min-w-0">
+              <p class="font-medium text-white truncate">{{ exercise.name }}</p>
+              <p class="text-xs text-gray-500 mt-0.5">
+                {{ exercise.targetSets }} series × {{ exercise.targetRepsMin }}-{{ exercise.targetRepsMax }} reps
+                @if (exercise.hasWarmupSets) { · {{ exercise.warmupSets }} aprox }
+              </p>
             </div>
+            <span class="text-xs px-2 py-0.5 rounded font-medium flex-shrink-0"
+              [class]="getCategoryBadge(exercise.category)">
+              {{ getCategoryLabel(exercise.category) }}
+            </span>
           </button>
         }
 
@@ -58,11 +73,11 @@
 
       <!-- Confirm button -->
       <div class="pt-4 space-y-3 pb-20">
-        <button (click)="confirmExercise()"
-          [disabled]="!selectedTemplateId()"
+        <button (click)="confirmExercises()"
+          [disabled]="selectedTemplateIds().length === 0"
           class="w-full py-4 rounded-xl font-bold text-white transition-colors min-h-[48px]"
-          [class]="getAccentBtnClass()">
-          {{ selectedTemplateId() ? 'Empezar → ' + (selectedTemplate()?.name ?? '') : 'Selecciona un ejercicio' }}
+          [class]="selectedTemplateIds().length > 0 ? 'bg-violet-600 hover:bg-violet-500' : 'bg-gray-800 text-gray-500 cursor-not-allowed'">
+          {{ selectedTemplateIds().length > 0 ? 'Empezar rutina (' + selectedTemplateIds().length + ' ejercicios) →' : 'Selecciona al menos un ejercicio' }}
         </button>
         <button (click)="goHome()"
           class="w-full py-3 text-gray-500 hover:text-gray-300 text-sm transition-colors">
@@ -72,11 +87,11 @@
     </div>
   }
 
-  <!-- ===== PHASE 2: WORKOUT (add sets) ===== -->
-  @if (phase() === 'workout' && selectedTemplate(); as template) {
+  <!-- ===== PHASE 2: WORKOUT (multi-exercise) ===== -->
+  @if (phase() === 'workout' && currentTemplate(); as template) {
     <!-- Header -->
     <header class="bg-gray-900/95 backdrop-blur border-b border-gray-800 px-4 py-3 sticky top-0 z-10">
-      <div class="flex items-center justify-between mb-1">
+      <div class="flex items-center justify-between mb-2">
         <button (click)="backToSelect()"
           class="p-2 -ml-2 text-gray-400 hover:text-white min-h-[48px] min-w-[48px] transition-colors">
           <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -95,15 +110,38 @@
           </svg>
         </button>
       </div>
+
+      <!-- Exercise name -->
       <h1 class="text-lg font-bold text-center">{{ template.name }}</h1>
       <p class="text-sm text-gray-400 text-center">
         {{ completedSets() }}/{{ totalSets() }} series · {{ durationMinutes() }} min
       </p>
+
+      <!-- Progress dots for exercise navigation -->
+      <div class="flex items-center justify-center gap-2 mt-3">
+        @for (tpl of selectedTemplates(); track tpl.id; let i = $index) {
+          <button (click)="goToExercise(i)"
+            class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all"
+            [class.bg-violet-600]="i === currentExerciseIndex()"
+            [class.text-white]="i === currentExerciseIndex()"
+            [class.bg-gray-800]="i !== currentExerciseIndex()"
+            [class.text-gray-400]="i !== currentExerciseIndex()"
+            [class.hover:bg-gray-700]="i !== currentExerciseIndex()"
+            [class.ring-2]="i === currentExerciseIndex()"
+            [class.ring-violet-400/50]="i === currentExerciseIndex()"
+            [title]="tpl.name">
+            {{ i + 1 }}
+          </button>
+          @if (i < selectedTemplates().length - 1) {
+            <span class="w-4 h-px bg-gray-700"></span>
+          }
+        }
+      </div>
     </header>
 
     <!-- Completed sets list -->
     <main class="flex-1 overflow-y-auto p-4 space-y-3">
-      @for (set of sets(); track set.setNumber; let i = $index) {
+      @for (set of currentSets(); track set.setNumber; let i = $index) {
         <div class="flex items-center gap-3 py-3 px-4 rounded-xl border"
           [class.bg-rose-500/5]="set.skipped"
           [class.border-rose-500/20]="set.skipped"
@@ -154,7 +192,7 @@
         </div>
       }
 
-      @if (sets().length === 0) {
+      @if (currentSets().length === 0) {
         <div class="text-center py-16">
           <p class="text-4xl mb-4">📝</p>
           <p class="text-gray-500 text-sm">Añade tu primera serie abajo</p>
@@ -164,6 +202,32 @@
 
     <!-- Add set form (fixed at bottom) -->
     <footer class="bg-gray-900/95 backdrop-blur border-t border-gray-800 px-4 py-3 sticky bottom-0 pb-16">
+      <!-- Exercise navigation buttons -->
+      <div class="flex items-center gap-2 mb-3">
+        <button (click)="previousExercise()"
+          [disabled]="currentExerciseIndex() === 0"
+          class="flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors"
+          [class.bg-gray-800]="currentExerciseIndex() > 0"
+          [class.text-gray-300]="currentExerciseIndex() > 0"
+          [class.hover:bg-gray-700]="currentExerciseIndex() > 0"
+          [class.bg-gray-900]="currentExerciseIndex() === 0"
+          [class.text-gray-600]="currentExerciseIndex() === 0"
+          [class.cursor-not-allowed]="currentExerciseIndex() === 0">
+          ← Anterior
+        </button>
+        <span class="text-xs text-gray-500 flex-shrink-0">
+          {{ currentExerciseIndex() + 1 }} / {{ totalExercises() }}
+        </span>
+        @if (!isLastExercise()) {
+          <button (click)="nextExercise()"
+            class="flex-1 py-2 px-3 rounded-lg text-xs font-medium bg-violet-600/30 text-violet-300 hover:bg-violet-600/50 transition-colors">
+            Siguiente →
+          </button>
+        } @else {
+          <div class="flex-1"></div>
+        }
+      </div>
+
       <!-- Warmup toggle -->
       <div class="flex items-center gap-2 mb-3">
         <button (click)="toggleWarmup()"
@@ -245,11 +309,11 @@
         + Añadir serie {{ nextSetNumber() }}
       </button>
 
-      <!-- Finish button -->
-      @if (sets().length > 0) {
+      <!-- Finish button (visible when any exercise has sets) -->
+      @if (hasAnySets()) {
         <button (click)="finishWorkout()"
           class="w-full mt-3 py-3 bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30 font-medium rounded-xl text-sm transition-colors">
-          ✅ Guardar y cerrar ({{ totalSets() }} series)
+          ✅ Guardar rutina completa
         </button>
       }
     </footer>
