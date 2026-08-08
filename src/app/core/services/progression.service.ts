@@ -4,7 +4,7 @@ import { ExerciseTemplate } from '../models/workout.model';
 import { AnalyticsService } from './analytics.service';
 import { ProfileService } from './profile.service';
 import { StorageService } from './storage.service';
-import { suggestNextSessionSets } from './progression.util';
+import { estimateExerciseFrequency, suggestNextSessionSets } from './progression.util';
 
 /**
  * Thin orchestration layer for next-session progression suggestions.
@@ -23,6 +23,9 @@ export class ProgressionService {
     templates: ExerciseTemplate[],
   ): Map<string, ExerciseProgressionSuggestion> {
     const sessions = this.storage.sessions();
+    const profile = this.profileService.profile();
+    const focus = profile?.trainingFocus ?? 'hypertrophy';
+    const now = Date.now();
     const result = new Map<string, ExerciseProgressionSuggestion>();
 
     for (const template of templates) {
@@ -37,12 +40,21 @@ export class ProgressionService {
           : 0;
 
       const level = this.profileService.getResolvedLevel(template.category);
+
+      // Frequency: manual per-category override wins, else auto-detect from history
+      const overrideCategory = template.category === 'abs' ? 'push' : template.category;
+      const frequency =
+        profile?.weeklyFrequencyOverride?.[overrideCategory] ??
+        estimateExerciseFrequency(template.id, sessions, now);
+
       const suggestion = suggestNextSessionSets({
         template,
         lastSets,
         level,
         rirTrend: metrics.rirTrend,
         avgRecentRir,
+        focus,
+        frequency,
       });
 
       result.set(template.id, {

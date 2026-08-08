@@ -13,14 +13,26 @@ export type TrainingGoal =
   | 'strength';
 
 /**
- * A self-reported best set on a free-weight reference lift (bench, squat,
- * deadlift, weighted pull-up...). Deliberately decoupled from the machine-based
- * exercise catalog: bodyweight-ratio strength standards only make sense for
- * well-known free-weight compounds.
+ * How progression suggestions behave — separate from TrainingGoal (diet phase):
+ * hypertrophy = double progression (fill the rep range, then add weight);
+ * strength = weight-priority (add weight at mid-range);
+ * maintenance = hold current loads.
+ */
+export type TrainingFocus = 'hypertrophy' | 'strength' | 'maintenance';
+
+/**
+ * A best set on a reference lift, either a canonical free-weight lift
+ * (bench, squat, deadlift...) entered manually, or an exercise from the app
+ * catalog (templateId set) — in which case the best logged set from session
+ * history is used automatically and kept up to date as you train.
+ * Note: bodyweight-ratio strength standards are calibrated for free-weight
+ * compounds; machine numbers make the estimate approximate.
  */
 export interface BenchmarkLift {
   category: MovementCategory;
   exerciseName: string;
+  /** Set when the lift references a catalog exercise — enables auto-update from history */
+  templateId?: string;
   weightKg: number;
   reps: number;
   date?: string; // ISO 8601
@@ -36,6 +48,13 @@ export interface UserProfile {
   goal?: TrainingGoal;
   /** Manually selected experience level — always the fallback */
   experienceLevelManual: ExperienceLevel;
+  /** Progression style; absent = 'hypertrophy' */
+  trainingFocus?: TrainingFocus;
+  /**
+   * Manual weekly-frequency override per category (sessions/week). Absent or
+   * empty per-category = auto-detected from the last 3 weeks of history.
+   */
+  weeklyFrequencyOverride?: { push?: number; pull?: number; legs?: number };
 
   // ── Advanced mode (optional) ──
   wristCircumferenceCm?: number;

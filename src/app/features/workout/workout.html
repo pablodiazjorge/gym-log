@@ -105,6 +105,37 @@
           }
         </div>
 
+        <!-- Bodyweight weekly check-in -->
+        <div class="bg-gray-900 border rounded-xl p-4"
+          [class.border-gray-800]="!shouldPromptBodyWeight()"
+          [class.border-sky-700/50]="shouldPromptBodyWeight()">
+          @if (bodyWeightVisible()) {
+            <div class="flex items-center justify-between gap-3">
+              <div class="min-w-0">
+                <label class="block text-xs font-medium text-gray-400" for="bodyWeight">Bodyweight (kg)</label>
+                @if (shouldPromptBodyWeight()) {
+                  <p class="text-[11px] text-sky-400/80 mt-0.5">Weekly check-in — nothing logged in the last 7 days</p>
+                }
+              </div>
+              <div class="flex items-center gap-2 flex-shrink-0">
+                <button (click)="adjustBodyWeight(-0.1)"
+                  class="w-8 h-8 bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center justify-center text-sm font-bold text-white transition-colors">−</button>
+                <input id="bodyWeight" type="number" step="0.1" min="0"
+                  [ngModel]="session.bodyWeightKg" (ngModelChange)="setBodyWeight($event)"
+                  [placeholder]="bodyWeightPrefill() ?? ''"
+                  class="w-20 bg-gray-800 border border-gray-700 rounded-lg p-2 text-center text-base font-bold text-white placeholder-gray-600 focus:outline-none focus:border-gray-500 tabular-nums" />
+                <button (click)="adjustBodyWeight(0.1)"
+                  class="w-8 h-8 bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center justify-center text-sm font-bold text-white transition-colors">+</button>
+              </div>
+            </div>
+          } @else {
+            <button (click)="bodyWeightOpen.set(true)"
+              class="w-full text-left text-xs text-gray-500 hover:text-gray-300 transition-colors">
+              + Log bodyweight (already logged this week)
+            </button>
+          }
+        </div>
+
         <!-- Session notes -->
         <div class="bg-gray-900 border border-gray-800 rounded-xl p-4">
           <label class="block text-xs font-medium text-gray-400 mb-2" for="sessionNotes">Notes</label>

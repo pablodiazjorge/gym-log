@@ -19,4 +19,8 @@ pure, unit-tested functions (`progression.util.ts`) with every tunable as a name
 
 - Reality always wins over the model; a bad suggestion costs one tap to fix.
 - The engine self-corrects: logged RIR/weights drive the next suggestion.
-- Constants (step percentages, frame factors, thresholds) are easy to recalibrate after real use.
+- Constants (step percentages, frame factors, thresholds, frequency step scaling, focus rep
+  thresholds) are easy to recalibrate after real use.
+- Weekly training frequency (auto-detected, overridable) scales per-session weight steps so weekly
+  progression stays constant across splits; training focus (hypertrophy/strength/maintenance)
+  changes when weight is added — both remain advisory inputs, never constraints.

@@ -5,6 +5,7 @@ import { RoutineLibraryService } from '../../core/services/routine-library.servi
 import { StorageService } from '../../core/services/storage.service';
 import { ExportService } from '../../core/services/export.service';
 import { ProgressionService } from '../../core/services/progression.service';
+import { ProfileService } from '../../core/services/profile.service';
 import { WorkoutSession, WorkoutExercise, WorkoutSet, ExerciseTemplate } from '../../core/models/workout.model';
 import { SetInput } from './set-input';
 
@@ -32,6 +33,7 @@ export class Workout {
   private readonly storage = inject(StorageService);
   private readonly exportService = inject(ExportService);
   private readonly progression = inject(ProgressionService);
+  private readonly profileService = inject(ProfileService);
 
   readonly source = signal<WorkoutSource>({ kind: 'day', dayType: 'push', variant: 'A' });
   readonly routineName = signal<string>('');
@@ -315,6 +317,51 @@ export class Workout {
     const allDone = exercise.sets.every((st) => st.completed);
     if (allDone && !this.isLastExercise()) setTimeout(() => this.goToNext(), 500);
     if (this.allCompleted()) this.isSummary.set(true);
+  }
+
+  // ─── Bodyweight weekly check-in (summary screen) ───
+
+  /** Manually expanded state for the bodyweight field */
+  readonly bodyWeightOpen = signal(false);
+
+  /** Days since the last session-logged bodyweight (Infinity = never logged) */
+  private readonly daysSinceBodyWeight = computed(() => {
+    const latest = this.profileService.getLatestLoggedBodyWeight();
+    if (!latest) return Infinity;
+    return (Date.now() - new Date(latest.date).getTime()) / 86400000;
+  });
+
+  /** Weekly check-in: highlight the field when no weight was logged in ≥7 days */
+  readonly shouldPromptBodyWeight = computed(() => this.daysSinceBodyWeight() >= 7);
+
+  /** Field is visible when prompted, manually opened, or already filled this session */
+  readonly bodyWeightVisible = computed(
+    () =>
+      this.shouldPromptBodyWeight() ||
+      this.bodyWeightOpen() ||
+      this.session()?.bodyWeightKg != null,
+  );
+
+  /** Suggested starting value: last logged weight, then profile, empty otherwise */
+  readonly bodyWeightPrefill = computed(
+    () =>
+      this.profileService.getLatestLoggedBodyWeight()?.weightKg ??
+      this.profileService.profile()?.bodyWeightKg ??
+      null,
+  );
+
+  setBodyWeight(value: number | null): void {
+    const s = this.session();
+    if (!s) return;
+    s.bodyWeightKg = value != null && value > 0 ? Math.round(value * 10) / 10 : undefined;
+    this.persistCurrent();
+  }
+
+  adjustBodyWeight(delta: number): void {
+    const s = this.session();
+    if (!s) return;
+    const current = s.bodyWeightKg ?? this.bodyWeightPrefill() ?? 70;
+    this.setBodyWeight(current + delta);
   }
 
   /** Adjust the current exercise's rest time (one value for all its sets) */

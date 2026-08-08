@@ -7,12 +7,14 @@ import {
   computeFrameSize,
   decideAction,
   estimate1Rm,
+  estimateExerciseFrequency,
+  frequencyStepScale,
   resolveLevel,
   rirToPercent1Rm,
   roundToPlate,
   suggestNextSessionSets,
 } from './progression.util';
-import { ExerciseTemplate, WorkoutSet } from '../models/workout.model';
+import { ExerciseTemplate, WorkoutSession, WorkoutSet } from '../models/workout.model';
 import { ComputedLevelResult, UserProfile } from '../models/profile.model';
 
 // ─── Fixtures ───
@@ -209,28 +211,98 @@ describe('resolveLevel', () => {
 // ─── decideAction ───
 
 describe('decideAction', () => {
+  // Rep range 8-12: 12 = at ceiling, 8 = mid-range not reached
   it('holds when RIR is trending down', () => {
-    expect(decideAction('beginner', 'falling', 2, 1, 2, true)).toBe('hold');
+    expect(decideAction('beginner', 'hypertrophy', 'falling', 2, 1, 2, 12, 8, 12)).toBe('hold');
   });
 
   it('holds when recent RIR is far below target', () => {
-    expect(decideAction('beginner', 'stable', 0.3, 1, 2, true)).toBe('hold');
+    expect(decideAction('beginner', 'hypertrophy', 'stable', 0.3, 1, 2, 12, 8, 12)).toBe('hold');
   });
 
   it('gates intermediate/advanced on RIR in range, but not beginner', () => {
     // avgRecentRir 0.7 < targetRirMin 1 (but not < 0.5 below)
-    expect(decideAction('intermediate', 'stable', 0.7, 1, 2, true)).toBe('hold');
-    expect(decideAction('advanced', 'stable', 0.7, 1, 2, true)).toBe('hold');
-    expect(decideAction('beginner', 'stable', 0.7, 1, 2, true)).toBe('add-weight');
+    expect(decideAction('intermediate', 'hypertrophy', 'stable', 0.7, 1, 2, 12, 8, 12)).toBe('hold');
+    expect(decideAction('advanced', 'hypertrophy', 'stable', 0.7, 1, 2, 12, 8, 12)).toBe('hold');
+    expect(decideAction('beginner', 'hypertrophy', 'stable', 0.7, 1, 2, 12, 8, 12)).toBe('add-weight');
   });
 
   it('takes an aggressive step when RIR is rising and above target', () => {
-    expect(decideAction('intermediate', 'rising', 3, 1, 2, false)).toBe('add-weight-aggressive');
+    expect(decideAction('intermediate', 'hypertrophy', 'rising', 3, 1, 2, 8, 8, 12)).toBe('add-weight-aggressive');
   });
 
-  it('adds weight at the top of the rep range, reps otherwise', () => {
-    expect(decideAction('intermediate', 'stable', 1.5, 1, 2, true)).toBe('add-weight');
-    expect(decideAction('intermediate', 'stable', 1.5, 1, 2, false)).toBe('add-reps');
+  it('adds weight at the top of the rep range, reps otherwise (hypertrophy)', () => {
+    expect(decideAction('intermediate', 'hypertrophy', 'stable', 1.5, 1, 2, 12, 8, 12)).toBe('add-weight');
+    expect(decideAction('intermediate', 'hypertrophy', 'stable', 1.5, 1, 2, 8, 8, 12)).toBe('add-reps');
+  });
+
+  it('strength focus adds weight at mid-range where hypertrophy adds reps', () => {
+    // Range 8-12 → midpoint 10
+    expect(decideAction('intermediate', 'strength', 'stable', 1.5, 1, 2, 10, 8, 12)).toBe('add-weight');
+    expect(decideAction('intermediate', 'hypertrophy', 'stable', 1.5, 1, 2, 10, 8, 12)).toBe('add-reps');
+    // Below the midpoint even strength keeps adding reps
+    expect(decideAction('intermediate', 'strength', 'stable', 1.5, 1, 2, 9, 8, 12)).toBe('add-reps');
+  });
+
+  it('maintenance focus never adds weight — holds, or adds a rep only when RIR is high and rising', () => {
+    // At the ceiling with RIR in range → still HOLD
+    expect(decideAction('intermediate', 'maintenance', 'stable', 1.5, 1, 2, 12, 8, 12)).toBe('hold');
+    // RIR rising well above target → the stimulus decayed → one rep, never weight
+    expect(decideAction('intermediate', 'maintenance', 'rising', 3, 1, 2, 12, 8, 12)).toBe('add-reps');
+    // Fatigue gates still apply
+    expect(decideAction('intermediate', 'maintenance', 'falling', 2, 1, 2, 12, 8, 12)).toBe('hold');
+  });
+});
+
+// ─── Frequency detection & scaling ───
+
+describe('estimateExerciseFrequency', () => {
+  const NOW = new Date('2026-08-08T12:00:00Z').getTime();
+
+  const sessionOn = (daysAgo: number, templateId = 'press-inclinado-maquina'): WorkoutSession => ({
+    id: `ws-${daysAgo}`,
+    date: new Date(NOW - daysAgo * 86400000).toISOString(),
+    dayType: 'push',
+    dayVariant: 'A',
+    exercises: [{ templateId, exerciseName: 'X', sets: [] }],
+    completed: true,
+  });
+
+  it('returns the neutral default of 1 with fewer than 2 occurrences', () => {
+    expect(estimateExerciseFrequency('press-inclinado-maquina', [], NOW)).toBe(1);
+    expect(estimateExerciseFrequency('press-inclinado-maquina', [sessionOn(3)], NOW)).toBe(1);
+  });
+
+  it('detects ~1×/week and ~2×/week from history', () => {
+    const onceWeekly = [sessionOn(2), sessionOn(9), sessionOn(16)];
+    expect(estimateExerciseFrequency('press-inclinado-maquina', onceWeekly, NOW)).toBe(1);
+
+    const twiceWeekly = [sessionOn(1), sessionOn(4), sessionOn(8), sessionOn(11), sessionOn(15), sessionOn(18)];
+    expect(estimateExerciseFrequency('press-inclinado-maquina', twiceWeekly, NOW)).toBe(2);
+  });
+
+  it('ignores sessions outside the 21-day window, incomplete sessions and other exercises', () => {
+    const sessions = [
+      sessionOn(2),
+      sessionOn(30), // outside window
+      { ...sessionOn(5), completed: false }, // incomplete
+      sessionOn(6, 'press-plano'), // different exercise
+    ];
+    // Only 1 valid occurrence → default
+    expect(estimateExerciseFrequency('press-inclinado-maquina', sessions, NOW)).toBe(1);
+  });
+});
+
+describe('frequencyStepScale', () => {
+  it('keeps weekly progression constant: freq 1 → ×1, freq 2 → ×0.5', () => {
+    expect(frequencyStepScale(1)).toBe(1);
+    expect(frequencyStepScale(2)).toBe(0.5);
+  });
+
+  it('caps the boost for sporadic training and the cut for very high frequency', () => {
+    expect(frequencyStepScale(0.5)).toBe(1.5); // capped, not ×2
+    expect(frequencyStepScale(4)).toBe(0.5); // capped, not ×0.25
+    expect(frequencyStepScale(0)).toBe(1); // guard
   });
 });
 
@@ -365,6 +437,56 @@ describe('suggestNextSessionSets', () => {
       const remainder = Math.round((t.weightKg % PLATE_INCREMENT_KG) * 1000) / 1000;
       expect(remainder === 0 || remainder === PLATE_INCREMENT_KG).toBe(true);
     }
+  });
+
+  it('frequency 2 halves the weight step vs frequency 1 (weekly progression constant)', () => {
+    const topped = [workSet({ weightKg: 200, reps: 12, rir: 2 })];
+    const base = { template: template(), lastSets: topped, level: 'intermediate' as const, rirTrend: 'stable' as const, avgRecentRir: 2 };
+    const freq1 = suggestNextSessionSets({ ...base, frequency: 1 });
+    const freq2 = suggestNextSessionSets({ ...base, frequency: 2 });
+    // 200 × 1.02 = 204 → 203.75 ; 200 × 1.01 = 202 → 202.5
+    expect(freq1.targets[0].weightKg).toBe(203.75);
+    expect(freq2.targets[0].weightKg).toBe(202.5);
+    expect(freq2.targets[0].weightKg - 200).toBeLessThan(freq1.targets[0].weightKg - 200);
+  });
+
+  it('defaults (no focus/frequency) behave exactly like hypertrophy at frequency 1', () => {
+    const topped = [workSet({ weightKg: 200, reps: 12, rir: 2 })];
+    const implicit = suggestNextSessionSets({
+      template: template(), lastSets: topped, level: 'intermediate', rirTrend: 'stable', avgRecentRir: 2,
+    });
+    const explicit = suggestNextSessionSets({
+      template: template(), lastSets: topped, level: 'intermediate', rirTrend: 'stable', avgRecentRir: 2,
+      focus: 'hypertrophy', frequency: 1,
+    });
+    expect(implicit.targets).toEqual(explicit.targets);
+    expect(implicit.action).toBe(explicit.action);
+  });
+
+  it('maintenance focus holds the load even at the rep ceiling', () => {
+    const topped = [workSet({ weightKg: 50, reps: 12, rir: 2 })];
+    const result = suggestNextSessionSets({
+      template: template(), lastSets: topped, level: 'intermediate', rirTrend: 'stable', avgRecentRir: 2,
+      focus: 'maintenance',
+    });
+    expect(result.action).toBe('hold');
+    expect(result.targets[0].weightKg).toBe(50);
+    expect(result.targets[0].reps).toBe(12);
+  });
+
+  it('strength focus moves weight up at mid-range instead of grinding to the ceiling', () => {
+    const midRange = [workSet({ weightKg: 50, reps: 10, rir: 2 })]; // range 8-12, midpoint 10
+    const strength = suggestNextSessionSets({
+      template: template(), lastSets: midRange, level: 'intermediate', rirTrend: 'stable', avgRecentRir: 2,
+      focus: 'strength',
+    });
+    const hypertrophy = suggestNextSessionSets({
+      template: template(), lastSets: midRange, level: 'intermediate', rirTrend: 'stable', avgRecentRir: 2,
+      focus: 'hypertrophy',
+    });
+    expect(strength.action).toBe('add-weight');
+    expect(strength.targets[0].reps).toBe(8); // back to range minimum
+    expect(hypertrophy.action).toBe('add-reps');
   });
 
   it('ignores skipped and incomplete sets when reading history', () => {

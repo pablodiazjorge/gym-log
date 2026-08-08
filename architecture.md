@@ -94,8 +94,12 @@ targets ([ADR-0005](docs/adr/0005-builtin-and-custom-routines.md)).
 
 **Progression suggestions.** `progression.util.ts` implements double progression autoregulated by
 RIR trend: hold / add reps / add weight / aggressive step, scaled by experience level, preserving
-the user's own set-to-set decline pattern from the last session. Suggestions only pre-fill editable
-fields — nothing is enforced ([ADR-0007](docs/adr/0007-advisory-progression.md)).
+the user's own set-to-set decline pattern from the last session. Per-session weight steps are also
+scaled by weekly training frequency (auto-detected from the last 3 weeks, overridable per category
+in the profile) so weekly progression stays constant across splits, and the profile's training
+focus (hypertrophy / strength / maintenance) moves the rep threshold at which weight goes up.
+Suggestions only pre-fill editable fields — nothing is enforced
+([ADR-0007](docs/adr/0007-advisory-progression.md)).
 
 **Export / import.** Export downloads a single JSON with sessions + profile + custom routines.
 Import merges sessions/routines by id (skipping duplicates) and only adopts the profile when none

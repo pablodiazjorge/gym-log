@@ -37,6 +37,11 @@
         <label class="block text-xs text-gray-500 mb-1" for="pWeight">Bodyweight (kg)</label>
         <input id="pWeight" type="number" [ngModel]="bodyWeightKg()" (ngModelChange)="bodyWeightKg.set($event)" min="30" max="250" step="0.1"
           class="w-full bg-gray-800 border border-gray-700 rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-gray-500 tabular-nums" />
+        @if (latestLoggedWeight(); as logged) {
+          <p class="text-[10px] text-emerald-400/70 mt-1">
+            Using {{ logged.weightKg }} kg from your latest session check-in
+          </p>
+        }
       </div>
       <div class="col-span-2">
         <label class="block text-xs text-gray-500 mb-1" for="pGoal">Goal</label>
@@ -64,6 +69,24 @@
           [class.bg-gray-800/50]="experienceLevelManual() !== level.value">
           <p class="font-medium text-white text-sm">{{ level.label }}</p>
           <p class="text-xs text-gray-500">{{ level.hint }}</p>
+        </button>
+      }
+    </div>
+  </section>
+
+  <!-- ─── Training focus ─── -->
+  <section class="bg-gray-900 border border-gray-800 rounded-xl p-4 mb-4">
+    <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Training focus</h2>
+    <div class="space-y-2">
+      @for (focus of focuses; track focus.value) {
+        <button (click)="trainingFocus.set(focus.value)"
+          class="w-full text-left p-3 rounded-xl border transition-all"
+          [class.border-sky-500]="trainingFocus() === focus.value"
+          [class.bg-sky-500/10]="trainingFocus() === focus.value"
+          [class.border-gray-800]="trainingFocus() !== focus.value"
+          [class.bg-gray-800/50]="trainingFocus() !== focus.value">
+          <p class="font-medium text-white text-sm">{{ focus.label }}</p>
+          <p class="text-xs text-gray-500">{{ focus.hint }}</p>
         </button>
       }
     </div>
@@ -97,37 +120,97 @@
           </div>
         </div>
 
+        <!-- Weekly training frequency -->
+        <div>
+          <p class="text-xs text-gray-500 mb-2">
+            Weekly training frequency per category. Auto-detected from your last 3 weeks — override
+            only if the detection is wrong (e.g. right after changing your split). Higher frequency
+            → smaller per-session weight steps, same weekly progression.
+          </p>
+          <div class="space-y-2">
+            @for (category of frequencyCategories; track category) {
+              <div class="bg-gray-800 rounded-lg p-2.5 flex items-center justify-between">
+                <div>
+                  <span class="text-xs font-medium text-gray-300 capitalize">{{ category }}</span>
+                  @if (freqOverride()[category] === null) {
+                    <span class="text-[10px] text-emerald-400/70 ml-2">Auto · detected ≈{{ detectedFrequency()[category] }}×/week</span>
+                  } @else {
+                    <button (click)="clearFrequency(category)"
+                      class="text-[10px] text-sky-400 hover:text-sky-300 ml-2 underline transition-colors">
+                      back to auto
+                    </button>
+                  }
+                </div>
+                <div class="flex items-center gap-2">
+                  <button (click)="adjustFrequency(category, -1)"
+                    class="w-7 h-7 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center justify-center text-sm font-bold text-white transition-colors">−</button>
+                  <span class="text-sm font-semibold w-10 text-center tabular-nums"
+                    [class.text-white]="freqOverride()[category] !== null"
+                    [class.text-gray-500]="freqOverride()[category] === null">
+                    {{ freqOverride()[category] ?? detectedFrequency()[category] }}×
+                  </span>
+                  <button (click)="adjustFrequency(category, 1)"
+                    class="w-7 h-7 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center justify-center text-sm font-bold text-white transition-colors">+</button>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
         <!-- Benchmark lifts -->
         <div>
           <p class="text-xs text-gray-500 mb-2">
-            Best recent set on free-weight reference lifts (machines make the estimate less accurate).
+            Reference lifts for the strength estimate. App exercises auto-update from your logged
+            history; free-weight references are entered manually (machines make the estimate less
+            accurate).
           </p>
           <div class="space-y-2">
             @for (lift of benchmarkLifts(); track $index; let i = $index) {
               <div class="bg-gray-800 rounded-lg p-3 space-y-2">
                 <div class="flex items-center gap-2">
-                  <select [ngModel]="lift.category" (ngModelChange)="updateLift(i, { category: $event })"
-                    class="bg-gray-700 border border-gray-600 rounded-lg p-2 text-xs text-white focus:outline-none appearance-none">
-                    @for (cat of benchmarkCategories; track cat.value) {
-                      <option [value]="cat.value">{{ cat.label }}</option>
-                    }
+                  <select [ngModel]="liftKey(lift)" (ngModelChange)="onLiftExerciseChange(i, $event)"
+                    class="flex-1 min-w-0 bg-gray-700 border border-gray-600 rounded-lg p-2 text-xs text-white focus:outline-none appearance-none">
+                    <option value="" disabled>Choose an exercise…</option>
+                    <optgroup label="Free-weight references">
+                      @for (option of referenceOptions; track option.key) {
+                        <option [value]="option.key">{{ option.label }}</option>
+                      }
+                    </optgroup>
+                    <optgroup label="App exercises (auto-updated)">
+                      @for (option of catalogOptions; track option.key) {
+                        <option [value]="option.key">{{ option.label }}</option>
+                      }
+                    </optgroup>
                   </select>
-                  <input type="text" [ngModel]="lift.exerciseName" (ngModelChange)="updateLift(i, { exerciseName: $event })"
-                    placeholder="e.g. Bench press"
-                    class="flex-1 min-w-0 bg-gray-700 border border-gray-600 rounded-lg p-2 text-xs text-white placeholder-gray-500 focus:outline-none" />
                   <button (click)="removeBenchmarkLift(i)"
                     class="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-rose-400 transition-colors flex-shrink-0" aria-label="Remove lift">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                   </button>
                 </div>
-                <div class="flex items-center gap-2">
-                  <input type="number" [ngModel]="lift.weightKg" (ngModelChange)="updateLift(i, { weightKg: $event })" min="0" step="0.5"
-                    class="w-20 bg-gray-700 border border-gray-600 rounded-lg p-2 text-xs text-white text-center focus:outline-none tabular-nums" />
-                  <span class="text-xs text-gray-500">kg ×</span>
-                  <input type="number" [ngModel]="lift.reps" (ngModelChange)="updateLift(i, { reps: $event })" min="1" max="20"
-                    class="w-14 bg-gray-700 border border-gray-600 rounded-lg p-2 text-xs text-white text-center focus:outline-none tabular-nums" />
-                  <span class="text-xs text-gray-500">reps</span>
-                </div>
+
+                @if (lift.templateId) {
+                  <!-- Catalog exercise: value comes from logged history automatically -->
+                  @if (bestLogged(lift); as best) {
+                    <p class="text-xs text-emerald-400/80">
+                      Auto from your history: <span class="font-semibold tabular-nums">{{ best.weightKg }} kg × {{ best.reps }} reps</span>
+                      <span class="text-gray-500"> (best logged set — updates as you train)</span>
+                    </p>
+                  } @else {
+                    <p class="text-xs text-gray-500">
+                      No logged sets yet — it will pick up your best set automatically once you train this exercise.
+                    </p>
+                  }
+                } @else {
+                  <!-- Free-weight reference: manual entry -->
+                  <div class="flex items-center gap-2">
+                    <input type="number" [ngModel]="lift.weightKg" (ngModelChange)="updateLift(i, { weightKg: $event })" min="0" step="0.5"
+                      class="w-20 bg-gray-700 border border-gray-600 rounded-lg p-2 text-xs text-white text-center focus:outline-none tabular-nums" />
+                    <span class="text-xs text-gray-500">kg ×</span>
+                    <input type="number" [ngModel]="lift.reps" (ngModelChange)="updateLift(i, { reps: $event })" min="1" max="20"
+                      class="w-14 bg-gray-700 border border-gray-600 rounded-lg p-2 text-xs text-white text-center focus:outline-none tabular-nums" />
+                    <span class="text-xs text-gray-500">reps</span>
+                  </div>
+                }
               </div>
             }
           </div>

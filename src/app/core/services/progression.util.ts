@@ -17,10 +17,11 @@ import {
   FrameSize,
   MovementCategory,
   Sex,
+  TrainingFocus,
   UserProfile,
 } from '../models/profile.model';
 import { ProgressionAction, SetTarget } from '../models/progression.model';
-import { ExerciseTemplate, WorkoutSet } from '../models/workout.model';
+import { ExerciseTemplate, WorkoutSession, WorkoutSet } from '../models/workout.model';
 
 // ─── Tunable constants ───
 
@@ -213,6 +214,52 @@ export function resolveLevel(
   return profile.experienceLevelManual;
 }
 
+// ─── Training frequency ───
+
+/** Look-back window for frequency detection */
+export const FREQUENCY_WINDOW_DAYS = 21;
+
+/**
+ * Sessions/week in which ANY of the given template ids was trained, over the
+ * last FREQUENCY_WINDOW_DAYS. Needs at least 2 occurrences to be meaningful —
+ * otherwise returns the neutral default of 1. Clamped to [0.5, 4].
+ */
+export function estimateFrequencyForTemplates(
+  templateIds: ReadonlySet<string>,
+  sessions: WorkoutSession[],
+  nowMs: number,
+): number {
+  const windowStart = nowMs - FREQUENCY_WINDOW_DAYS * 86400000;
+  let count = 0;
+  for (const session of sessions) {
+    if (!session.completed) continue;
+    const t = new Date(session.date).getTime();
+    if (t < windowStart || t > nowMs) continue;
+    if (session.exercises.some((e) => templateIds.has(e.templateId))) count++;
+  }
+  if (count < 2) return 1;
+  return clamp(count / (FREQUENCY_WINDOW_DAYS / 7), 0.5, 4);
+}
+
+/** Frequency of one specific exercise (sessions/week) */
+export function estimateExerciseFrequency(
+  templateId: string,
+  sessions: WorkoutSession[],
+  nowMs: number,
+): number {
+  return estimateFrequencyForTemplates(new Set([templateId]), sessions, nowMs);
+}
+
+/**
+ * Per-session weight-step multiplier keeping WEEKLY progression constant:
+ * freq 1 → ×1.0, freq 2 → ×0.5. Capped at ×1.5 for sporadic training (a low
+ * frequency should not over-boost a single session) and at ×0.5 downward.
+ */
+export function frequencyStepScale(frequency: number): number {
+  if (frequency <= 0) return 1;
+  return clamp(1 / frequency, 0.5, 1.5);
+}
+
 // ─── Next-session suggestion ───
 
 export type RirTrend = 'rising' | 'falling' | 'stable';
@@ -225,6 +272,10 @@ export interface SuggestionInput {
   rirTrend: RirTrend;
   /** Average RIR over the last session's completed work sets */
   avgRecentRir: number;
+  /** Progression style; absent = 'hypertrophy' (double progression) */
+  focus?: TrainingFocus;
+  /** Sessions/week this exercise is trained; absent = 1 (full step per session) */
+  frequency?: number;
 }
 
 export interface SuggestionResult {
@@ -239,19 +290,33 @@ export function roundToPlate(weightKg: number): number {
   return Math.max(0, Math.round(weightKg / PLATE_INCREMENT_KG) * PLATE_INCREMENT_KG);
 }
 
-/** Decide the progression action from level, RIR trend and rep-range position */
+/**
+ * Decide the progression action from level, focus, RIR trend and rep-range
+ * position. Focus moves the reps threshold at which weight goes up:
+ * hypertrophy = range ceiling (double progression), strength = range midpoint
+ * (weight-priority), maintenance = never adds weight automatically.
+ */
 export function decideAction(
   level: ExperienceLevel,
+  focus: TrainingFocus,
   rirTrend: RirTrend,
   avgRecentRir: number,
   targetRirMin: number,
   targetRirMax: number,
-  topOfRangeReached: boolean,
+  set1Reps: number,
+  targetRepsMin: number,
+  targetRepsMax: number,
 ): ProgressionAction {
   if (rirTrend === 'falling' || avgRecentRir < targetRirMin - 0.5) return 'hold';
   if (AGGRESSIVENESS[level].requireRirInRange && avgRecentRir < targetRirMin) return 'hold';
+  if (focus === 'maintenance') {
+    // Hold loads; only add a rep when the stimulus clearly decayed below maintenance
+    return rirTrend === 'rising' && avgRecentRir > targetRirMax + 0.5 ? 'add-reps' : 'hold';
+  }
   if (rirTrend === 'rising' && avgRecentRir > targetRirMax + 0.5) return 'add-weight-aggressive';
-  return topOfRangeReached ? 'add-weight' : 'add-reps';
+  const weightThreshold =
+    focus === 'strength' ? Math.ceil((targetRepsMin + targetRepsMax) / 2) : targetRepsMax;
+  return set1Reps >= weightThreshold ? 'add-weight' : 'add-reps';
 }
 
 /**
@@ -266,6 +331,8 @@ export function decideAction(
  */
 export function suggestNextSessionSets(input: SuggestionInput): SuggestionResult {
   const { template, lastSets, level, rirTrend, avgRecentRir } = input;
+  const focus = input.focus ?? 'hypertrophy';
+  const frequency = input.frequency ?? 1;
   const defaultRir = midpointRir(template);
 
   const workSets = lastSets.filter((s) => !s.isWarmup && s.completed && !s.skipped && s.weightKg > 0);
@@ -280,9 +347,20 @@ export function suggestNextSessionSets(input: SuggestionInput): SuggestionResult
   const set1 = workSets[0];
   const targetRirMin = template.targetRirMin ?? 1;
   const targetRirMax = template.targetRirMax ?? 3;
-  const topOfRange = set1.reps >= template.targetRepsMax;
-  const action = decideAction(level, rirTrend, avgRecentRir, targetRirMin, targetRirMax, topOfRange);
-  const step = AGGRESSIVENESS[level].weightStepPct;
+  const action = decideAction(
+    level,
+    focus,
+    rirTrend,
+    avgRecentRir,
+    targetRirMin,
+    targetRirMax,
+    set1.reps,
+    template.targetRepsMin,
+    template.targetRepsMax,
+  );
+  // Scale the per-session weight step so WEEKLY progression stays constant
+  // regardless of how often the exercise is trained.
+  const step = AGGRESSIVENESS[level].weightStepPct * frequencyStepScale(frequency);
 
   let newSet1Weight: number;
   let newSet1Reps: number;
@@ -333,7 +411,12 @@ export function suggestNextSessionSets(input: SuggestionInput): SuggestionResult
     });
   }
 
-  return { basis: 'computed', action, targets, rationale: buildRationale(action, rirTrend, level) };
+  return {
+    basis: 'computed',
+    action,
+    targets,
+    rationale: buildRationale(action, rirTrend, level, focus, frequency),
+  };
 }
 
 // ─── Internal helpers ───
@@ -368,18 +451,32 @@ function roundUpFrom(baseWeight: number, factor: number): number {
   return rounded > baseWeight ? rounded : baseWeight + PLATE_INCREMENT_KG;
 }
 
-function buildRationale(action: ProgressionAction, rirTrend: RirTrend, level: ExperienceLevel): string {
+function buildRationale(
+  action: ProgressionAction,
+  rirTrend: RirTrend,
+  level: ExperienceLevel,
+  focus: TrainingFocus,
+  frequency: number,
+): string {
+  const freqNote =
+    frequency >= 1.5 ? ` Trained ~${Math.round(frequency)}×/week — smaller per-session step.` : '';
   switch (action) {
     case 'hold':
+      if (focus === 'maintenance') return 'Maintenance focus — holding the current load.';
       return rirTrend === 'falling'
         ? 'RIR trending down — consolidate at the same load.'
         : 'Recent RIR below target — repeat last session before progressing.';
     case 'add-reps':
+      if (focus === 'maintenance') {
+        return 'RIR well above target — adding a rep to keep the maintenance stimulus.';
+      }
       return 'Within the rep range — add a rep at the same weight (double progression).';
     case 'add-weight':
-      return `Rep-range ceiling reached — weight up (${level} step), reps back to range minimum.`;
+      return focus === 'strength'
+        ? `Strength focus — reps at mid-range, weight up (${level} step), reps back to minimum.${freqNote}`
+        : `Rep-range ceiling reached — weight up (${level} step), reps back to range minimum.${freqNote}`;
     case 'add-weight-aggressive':
-      return 'RIR consistently above target — current load too easy, taking a double step up.';
+      return `RIR consistently above target — current load too easy, taking a double step up.${freqNote}`;
   }
 }
 
