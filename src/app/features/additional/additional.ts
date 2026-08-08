@@ -1,6 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { RoutineService } from '../../core/services/routine.service';
+import { ExerciseLibraryService } from '../../core/services/exercise-library.service';
 import { StorageService } from '../../core/services/storage.service';
 import { ExerciseTemplate, WorkoutSession, WorkoutExercise, WorkoutSet } from '../../core/models/workout.model';
 import { FormsModule } from '@angular/forms';
@@ -15,14 +16,15 @@ type Category = 'push' | 'pull' | 'legs' | 'abs';
 })
 export class Additional {
   private readonly routineService = inject(RoutineService);
+  private readonly exerciseLibrary = inject(ExerciseLibraryService);
   private readonly storage = inject(StorageService);
   private readonly router = inject(Router);
 
   // ─── Phases: 'select' | 'workout' ───
   readonly phase = signal<'select' | 'workout'>('select');
 
-  // ─── Exercise selection phase ───
-  readonly allExercises = this.routineService.getAllExercises();
+  // ─── Exercise selection phase (enabled exercises only) ───
+  readonly allExercises = this.exerciseLibrary.enabledExercises;
   readonly categoryFilter = signal<Category | 'all'>('all');
   /** IDs of the selected exercises (multi-select) */
   readonly selectedTemplateIds = signal<string[]>([]);
@@ -37,14 +39,14 @@ export class Additional {
 
   readonly filteredExercises = computed(() => {
     const cat = this.categoryFilter();
-    if (cat === 'all') return this.allExercises;
-    return this.allExercises.filter((ex) => ex.category === cat);
+    if (cat === 'all') return this.allExercises();
+    return this.allExercises().filter((ex) => ex.category === cat);
   });
 
-  /** Selected templates, in order */
+  /** Selected templates, in order (full-catalog lookup so mid-flow disables never break) */
   readonly selectedTemplates = computed(() =>
     this.selectedTemplateIds()
-      .map((id) => this.allExercises.find((ex) => ex.id === id))
+      .map((id) => this.routineService.getTemplateById(id))
       .filter((t): t is ExerciseTemplate => !!t),
   );
 
@@ -308,7 +310,6 @@ export class Additional {
       id: `ws-${new Date().toISOString().slice(0, 10)}-additional-${String(Date.now()).slice(-4)}`,
       date: new Date().toISOString(),
       dayType: 'additional',
-      dayVariant: 'A',
       exercises,
       durationMinutes: this.durationMinutes(),
       completed: true,

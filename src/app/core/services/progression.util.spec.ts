@@ -20,7 +20,7 @@ import { ComputedLevelResult, UserProfile } from '../models/profile.model';
 // ─── Fixtures ───
 
 const template = (overrides: Partial<ExerciseTemplate> = {}): ExerciseTemplate => ({
-  id: 'press-inclinado-maquina',
+  id: 'incline-machine-press',
   name: 'Incline Machine Press',
   category: 'push',
   order: 1,
@@ -236,12 +236,14 @@ describe('decideAction', () => {
     expect(decideAction('intermediate', 'hypertrophy', 'stable', 1.5, 1, 2, 8, 8, 12)).toBe('add-reps');
   });
 
-  it('strength focus adds weight at mid-range where hypertrophy adds reps', () => {
-    // Range 8-12 → midpoint 10
-    expect(decideAction('intermediate', 'strength', 'stable', 1.5, 1, 2, 10, 8, 12)).toBe('add-weight');
-    expect(decideAction('intermediate', 'hypertrophy', 'stable', 1.5, 1, 2, 10, 8, 12)).toBe('add-reps');
+  it('strength focus adds weight at mid-range on COMPOUNDS where hypertrophy adds reps', () => {
+    // Range 8-12 → midpoint 10 (isCompound = true)
+    expect(decideAction('intermediate', 'strength', 'stable', 1.5, 1, 2, 10, 8, 12, true)).toBe('add-weight');
+    expect(decideAction('intermediate', 'hypertrophy', 'stable', 1.5, 1, 2, 10, 8, 12, true)).toBe('add-reps');
     // Below the midpoint even strength keeps adding reps
-    expect(decideAction('intermediate', 'strength', 'stable', 1.5, 1, 2, 9, 8, 12)).toBe('add-reps');
+    expect(decideAction('intermediate', 'strength', 'stable', 1.5, 1, 2, 9, 8, 12, true)).toBe('add-reps');
+    // Isolation never gets weight-priority, even under strength focus
+    expect(decideAction('intermediate', 'strength', 'stable', 1.5, 1, 2, 10, 8, 12, false)).toBe('add-reps');
   });
 
   it('maintenance focus never adds weight — holds, or adds a rep only when RIR is high and rising', () => {
@@ -259,26 +261,25 @@ describe('decideAction', () => {
 describe('estimateExerciseFrequency', () => {
   const NOW = new Date('2026-08-08T12:00:00Z').getTime();
 
-  const sessionOn = (daysAgo: number, templateId = 'press-inclinado-maquina'): WorkoutSession => ({
+  const sessionOn = (daysAgo: number, templateId = 'incline-machine-press'): WorkoutSession => ({
     id: `ws-${daysAgo}`,
     date: new Date(NOW - daysAgo * 86400000).toISOString(),
     dayType: 'push',
-    dayVariant: 'A',
     exercises: [{ templateId, exerciseName: 'X', sets: [] }],
     completed: true,
   });
 
   it('returns the neutral default of 1 with fewer than 2 occurrences', () => {
-    expect(estimateExerciseFrequency('press-inclinado-maquina', [], NOW)).toBe(1);
-    expect(estimateExerciseFrequency('press-inclinado-maquina', [sessionOn(3)], NOW)).toBe(1);
+    expect(estimateExerciseFrequency('incline-machine-press', [], NOW)).toBe(1);
+    expect(estimateExerciseFrequency('incline-machine-press', [sessionOn(3)], NOW)).toBe(1);
   });
 
   it('detects ~1×/week and ~2×/week from history', () => {
     const onceWeekly = [sessionOn(2), sessionOn(9), sessionOn(16)];
-    expect(estimateExerciseFrequency('press-inclinado-maquina', onceWeekly, NOW)).toBe(1);
+    expect(estimateExerciseFrequency('incline-machine-press', onceWeekly, NOW)).toBe(1);
 
     const twiceWeekly = [sessionOn(1), sessionOn(4), sessionOn(8), sessionOn(11), sessionOn(15), sessionOn(18)];
-    expect(estimateExerciseFrequency('press-inclinado-maquina', twiceWeekly, NOW)).toBe(2);
+    expect(estimateExerciseFrequency('incline-machine-press', twiceWeekly, NOW)).toBe(2);
   });
 
   it('ignores sessions outside the 21-day window, incomplete sessions and other exercises', () => {
@@ -286,10 +287,10 @@ describe('estimateExerciseFrequency', () => {
       sessionOn(2),
       sessionOn(30), // outside window
       { ...sessionOn(5), completed: false }, // incomplete
-      sessionOn(6, 'press-plano'), // different exercise
+      sessionOn(6, 'flat-machine-press'), // different exercise
     ];
     // Only 1 valid occurrence → default
-    expect(estimateExerciseFrequency('press-inclinado-maquina', sessions, NOW)).toBe(1);
+    expect(estimateExerciseFrequency('incline-machine-press', sessions, NOW)).toBe(1);
   });
 });
 
@@ -370,16 +371,16 @@ describe('suggestNextSessionSets', () => {
     expect(result.targets[1].weightKg).toBe(48.75);
   });
 
-  it('ADD_WEIGHT_AGGRESSIVE doubles the step when RIR is consistently high', () => {
+  it('ADD_WEIGHT_AGGRESSIVE doubles the step on compounds when RIR is consistently high', () => {
     const result = suggestNextSessionSets({
-      template: template(),
+      template: template({ isCompound: true }),
       lastSets: [workSet({ weightKg: 100, reps: 10, rir: 4 })],
       level: 'intermediate',
       rirTrend: 'rising',
       avgRecentRir: 4,
     });
     expect(result.action).toBe('add-weight-aggressive');
-    // 100 × 1.04 = 104 → rounds to 103.75 or 105 depending on increment; 104/1.25 = 83.2 → 83 × 1.25 = 103.75
+    // 100 × 1.04 = 104 → 104/1.25 = 83.2 → 83 × 1.25 = 103.75
     expect(result.targets[0].weightKg).toBe(103.75);
     expect(result.targets[0].reps).toBe(10); // keeps reps (≥ range min)
   });
@@ -474,19 +475,117 @@ describe('suggestNextSessionSets', () => {
     expect(result.targets[0].reps).toBe(12);
   });
 
-  it('strength focus moves weight up at mid-range instead of grinding to the ceiling', () => {
+  it('strength focus moves weight up at mid-range on compounds without a strength range', () => {
+    // Compound with no strengthReps defined → weight-priority applies on the hypertrophy range
     const midRange = [workSet({ weightKg: 50, reps: 10, rir: 2 })]; // range 8-12, midpoint 10
     const strength = suggestNextSessionSets({
-      template: template(), lastSets: midRange, level: 'intermediate', rirTrend: 'stable', avgRecentRir: 2,
+      template: template({ isCompound: true }), lastSets: midRange, level: 'intermediate', rirTrend: 'stable', avgRecentRir: 2,
       focus: 'strength',
     });
     const hypertrophy = suggestNextSessionSets({
-      template: template(), lastSets: midRange, level: 'intermediate', rirTrend: 'stable', avgRecentRir: 2,
+      template: template({ isCompound: true }), lastSets: midRange, level: 'intermediate', rirTrend: 'stable', avgRecentRir: 2,
       focus: 'hypertrophy',
     });
     expect(strength.action).toBe('add-weight');
     expect(strength.targets[0].reps).toBe(8); // back to range minimum
     expect(hypertrophy.action).toBe('add-reps');
+  });
+
+  // ─── Exercise-type-aware behavior (compound vs isolation) ───
+
+  const compoundTemplate = (over: Partial<ExerciseTemplate> = {}): ExerciseTemplate =>
+    template({ isCompound: true, strengthRepsMin: 3, strengthRepsMax: 6, weightIncrementKg: 2.5, ...over });
+  const isolationTemplate = (over: Partial<ExerciseTemplate> = {}): ExerciseTemplate =>
+    template({ isCompound: false, targetRepsMin: 10, targetRepsMax: 15, weightIncrementKg: 2.0, ...over });
+
+  it('strength focus on a compound uses the strength rep range', () => {
+    // Last performance already inside 3-6: 100×5, RIR in range → midpoint of 3-6 is 5 → add-weight
+    const result = suggestNextSessionSets({
+      template: compoundTemplate(),
+      lastSets: [workSet({ weightKg: 100, reps: 5, rir: 2 })],
+      level: 'intermediate', rirTrend: 'stable', avgRecentRir: 2, focus: 'strength',
+    });
+    expect(result.action).toBe('add-weight');
+    expect(result.targets[0].reps).toBe(3); // back to strength range minimum
+  });
+
+  it('range switch: strength focus after hypertrophy work recalculates from e1RM', () => {
+    // Last session 50×10 (way above the 3-6 strength range) → e1RM-based reload
+    const result = suggestNextSessionSets({
+      template: compoundTemplate(),
+      lastSets: [workSet({ weightKg: 50, reps: 10, rir: 2 })],
+      level: 'intermediate', rirTrend: 'stable', avgRecentRir: 2, focus: 'strength',
+    });
+    // e1RM ≈ 66.7; target 5 reps @ RIR 1.5 → 66.7/(1+6.5/30) ≈ 54.8 → 55 with 2.5 increment
+    expect(result.targets[0].weightKg).toBe(55);
+    expect(result.targets[0].reps).toBe(5);
+    expect(result.rationale).toContain('recalculated');
+  });
+
+  it('fatigue gates override the range switch (falling RIR far outside range → HOLD)', () => {
+    // Overshoot to 15 reps on a 6-12 range, but RIR is trending down → HOLD, no e1RM reload
+    const result = suggestNextSessionSets({
+      template: compoundTemplate({ targetRepsMin: 6, targetRepsMax: 12 }),
+      lastSets: [workSet({ weightKg: 50, reps: 15, rir: 1 })],
+      level: 'intermediate', rirTrend: 'falling', avgRecentRir: 1, focus: 'hypertrophy',
+    });
+    expect(result.action).toBe('hold');
+    expect(result.targets[0].weightKg).toBe(50);
+    expect(result.targets[0].reps).toBe(15);
+  });
+
+  it('downward range switch (strength→hypertrophy) also reloads from e1RM', () => {
+    // Last block: 80×4 heavy work; now hypertrophy range 8-12 → e1RM-based lighter reload
+    const result = suggestNextSessionSets({
+      template: template({ isCompound: true, weightIncrementKg: 2.5 }), // range 8-12
+      lastSets: [workSet({ weightKg: 80, reps: 4, rir: 2 })],
+      level: 'intermediate', rirTrend: 'stable', avgRecentRir: 2, focus: 'hypertrophy',
+    });
+    // e1RM (Brzycki @4 reps) ≈ 87.3; target 10 reps @ RIR 1.5 → 87.3/(1+11.5/30) ≈ 63.1 → 62.5
+    expect(result.rationale).toContain('recalculated');
+    expect(result.targets[0].reps).toBe(10);
+    expect(result.targets[0].weightKg).toBeLessThan(80);
+    expect(result.targets[0].weightKg).toBe(62.5);
+  });
+
+  it('strength focus does NOT heavy-load isolation exercises', () => {
+    // Isolation at 12 reps (mid of 10-15), RIR fine → stays double progression (add-reps)
+    const result = suggestNextSessionSets({
+      template: isolationTemplate(),
+      lastSets: [workSet({ weightKg: 20, reps: 12, rir: 2 })],
+      level: 'intermediate', rirTrend: 'stable', avgRecentRir: 2, focus: 'strength',
+    });
+    expect(result.action).toBe('add-reps');
+    expect(result.targets[0].reps).toBe(13);
+    expect(result.targets[0].weightKg).toBe(20);
+  });
+
+  it('uses the per-exercise weight increment (light dumbbell steps by 2.0)', () => {
+    // 10 kg isolation at the 15-rep ceiling → add-weight → 10×1.02=10.2 rounds to 10 → forced +2.0 = 12
+    const result = suggestNextSessionSets({
+      template: isolationTemplate(),
+      lastSets: [workSet({ weightKg: 10, reps: 15, rir: 2 })],
+      level: 'intermediate', rirTrend: 'stable', avgRecentRir: 2,
+    });
+    expect(result.action).toBe('add-weight');
+    expect(result.targets[0].weightKg).toBe(12);
+  });
+
+  it('aggressive double step applies to compounds only', () => {
+    const high = { level: 'intermediate' as const, rirTrend: 'rising' as const, avgRecentRir: 4 };
+    const compound = suggestNextSessionSets({
+      template: compoundTemplate({ targetRepsMin: 6, targetRepsMax: 12 }),
+      lastSets: [workSet({ weightKg: 100, reps: 8, rir: 4 })], ...high,
+    });
+    const isolation = suggestNextSessionSets({
+      template: isolationTemplate(),
+      lastSets: [workSet({ weightKg: 100, reps: 12, rir: 4 })], ...high,
+    });
+    expect(compound.action).toBe('add-weight-aggressive');
+    expect(isolation.action).toBe('add-weight-aggressive');
+    // Compound: 100×1.04=104 → 105 (2.5 inc). Isolation: single step 100×1.02=102 → 102 (2.0 inc)
+    expect(compound.targets[0].weightKg).toBe(105);
+    expect(isolation.targets[0].weightKg).toBe(102);
   });
 
   it('ignores skipped and incomplete sets when reading history', () => {

@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { RoutineService } from '../../core/services/routine.service';
 import { RoutineLibraryService } from '../../core/services/routine-library.service';
+import { ExerciseLibraryService } from '../../core/services/exercise-library.service';
 import { RoutineExerciseConfig } from '../../core/models/routine.model';
 import { ExerciseTemplate } from '../../core/models/workout.model';
 
@@ -25,6 +26,7 @@ export class RoutineEditor {
   private readonly router = inject(Router);
   private readonly routineService = inject(RoutineService);
   private readonly routineLibrary = inject(RoutineLibraryService);
+  private readonly exerciseLibrary = inject(ExerciseLibraryService);
 
   readonly editingId = signal<string | null>(null);
   readonly isEditMode = computed(() => this.editingId() !== null);
@@ -33,9 +35,8 @@ export class RoutineEditor {
   readonly rows = signal<EditorRow[]>([]);
   readonly errors = signal<string[]>([]);
 
-  // ─── Exercise picker ───
+  // ─── Exercise picker (enabled exercises only) ───
   readonly isPicking = signal(false);
-  readonly allExercises = this.routineService.getAllExercises();
   readonly categoryFilter = signal<Category | 'all'>('all');
   readonly categories: { value: Category | 'all'; label: string; emoji: string }[] = [
     { value: 'all', label: 'All', emoji: '🏋️' },
@@ -47,9 +48,9 @@ export class RoutineEditor {
   readonly filteredExercises = computed(() => {
     const cat = this.categoryFilter();
     const inRoutine = new Set(this.rows().map((r) => r.templateId));
-    return this.allExercises.filter(
-      (ex) => !inRoutine.has(ex.id) && (cat === 'all' || ex.category === cat),
-    );
+    return this.exerciseLibrary
+      .enabledExercises()
+      .filter((ex) => !inRoutine.has(ex.id) && (cat === 'all' || ex.category === cat));
   });
 
   constructor() {

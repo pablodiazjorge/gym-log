@@ -29,6 +29,7 @@ export class Header {
     if (url.startsWith('/routines/new')) return 'New routine';
     if (url.startsWith('/routines') && url.endsWith('/edit')) return 'Edit routine';
     if (url.startsWith('/routines')) return 'Routines';
+    if (url.startsWith('/exercises')) return 'Exercise Library';
     if (url.startsWith('/history') && url.split('/').length > 2) return 'Detail';
     if (url.startsWith('/history')) return 'History';
     if (url.startsWith('/analysis')) return 'Analysis';

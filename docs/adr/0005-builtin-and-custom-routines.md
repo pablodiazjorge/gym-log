@@ -29,4 +29,4 @@ resolved at authoring time).
 - No duplicated "start workout" logic; one session-creation path.
 - Built-ins stay maintainable in code; custom routines are real user data (included in exports).
 - The catalog remains the single source of exercise definitions; routines reference it by
-  `templateId` (see ADR-0008).
+  `templateId` (see ADR-0012).

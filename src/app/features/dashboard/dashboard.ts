@@ -5,6 +5,7 @@ import { RoutineLibraryService } from '../../core/services/routine-library.servi
 import { StorageService } from '../../core/services/storage.service';
 import { ExportService } from '../../core/services/export.service';
 import { ProfileService } from '../../core/services/profile.service';
+import { ExerciseLibraryService } from '../../core/services/exercise-library.service';
 import { DayInfo } from '../../core/models/workout.model';
 
 @Component({
@@ -18,6 +19,7 @@ export class Dashboard {
   private readonly routineService = inject(RoutineService);
   private readonly routineLibrary = inject(RoutineLibraryService);
   private readonly profileService = inject(ProfileService);
+  private readonly exerciseLibrary = inject(ExerciseLibraryService);
   readonly storage = inject(StorageService);
   private readonly exportService = inject(ExportService);
 
@@ -106,6 +108,9 @@ export class Dashboard {
       const result = await this.exportService.importFromFile(file);
       const count = this.storage.importSessions(result.sessions);
       const routineCount = result.routines ? this.routineLibrary.importRoutines(result.routines) : 0;
+      if (result.enabledExerciseIds) {
+        this.exerciseLibrary.importEnabledIds(result.enabledExerciseIds);
+      }
       // Only adopt the imported profile when none exists yet (new-device convenience)
       if (result.user && !this.profileService.profile()) {
         this.profileService.saveProfile(result.user);

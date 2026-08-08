@@ -45,12 +45,6 @@ export interface ExerciseMetrics {
   recommendation: string;
 }
 
-export interface VariantComparison {
-  avgWeight: number;
-  avgVolume: number;
-  winner: 'A' | 'B' | 'tie';
-}
-
 export interface WeeklyVolumeEntry {
   weekStart: string;
   totalVolume: number;
@@ -80,16 +74,6 @@ export interface GlobalMetrics {
   // Bodyweight
   bodyWeightProgression: { date: string; weight: number }[];
 
-  // Variant comparison
-  variantComparison: {
-    pullA: VariantComparison;
-    pullB: VariantComparison;
-    pullWinner: 'A' | 'B' | 'tie';
-    pushA: VariantComparison;
-    pushB: VariantComparison;
-    pushWinner: 'A' | 'B' | 'tie';
-  };
-
   // Trends
   isProgressing: boolean;
   warningFlags: string[];
@@ -109,15 +93,6 @@ export class AnalyticsService {
   /** Volume of one set: weight × reps */
   private getSetVolume(set: WorkoutSet): number {
     return set.weightKg * set.reps;
-  }
-
-  /** ISO week number of a date */
-  private getWeekNumber(dateStr: string): number {
-    const d = new Date(dateStr);
-    const dayNum = d.getUTCDay() || 7;
-    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-    return Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
   }
 
   /** Monday of the week containing a date */
@@ -477,59 +452,6 @@ export class AnalyticsService {
     return { isStagnant, weeks: weeksSinceLastPR, suggestion };
   }
 
-  // ─── A vs B comparison ───
-
-  compareVariants(
-    sessions: WorkoutSession[],
-    dayType: 'push' | 'pull',
-  ): { variantA: VariantComparison; variantB: VariantComparison; winner: 'A' | 'B' | 'tie' } {
-    const completed = sessions.filter(
-      (s) => s.completed && s.dayType === dayType,
-    );
-
-    const aSessions = completed.filter((s) => s.dayVariant === 'A');
-    const bSessions = completed.filter((s) => s.dayVariant === 'B');
-
-    const calcAvg = (sessionsList: WorkoutSession[]): { avgWeight: number; avgVolume: number } => {
-      if (sessionsList.length === 0) return { avgWeight: 0, avgVolume: 0 };
-
-      let totalWeight = 0;
-      let totalVolume = 0;
-      let weightCount = 0;
-
-      for (const session of sessionsList) {
-        for (const ex of session.exercises) {
-          const workSets = this.getWorkSets(ex);
-          if (workSets.length === 0) continue;
-          totalWeight += Math.max(...workSets.map((s) => s.weightKg));
-          weightCount++;
-          totalVolume += workSets.reduce((sum, s) => sum + this.getSetVolume(s), 0);
-        }
-      }
-
-      return {
-        avgWeight: weightCount > 0 ? Math.round(totalWeight / weightCount) : 0,
-        avgVolume:
-          sessionsList.length > 0
-            ? Math.round(totalVolume / sessionsList.length)
-            : 0,
-      };
-    };
-
-    const aStats = calcAvg(aSessions);
-    const bStats = calcAvg(bSessions);
-
-    const variantA: VariantComparison = { ...aStats, winner: 'A' };
-    const variantB: VariantComparison = { ...bStats, winner: 'B' };
-
-    let winner: 'A' | 'B' | 'tie';
-    if (aStats.avgVolume > bStats.avgVolume) winner = 'A';
-    else if (bStats.avgVolume > aStats.avgVolume) winner = 'B';
-    else winner = 'tie';
-
-    return { variantA, variantB, winner };
-  }
-
   // ─── Global metrics ───
 
   getGlobalMetrics(sessions: WorkoutSession[]): GlobalMetrics {
@@ -625,10 +547,6 @@ export class AnalyticsService {
       .filter((s) => s.bodyWeightKg != null)
       .map((s) => ({ date: s.date, weight: s.bodyWeightKg! }));
 
-    // Variant comparison
-    const pullComparison = this.compareVariants(sessions, 'pull');
-    const pushComparison = this.compareVariants(sessions, 'push');
-
     // Overall trend: compare last 2 full weeks
     let isProgressing = true; // default: assume progress with little data
     if (weeklyVolume.length >= 2) {
@@ -685,14 +603,6 @@ export class AnalyticsService {
       consistencyScore: Math.round(consistencyScore),
       weeklyVolume,
       bodyWeightProgression,
-      variantComparison: {
-        pullA: pullComparison.variantA,
-        pullB: pullComparison.variantB,
-        pullWinner: pullComparison.winner,
-        pushA: pushComparison.variantA,
-        pushB: pushComparison.variantB,
-        pushWinner: pushComparison.winner,
-      },
       isProgressing,
       warningFlags,
     };

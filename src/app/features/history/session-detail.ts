@@ -38,7 +38,7 @@ export class SessionDetail {
     }
   }
 
-  getDayLabel(dayType: string, _variant: string, date?: string): string {
+  getDayLabel(dayType: string, date?: string): string {
     const map: Record<string, string> = {
       push: 'Push',
       pull: 'Pull',

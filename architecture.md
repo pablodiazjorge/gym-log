@@ -30,6 +30,7 @@ localStorage  ←→  manual JSON export/import (backup & analysis channel)
 ```
 src/app/
 ├── core/
+│   ├── data/exercises/  # curated exercise catalog, one file per muscle group (ADR-0011)
 │   ├── models/          # pure domain interfaces, no logic
 │   │   ├── workout.model.ts      # sessions / exercises / sets + export schema
 │   │   ├── routine.model.ts      # saved routines (built-in + custom)
@@ -37,7 +38,8 @@ src/app/
 │   │   └── progression.model.ts  # suggestion types
 │   └── services/
 │       ├── storage.service.ts          # sessions persistence (localStorage)
-│       ├── routine.service.ts          # hardcoded exercise catalog + built-in days
+│       ├── routine.service.ts          # catalog access layer + built-in days
+│       ├── exercise-library.service.ts # user-enabled exercise subset (ADR-0011)
 │       ├── routine-library.service.ts  # user-created custom routines (CRUD)
 │       ├── profile.service.ts          # user profile persistence + level resolution
 │       ├── progression.util.ts         # PURE progression math (no Angular) — unit-tested
@@ -48,6 +50,7 @@ src/app/
 │   ├── dashboard/       # home: quick-start cards, resume banner, export/import
 │   ├── workout/         # guided logging flow (day-based or routine-based)
 │   ├── routines/        # routines list + editor
+│   ├── exercise-library/# enable/disable catalog exercises
 │   ├── profile/         # profile form + computed level panel
 │   ├── history/         # session list + detail
 │   ├── analysis/        # Chart.js dashboards + PNG export
@@ -76,12 +79,13 @@ Four localStorage keys:
 | `gym_current_session` | in-progress session autosave  | `StorageService`        |
 | `gym_custom_routines` | user-created `Routine[]`      | `RoutineLibraryService` |
 | `gym_user_profile`    | `UserProfile`                 | `ProfileService`        |
+| `gym_enabled_exercises` | enabled catalog exercise ids | `ExerciseLibraryService` |
 
-The export file (`ExportData`) bundles `sessions`, `user?` and `routines?` — everything needed to
-restore on a new device ([ADR-0002](docs/adr/0002-localstorage-plus-json-export.md)). The session
-schema is append-only: new fields are always optional so historical data parses unchanged. Exercise
-`templateId` slugs are stable opaque keys, never renamed
-([ADR-0008](docs/adr/0008-stable-template-ids.md)). A sample export lives in
+The export file (`ExportData`, `version: "2.0"`) bundles `sessions`, `user?`, `routines?` and
+`enabledExerciseIds?` — everything needed to restore on a new device
+([ADR-0002](docs/adr/0002-localstorage-plus-json-export.md)). Exercise `templateId` slugs are
+stable English keys ([ADR-0012](docs/adr/0012-v2-format-clean-break.md); pre-v2 data converts via
+[docs/migration-v2.md](docs/migration-v2.md)). A pre-v2 sample export lives in
 [docs/sample-data/](docs/sample-data/).
 
 ## Key flows
@@ -98,8 +102,11 @@ the user's own set-to-set decline pattern from the last session. Per-session wei
 scaled by weekly training frequency (auto-detected from the last 3 weeks, overridable per category
 in the profile) so weekly progression stays constant across splits, and the profile's training
 focus (hypertrophy / strength / maintenance) moves the rep threshold at which weight goes up.
-Suggestions only pre-fill editable fields — nothing is enforced
-([ADR-0007](docs/adr/0007-advisory-progression.md)).
+Rules are exercise-type aware: strength-style weight-priority and the aggressive double step
+apply to compounds only, each exercise carries its own rep ranges and load increment, and a
+focus-driven range switch reloads from the estimated 1RM (full decision matrix in
+[docs/exercises/README.md](docs/exercises/README.md)). Suggestions only pre-fill editable
+fields — nothing is enforced ([ADR-0007](docs/adr/0007-advisory-progression.md)).
 
 **Export / import.** Export downloads a single JSON with sessions + profile + custom routines.
 Import merges sessions/routines by id (skipping duplicates) and only adopts the profile when none
@@ -119,6 +126,8 @@ exists locally.
 | [0008](docs/adr/0008-stable-template-ids.md)              | Exercise template ids are stable, exempt from renames |
 | [0009](docs/adr/0009-no-ci-pipeline.md)                   | No CI pipeline; manual deploy to Vercel              |
 | [0010](docs/adr/0010-narrow-testing-scope.md)             | Tests target critical logic only                     |
+| [0011](docs/adr/0011-curated-catalog-with-enabled-subset.md) | Curated catalog with user-enabled subset          |
+| [0012](docs/adr/0012-v2-format-clean-break.md)            | One-time v2 clean break (supersedes 0008)            |
 
 ## Non-goals
 

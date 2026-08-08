@@ -53,24 +53,6 @@ export class StorageService {
     this.persistSessions();
   }
 
-  /** Find the most recent completed session of a dayType (and optionally dayVariant) for pre-fill */
-  getLastSessionForDay(
-    dayType: 'push' | 'pull' | 'legs' | 'abs',
-    dayVariant?: 'A' | 'B',
-  ): WorkoutSession | undefined {
-    const matching = this.sessions()
-      .filter((s) => s.dayType === dayType && s.completed)
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
-    // Prefer the same variant when specified
-    if (dayVariant) {
-      const sameVariant = matching.find((s) => s.dayVariant === dayVariant);
-      if (sameVariant) return sameVariant;
-    }
-
-    return matching[0];
-  }
-
   /**
    * Find the most recent completed occurrence of an exercise across ALL
    * sessions, regardless of dayType/variant. Progression needs

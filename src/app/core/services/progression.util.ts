@@ -285,16 +285,19 @@ export interface SuggestionResult {
   rationale: string;
 }
 
-/** Round a weight to the nearest plate increment */
-export function roundToPlate(weightKg: number): number {
-  return Math.max(0, Math.round(weightKg / PLATE_INCREMENT_KG) * PLATE_INCREMENT_KG);
+/** Round a weight to the nearest load increment (per-exercise when available) */
+export function roundToPlate(weightKg: number, incrementKg: number = PLATE_INCREMENT_KG): number {
+  if (incrementKg <= 0) incrementKg = PLATE_INCREMENT_KG;
+  return Math.max(0, Math.round(weightKg / incrementKg) * incrementKg);
 }
 
 /**
- * Decide the progression action from level, focus, RIR trend and rep-range
- * position. Focus moves the reps threshold at which weight goes up:
- * hypertrophy = range ceiling (double progression), strength = range midpoint
- * (weight-priority), maintenance = never adds weight automatically.
+ * Decide the progression action from level, focus, exercise type, RIR trend
+ * and rep-range position. Focus moves the reps threshold at which weight goes
+ * up: hypertrophy = range ceiling (double progression), strength = range
+ * midpoint (weight-priority) — but ONLY for compounds; isolation exercises
+ * always run double progression (heavy-loading a lateral raise is pointless
+ * and injury-prone). Maintenance never adds weight automatically.
  */
 export function decideAction(
   level: ExperienceLevel,
@@ -306,6 +309,7 @@ export function decideAction(
   set1Reps: number,
   targetRepsMin: number,
   targetRepsMax: number,
+  isCompound = false,
 ): ProgressionAction {
   if (rirTrend === 'falling' || avgRecentRir < targetRirMin - 0.5) return 'hold';
   if (AGGRESSIVENESS[level].requireRirInRange && avgRecentRir < targetRirMin) return 'hold';
@@ -315,7 +319,9 @@ export function decideAction(
   }
   if (rirTrend === 'rising' && avgRecentRir > targetRirMax + 0.5) return 'add-weight-aggressive';
   const weightThreshold =
-    focus === 'strength' ? Math.ceil((targetRepsMin + targetRepsMax) / 2) : targetRepsMax;
+    focus === 'strength' && isCompound
+      ? Math.ceil((targetRepsMin + targetRepsMax) / 2)
+      : targetRepsMax;
   return set1Reps >= weightThreshold ? 'add-weight' : 'add-reps';
 }
 
@@ -333,13 +339,26 @@ export function suggestNextSessionSets(input: SuggestionInput): SuggestionResult
   const { template, lastSets, level, rirTrend, avgRecentRir } = input;
   const focus = input.focus ?? 'hypertrophy';
   const frequency = input.frequency ?? 1;
+  const isCompound = template.isCompound ?? false;
+  const increment = template.weightIncrementKg ?? PLATE_INCREMENT_KG;
   const defaultRir = midpointRir(template);
+
+  // Effective rep range: strength focus uses the strength range — compounds
+  // with a defined strength range only. Everything else keeps the hypertrophy
+  // range (isolation, unilateral/technique-limited compounds, maintenance).
+  const useStrengthRange =
+    focus === 'strength' &&
+    isCompound &&
+    template.strengthRepsMin != null &&
+    template.strengthRepsMax != null;
+  const repsMin = useStrengthRange ? template.strengthRepsMin! : template.targetRepsMin;
+  const repsMax = useStrengthRange ? template.strengthRepsMax! : template.targetRepsMax;
 
   const workSets = lastSets.filter((s) => !s.isWarmup && s.completed && !s.skipped && s.weightKg > 0);
   if (workSets.length === 0) {
     return {
       basis: 'no-history',
-      targets: targetsFromTemplateDefaults(template, defaultRir),
+      targets: targetsFromTemplateDefaults(template, defaultRir, repsMin),
       rationale: 'No previous data for this exercise — using template defaults.',
     };
   }
@@ -347,7 +366,9 @@ export function suggestNextSessionSets(input: SuggestionInput): SuggestionResult
   const set1 = workSets[0];
   const targetRirMin = template.targetRirMin ?? 1;
   const targetRirMax = template.targetRirMax ?? 3;
-  const action = decideAction(
+
+  // Fatigue gates always run first — a HOLD verdict is never overridden.
+  const gateAction = decideAction(
     level,
     focus,
     rirTrend,
@@ -355,32 +376,56 @@ export function suggestNextSessionSets(input: SuggestionInput): SuggestionResult
     targetRirMin,
     targetRirMax,
     set1.reps,
-    template.targetRepsMin,
-    template.targetRepsMax,
+    repsMin,
+    repsMax,
+    isCompound,
   );
+
+  // Range transition (e.g. focus switched hypertrophy↔strength, or a big
+  // overshoot): when the last performance sits far outside the effective
+  // range, extrapolating rep-by-rep is meaningless — recalculate the load
+  // from the estimated 1RM instead. Skipped under maintenance and whenever
+  // the fatigue gates said HOLD.
+  const rangeSwitched =
+    focus !== 'maintenance' &&
+    gateAction !== 'hold' &&
+    (set1.reps > repsMax + 2 || set1.reps < repsMin - 2);
+
+  const action = rangeSwitched ? 'add-weight' : gateAction;
+
   // Scale the per-session weight step so WEEKLY progression stays constant
   // regardless of how often the exercise is trained.
   const step = AGGRESSIVENESS[level].weightStepPct * frequencyStepScale(frequency);
+  // The aggressive double step only makes sense on compounds; isolation takes
+  // a single step (the per-exercise increment already bounds the jump).
+  const aggressiveMultiplier = isCompound ? 2 : 1;
 
   let newSet1Weight: number;
   let newSet1Reps: number;
-  switch (action) {
-    case 'hold':
-      newSet1Weight = set1.weightKg;
-      newSet1Reps = set1.reps;
-      break;
-    case 'add-reps':
-      newSet1Weight = set1.weightKg;
-      newSet1Reps = Math.min(set1.reps + AGGRESSIVENESS[level].repsStep, template.targetRepsMax);
-      break;
-    case 'add-weight':
-      newSet1Weight = roundUpFrom(set1.weightKg, 1 + step);
-      newSet1Reps = template.targetRepsMin;
-      break;
-    case 'add-weight-aggressive':
-      newSet1Weight = roundUpFrom(set1.weightKg, 1 + step * 2);
-      newSet1Reps = Math.max(template.targetRepsMin, set1.reps);
-      break;
+  if (rangeSwitched) {
+    // Solve Epley backwards: e1RM = w × (1 + n/30) with n = target reps + RIR in reserve
+    const e1Rm = estimate1Rm(set1.weightKg, set1.reps);
+    newSet1Reps = Math.round((repsMin + repsMax) / 2);
+    newSet1Weight = roundToPlate(e1Rm / (1 + (newSet1Reps + defaultRir) / 30), increment);
+  } else {
+    switch (action) {
+      case 'hold':
+        newSet1Weight = set1.weightKg;
+        newSet1Reps = set1.reps;
+        break;
+      case 'add-reps':
+        newSet1Weight = set1.weightKg;
+        newSet1Reps = Math.min(set1.reps + AGGRESSIVENESS[level].repsStep, repsMax);
+        break;
+      case 'add-weight':
+        newSet1Weight = roundUpFrom(set1.weightKg, 1 + step, increment);
+        newSet1Reps = repsMin;
+        break;
+      case 'add-weight-aggressive':
+        newSet1Weight = roundUpFrom(set1.weightKg, 1 + step * aggressiveMultiplier, increment);
+        newSet1Reps = Math.max(repsMin, Math.min(set1.reps, repsMax));
+        break;
+    }
   }
 
   // Preserve last session's per-set shape relative to set 1
@@ -392,7 +437,7 @@ export function suggestNextSessionSets(input: SuggestionInput): SuggestionResult
     targets.push({
       setNumber: setNumber++,
       isWarmup: true,
-      weightKg: roundToPlate(newSet1Weight * ratio),
+      weightKg: roundToPlate(newSet1Weight * ratio, increment),
       reps: warmup.reps,
       rir: warmup.rir,
     });
@@ -400,28 +445,32 @@ export function suggestNextSessionSets(input: SuggestionInput): SuggestionResult
 
   for (const ws of workSets) {
     const weightRatio = ws.weightKg / set1.weightKg;
-    const repsDelta = ws.reps - set1.reps;
+    // On a range switch the old per-set rep deltas belong to the old range — reset them
+    const repsDelta = rangeSwitched ? 0 : ws.reps - set1.reps;
     const rirDelta = ws.rir - set1.rir;
     targets.push({
       setNumber: setNumber++,
       isWarmup: false,
-      weightKg: roundToPlate(newSet1Weight * weightRatio),
+      weightKg: roundToPlate(newSet1Weight * weightRatio, increment),
       reps: Math.max(1, Math.round(newSet1Reps + repsDelta)),
       rir: clamp(defaultRir + rirDelta, 0, 5),
     });
   }
 
-  return {
-    basis: 'computed',
-    action,
-    targets,
-    rationale: buildRationale(action, rirTrend, level, focus, frequency),
-  };
+  const rationale = rangeSwitched
+    ? `Last performance far outside the ${repsMin}-${repsMax} target range — load recalculated from your estimated 1RM.`
+    : buildRationale(action, rirTrend, level, focus, frequency);
+
+  return { basis: 'computed', action, targets, rationale };
 }
 
 // ─── Internal helpers ───
 
-function targetsFromTemplateDefaults(template: ExerciseTemplate, defaultRir: number): SetTarget[] {
+function targetsFromTemplateDefaults(
+  template: ExerciseTemplate,
+  defaultRir: number,
+  repsMin: number = template.targetRepsMin,
+): SetTarget[] {
   const warmupCount = template.hasWarmupSets ? (template.warmupSets ?? 0) : 0;
   const total = template.targetSets + warmupCount;
   const targets: SetTarget[] = [];
@@ -430,7 +479,7 @@ function targetsFromTemplateDefaults(template: ExerciseTemplate, defaultRir: num
       setNumber: i + 1,
       isWarmup: i < warmupCount,
       weightKg: 0,
-      reps: template.targetRepsMin,
+      reps: repsMin,
       rir: defaultRir,
     });
   }
@@ -444,11 +493,11 @@ function midpointRir(template: ExerciseTemplate): number {
   return min ?? max ?? 2;
 }
 
-/** Round up to the next plate increment, guaranteeing at least one increment of progress */
-function roundUpFrom(baseWeight: number, factor: number): number {
+/** Round up to the next load increment, guaranteeing at least one increment of progress */
+function roundUpFrom(baseWeight: number, factor: number, incrementKg: number = PLATE_INCREMENT_KG): number {
   const raw = baseWeight * factor;
-  const rounded = roundToPlate(raw);
-  return rounded > baseWeight ? rounded : baseWeight + PLATE_INCREMENT_KG;
+  const rounded = roundToPlate(raw, incrementKg);
+  return rounded > baseWeight ? rounded : baseWeight + incrementKg;
 }
 
 function buildRationale(

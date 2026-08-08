@@ -1,7 +1,7 @@
 # ADR-0008: Exercise template ids are stable identifiers, exempt from renames
 
 Date: 2026-08-08
-Status: Accepted
+Status: Superseded by [ADR-0012](0012-v2-format-clean-break.md)
 
 ## Context
 

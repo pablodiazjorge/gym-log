@@ -3,7 +3,7 @@ import { RoutineLibraryService } from './routine-library.service';
 import { RoutineExerciseConfig } from '../models/routine.model';
 
 const config = (overrides: Partial<RoutineExerciseConfig> = {}): RoutineExerciseConfig => ({
-  templateId: 'press-inclinado-maquina',
+  templateId: 'incline-machine-press',
   order: 1,
   targetSets: 4,
   targetRepsMin: 10,

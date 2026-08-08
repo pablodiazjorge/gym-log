@@ -4,21 +4,24 @@ import { Routine } from '../models/routine.model';
 import { UserProfile } from '../models/profile.model';
 import { ProfileService } from './profile.service';
 import { RoutineLibraryService } from './routine-library.service';
+import { ExerciseLibraryService } from './exercise-library.service';
 
 /** Result of parsing an import file */
 export interface ImportResult {
   sessions: WorkoutSession[];
   user?: UserProfile;
   routines?: Routine[];
+  enabledExerciseIds?: string[];
 }
 
 @Injectable({ providedIn: 'root' })
 export class ExportService {
   private readonly profileService = inject(ProfileService);
   private readonly routineLibrary = inject(RoutineLibraryService);
+  private readonly exerciseLibrary = inject(ExerciseLibraryService);
 
   private readonly appName = 'GymTracker';
-  private readonly version = '1.1';
+  private readonly version = '2.0'; // v2: English exercise ids, no dayVariant (see docs/migration-v2.md)
 
   /** Export all sessions (plus profile and custom routines) to JSON and trigger the download */
   exportAll(sessions: WorkoutSession[]): void {
@@ -46,6 +49,9 @@ export class ExportService {
             sessions: data.sessions,
             user: data.user,
             routines: Array.isArray(data.routines) ? data.routines : undefined,
+            enabledExerciseIds: Array.isArray(data.enabledExerciseIds)
+              ? data.enabledExerciseIds
+              : undefined,
           });
         } catch (err) {
           reject(err instanceof Error ? err : new Error('Failed to parse the JSON file'));
@@ -59,12 +65,14 @@ export class ExportService {
   private buildExportData(sessions: WorkoutSession[]): ExportData {
     const user = this.profileService.profile();
     const routines = this.routineLibrary.customRoutines();
+    const enabledExerciseIds = [...this.exerciseLibrary.enabledIds()];
     return {
       version: this.version,
       exportDate: new Date().toISOString(),
       appName: this.appName,
       ...(user ? { user } : {}),
       ...(routines.length > 0 ? { routines } : {}),
+      ...(enabledExerciseIds.length > 0 ? { enabledExerciseIds } : {}),
       sessions,
     };
   }

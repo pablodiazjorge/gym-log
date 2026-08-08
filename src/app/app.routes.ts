@@ -26,6 +26,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/routines/routine-editor').then((m) => m.RoutineEditor),
   },
   {
+    path: 'exercises',
+    loadComponent: () =>
+      import('./features/exercise-library/exercise-library').then((m) => m.ExerciseLibrary),
+  },
+  {
     path: 'history',
     loadComponent: () => import('./features/history/history').then((m) => m.History),
   },

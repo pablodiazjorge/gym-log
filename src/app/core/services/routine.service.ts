@@ -1,383 +1,53 @@
 import { Injectable } from '@angular/core';
 import { DayInfo, ExerciseTemplate } from '../models/workout.model';
 import { Routine, RoutineExerciseConfig } from '../models/routine.model';
+import { EXERCISE_CATALOG } from '../data/exercises';
 
 /**
  * Exercise catalog + built-in PPL + Abs routine provider.
- * 4 built-in session types: Push, Pull, Legs, Abs — each may offer
- * alternative exercises to choose from at the start (choice groups).
+ * The catalog lives in src/app/core/data/exercises/* (mirrored in
+ * docs/exercises/*.md); this service is the read-only access layer.
  *
- * NOTE: ExerciseTemplate ids are Spanish-derived slugs kept as stable FKs into
- * the user's logged history — they are internal opaque keys, exempt from the
- * English rewrite (ADR-0008). Only human-facing names/notes are English.
+ * 4 built-in session types: Push, Pull, Legs, Abs — their members are the
+ * catalog entries flagged `builtInDay`. Other catalog exercises join built-in
+ * days only as enabled alternatives of a choiceGroup (see
+ * ExerciseLibraryService / ADR-0011).
+ *
+ * ExerciseTemplate ids are English slugs used as stable FKs into the user's
+ * logged history (ADR-0012 — v2 format).
  */
 @Injectable({ providedIn: 'root' })
 export class RoutineService {
   // ─── Available session types ───
-  private readonly sessionTypes: { dayType: 'push' | 'pull' | 'legs' | 'abs'; dayVariant: 'A'; label: string; muscleLabel: string; emoji: string }[] = [
-    { dayType: 'push', dayVariant: 'A', label: 'Push', muscleLabel: 'Chest, shoulders, triceps', emoji: '💪' },
-    { dayType: 'pull', dayVariant: 'A', label: 'Pull', muscleLabel: 'Back, biceps', emoji: '🏋️' },
-    { dayType: 'legs', dayVariant: 'A', label: 'Legs', muscleLabel: 'Quads, hamstrings, glutes, calves', emoji: '🦵' },
-    { dayType: 'abs', dayVariant: 'A', label: 'Abs', muscleLabel: 'Abdominals', emoji: '🪨' },
+  private readonly sessionTypes: { dayType: 'push' | 'pull' | 'legs' | 'abs'; label: string; muscleLabel: string; emoji: string }[] = [
+    { dayType: 'push', label: 'Push', muscleLabel: 'Chest, shoulders, triceps', emoji: '💪' },
+    { dayType: 'pull', label: 'Pull', muscleLabel: 'Back, biceps', emoji: '🏋️' },
+    { dayType: 'legs', label: 'Legs', muscleLabel: 'Quads, hamstrings, glutes, calves', emoji: '🦵' },
+    { dayType: 'abs', label: 'Abs', muscleLabel: 'Abdominals', emoji: '🪨' },
   ];
 
-  // ─── Routine exercises ───
-  private readonly allExercises: ExerciseTemplate[] = [
-    // ── PUSH (choose: incline press or flat press) ──
-    {
-      id: 'press-inclinado-maquina',
-      name: 'Incline Machine Press',
-      category: 'push',
-      order: 1,
-      targetSets: 4,
-      targetRepsMin: 10,
-      targetRepsMax: 12,
-      hasWarmupSets: true,
-      warmupSets: 2,
-      choiceGroup: 'push-main',
-    },
-    {
-      id: 'press-plano',
-      name: 'Flat Press',
-      category: 'push',
-      order: 1,
-      targetSets: 4,
-      targetRepsMin: 10,
-      targetRepsMax: 12,
-      hasWarmupSets: true,
-      warmupSets: 2,
-      choiceGroup: 'push-main',
-    },
-    {
-      id: 'press-inclinado-smith',
-      name: 'Incline Smith Press',
-      category: 'push',
-      order: 1,
-      targetSets: 4,
-      targetRepsMin: 10,
-      targetRepsMax: 12,
-      hasWarmupSets: true,
-      warmupSets: 2,
-      choiceGroup: 'push-main',
-    },
-    {
-      id: 'pec-deck',
-      name: 'Pec Deck / Chest Fly Machine',
-      category: 'push',
-      order: 2,
-      targetSets: 3,
-      targetRepsMin: 12,
-      targetRepsMax: 15,
-      hasWarmupSets: false,
-    },
-    {
-      id: 'triceps-polea-vertical',
-      name: 'Cable Triceps Pushdown',
-      category: 'push',
-      order: 3,
-      targetSets: 3,
-      targetRepsMin: 12,
-      targetRepsMax: 15,
-      hasWarmupSets: false,
-    },
-    {
-      id: 'elevaciones-laterales-banco-inclinado',
-      name: 'Incline Bench Lateral Raises',
-      category: 'push',
-      order: 4,
-      targetSets: 3,
-      targetRepsMin: 12,
-      targetRepsMax: 15,
-      hasWarmupSets: false,
-    },
-    {
-      id: 'rear-delt-fly',
-      name: 'Rear Delt Fly',
-      category: 'push',
-      order: 5,
-      targetSets: 3,
-      targetRepsMin: 12,
-      targetRepsMax: 15,
-      hasWarmupSets: false,
-    },
-
-    // ── PULL (choose: bar lat pulldown, MAG neutral, pull-ups or 1-arm pulldown; incline bench curl or hammer curl) ──
-    {
-      id: 'jalon-pecho-agarre-ancho',
-      name: 'Lat Pulldown (bar & straps, wide pronated grip)',
-      category: 'pull',
-      order: 1,
-      targetSets: 4,
-      targetRepsMin: 8,
-      targetRepsMax: 10,
-      hasWarmupSets: true,
-      warmupSets: 2,
-      choiceGroup: 'pull-main',
-    },
-    {
-      id: 'jalon-pecho-agarre-mag-neutro',
-      name: 'Lat Pulldown (wide MAG grip, neutral)',
-      category: 'pull',
-      order: 1,
-      targetSets: 4,
-      targetRepsMin: 8,
-      targetRepsMax: 10,
-      hasWarmupSets: true,
-      warmupSets: 2,
-      choiceGroup: 'pull-main',
-    },
-    {
-      id: 'dominadas-agarre-prono',
-      name: 'Pronated-Grip Pull-Ups',
-      category: 'pull',
-      order: 1,
-      targetSets: 4,
-      targetRepsMin: 6,
-      targetRepsMax: 10,
-      hasWarmupSets: true,
-      warmupSets: 2,
-      choiceGroup: 'pull-main',
-      notes: 'Wide pronated grip. If you cannot reach 6 reps, use a band or negative reps.',
-    },
-    {
-      id: 'jalon-lat-1-mano',
-      name: 'Single-Arm Lat Pulldown',
-      category: 'pull',
-      order: 1,
-      targetSets: 4,
-      targetRepsMin: 8,
-      targetRepsMax: 12,
-      hasWarmupSets: true,
-      warmupSets: 2,
-      choiceGroup: 'pull-main',
-      notes: 'Grab the single handle. Pull toward the chest, elbow close to the body.',
-    },
-    {
-      id: 'remo-t-agarre-neutro',
-      name: 'T-Bar Row (neutral shoulder-width grip)',
-      category: 'pull',
-      order: 2,
-      targetSets: 3,
-      targetRepsMin: 10,
-      targetRepsMax: 12,
-      hasWarmupSets: false,
-    },
-    {
-      id: 'curl-biceps-banco-inclinado',
-      name: 'Incline Bench Biceps Curl',
-      category: 'pull',
-      order: 3,
-      targetSets: 4,
-      targetRepsMin: 10,
-      targetRepsMax: 12,
-      hasWarmupSets: false,
-      choiceGroup: 'pull-curl',
-    },
-    {
-      id: 'curl-martillo',
-      name: 'Hammer Curl',
-      category: 'pull',
-      order: 3,
-      targetSets: 4,
-      targetRepsMin: 10,
-      targetRepsMax: 12,
-      hasWarmupSets: false,
-      choiceGroup: 'pull-curl',
-    },
-
-    // ── LEGS (main exercise to choose: hack squat, incline leg press or weighted squats) ──
-    {
-      id: 'hack-squat-maquina',
-      name: 'Machine Hack Squat',
-      category: 'legs',
-      order: 1,
-      targetSets: 4,
-      targetRepsMin: 8,
-      targetRepsMax: 10,
-      hasWarmupSets: true,
-      warmupSets: 2,
-      targetRirMin: 1,
-      targetRirMax: 2,
-      choiceGroup: 'legs-main',
-    },
-    {
-      id: 'prensa-inclinada',
-      name: 'Incline Leg Press',
-      category: 'legs',
-      order: 1,
-      targetSets: 4,
-      targetRepsMin: 8,
-      targetRepsMax: 10,
-      hasWarmupSets: true,
-      warmupSets: 2,
-      targetRirMin: 1,
-      targetRirMax: 2,
-      choiceGroup: 'legs-main',
-      notes: 'Feet low, shoulder-width. Controlled range, lower back supported.',
-    },
-    {
-      id: 'sentadillas-lastradas-casa',
-      name: 'Weighted Squats (home)',
-      category: 'legs',
-      order: 1,
-      targetSets: 4,
-      targetRepsMin: 10,
-      targetRepsMax: 15,
-      hasWarmupSets: true,
-      warmupSets: 2,
-      targetRirMin: 1,
-      targetRirMax: 2,
-      choiceGroup: 'legs-main',
-      notes: 'With a weighted backpack or dumbbells at home. Deep controlled range.',
-    },
-    {
-      id: 'curl-femoral-sentado',
-      name: 'Seated Leg Curl',
-      category: 'legs',
-      order: 2,
-      targetSets: 3,
-      targetRepsMin: 12,
-      targetRepsMax: 15,
-      hasWarmupSets: false,
-      targetRirMin: 1,
-      targetRirMax: 2,
-      choiceGroup: 'legs-femoral',
-    },
-    {
-      id: 'rdl-una-pierna',
-      name: 'Single-Leg RDL',
-      category: 'legs',
-      order: 2,
-      targetSets: 3,
-      targetRepsMin: 10,
-      targetRepsMax: 12,
-      hasWarmupSets: false,
-      targetRirMin: 2,
-      targetRirMax: 2,
-      choiceGroup: 'legs-femoral',
-      notes: 'Torso straight, rear leg as counterweight.',
-    },
-    {
-      id: 'hip-thrust',
-      name: 'Hip Thrust',
-      category: 'legs',
-      order: 3,
-      targetSets: 3,
-      targetRepsMin: 10,
-      targetRepsMax: 12,
-      hasWarmupSets: false,
-      targetRirMin: 1,
-      targetRirMax: 2,
-      choiceGroup: 'legs-glute',
-    },
-    {
-      id: 'abductor-maquina',
-      name: 'Machine Hip Abduction',
-      category: 'legs',
-      order: 3,
-      targetSets: 3,
-      targetRepsMin: 15,
-      targetRepsMax: 20,
-      hasWarmupSets: false,
-      targetRirMin: 2,
-      targetRirMax: 2,
-      choiceGroup: 'legs-glute',
-      notes: 'Lean 10-20° forward. Pause at peak contraction.',
-    },
-    {
-      id: 'elevacion-gemelos-maquina-pie',
-      name: 'Standing Machine Calf Raise',
-      category: 'legs',
-      order: 4,
-      targetSets: 2,
-      targetRepsMin: 15,
-      targetRepsMax: 20,
-      hasWarmupSets: false,
-      targetRirMin: 1,
-      targetRirMax: 1,
-      choiceGroup: 'legs-calves',
-    },
-    {
-      id: 'elevacion-gemelos-sentado',
-      name: 'Seated Calf Raise',
-      category: 'legs',
-      order: 4,
-      targetSets: 2,
-      targetRepsMin: 15,
-      targetRepsMax: 20,
-      hasWarmupSets: false,
-      targetRirMin: 1,
-      targetRirMax: 1,
-      choiceGroup: 'legs-calves',
-    },
-    {
-      id: 'bulgara-smith',
-      name: 'Smith Bulgarian Split Squat',
-      category: 'legs',
-      order: 5,
-      targetSets: 3,
-      targetRepsMin: 8,
-      targetRepsMax: 12,
-      hasWarmupSets: false,
-      targetRirMin: 1,
-      targetRirMax: 2,
-      choiceGroup: 'legs-bulgara',
-    },
-
-    // ── ABS (choose one exercise) ──
-    {
-      id: 'abs-colgado-barra',
-      name: 'Hanging Leg Raises',
-      category: 'abs',
-      order: 1,
-      targetSets: 4,
-      targetRepsMin: 8,
-      targetRepsMax: 15,
-      hasWarmupSets: true,
-      warmupSets: 2,
-      choiceGroup: 'abs-main',
-    },
-    {
-      id: 'crunch-polea',
-      name: 'Cable Crunch',
-      category: 'abs',
-      order: 1,
-      targetSets: 4,
-      targetRepsMin: 8,
-      targetRepsMax: 15,
-      hasWarmupSets: true,
-      warmupSets: 2,
-      choiceGroup: 'abs-main',
-    },
-    {
-      id: 'dragon-flight',
-      name: 'Dragon Flag',
-      category: 'abs',
-      order: 1,
-      targetSets: 4,
-      targetRepsMin: 6,
-      targetRepsMax: 12,
-      hasWarmupSets: true,
-      warmupSets: 2,
-      choiceGroup: 'abs-main',
-    },
-  ];
+  private readonly allExercises: ExerciseTemplate[] = EXERCISE_CATALOG;
 
   // ─── Public methods ───
 
-  /** ALL candidate exercises for a session (choice-group alternatives included, unfiltered) */
-  getExercisesForDay(dayType: 'push' | 'pull' | 'legs' | 'abs', _variant: 'A' | 'B'): ExerciseTemplate[] {
+  /**
+   * Candidate exercises for a built-in session: only the original built-in
+   * day members (choice-group alternatives included, unfiltered). Catalog
+   * extras never auto-join a day here.
+   */
+  getExercisesForDay(dayType: 'push' | 'pull' | 'legs' | 'abs'): ExerciseTemplate[] {
     return this.allExercises
-      .filter((ex) => ex.category === dayType)
+      .filter((ex) => ex.category === dayType && ex.builtInDay)
       .sort((a, b) => a.order - b.order);
   }
 
   /**
-   * Choice groups for a session.
+   * Choice groups for a built-in session (built-in members only — the
+   * enabled-aware variant lives in ExerciseLibraryService).
    * Returns an empty array when there is nothing to choose.
    */
-  getChoicesForDay(dayType: 'push' | 'pull' | 'legs' | 'abs', dayVariant: 'A' | 'B'): { groupId: string; label: string; options: ExerciseTemplate[] }[] {
-    const all = this.getExercisesForDay(dayType, dayVariant);
+  getChoicesForDay(dayType: 'push' | 'pull' | 'legs' | 'abs'): { groupId: string; label: string; options: ExerciseTemplate[] }[] {
+    const all = this.getExercisesForDay(dayType);
     const choiceMap = new Map<string, ExerciseTemplate[]>();
 
     for (const ex of all) {
@@ -396,7 +66,7 @@ export class RoutineService {
   }
 
   /** Human-readable label for a choice group */
-  private getChoiceLabel(groupId: string): string {
+  getChoiceLabel(groupId: string): string {
     switch (groupId) {
       case 'push-main': return 'Main chest exercise';
       case 'pull-main': return 'Main back exercise';
@@ -405,7 +75,7 @@ export class RoutineService {
       case 'legs-femoral': return 'Hamstring exercise';
       case 'legs-glute': return 'Glute exercise';
       case 'legs-calves': return 'Calf exercise';
-      case 'legs-bulgara': return 'Bulgarian split squat (extra)';
+      case 'legs-split-squat': return 'Bulgarian split squat (extra)';
       case 'abs-main': return 'Abs exercise';
       default: return 'Choose an exercise';
     }
@@ -416,7 +86,6 @@ export class RoutineService {
     return this.sessionTypes.map((st, i) => ({
       weekday: i + 1,
       dayType: st.dayType,
-      dayVariant: st.dayVariant,
       label: st.label,
       muscleLabel: st.muscleLabel,
       emoji: st.emoji,
@@ -430,14 +99,13 @@ export class RoutineService {
     return {
       weekday,
       dayType: st.dayType,
-      dayVariant: st.dayVariant,
       label: st.label,
       muscleLabel: st.muscleLabel,
       emoji: st.emoji,
     };
   }
 
-  /** ALL exercises across every category */
+  /** ALL catalog exercises across every category */
   getAllExercises(): ExerciseTemplate[] {
     return [...this.allExercises].sort((a, b) => a.category.localeCompare(b.category) || a.order - b.order);
   }
@@ -459,7 +127,7 @@ export class RoutineService {
     return this.sessionTypes.map((st) => {
       const seenGroups = new Set<string>();
       const exercises: RoutineExerciseConfig[] = [];
-      for (const ex of this.getExercisesForDay(st.dayType, st.dayVariant)) {
+      for (const ex of this.getExercisesForDay(st.dayType)) {
         if (ex.choiceGroup) {
           if (seenGroups.has(ex.choiceGroup)) continue; // first option represents the group
           seenGroups.add(ex.choiceGroup);

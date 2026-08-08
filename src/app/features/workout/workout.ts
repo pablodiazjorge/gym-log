@@ -6,6 +6,7 @@ import { StorageService } from '../../core/services/storage.service';
 import { ExportService } from '../../core/services/export.service';
 import { ProgressionService } from '../../core/services/progression.service';
 import { ProfileService } from '../../core/services/profile.service';
+import { ExerciseLibraryService } from '../../core/services/exercise-library.service';
 import { WorkoutSession, WorkoutExercise, WorkoutSet, ExerciseTemplate } from '../../core/models/workout.model';
 import { SetInput } from './set-input';
 
@@ -16,7 +17,7 @@ type DayType = 'push' | 'pull' | 'legs' | 'abs';
 
 /** Where this workout was started from */
 type WorkoutSource =
-  | { kind: 'day'; dayType: DayType; variant: 'A' | 'B' }
+  | { kind: 'day'; dayType: DayType }
   | { kind: 'routine'; routineId: string };
 
 @Component({
@@ -34,8 +35,9 @@ export class Workout {
   private readonly exportService = inject(ExportService);
   private readonly progression = inject(ProgressionService);
   private readonly profileService = inject(ProfileService);
+  private readonly exerciseLibrary = inject(ExerciseLibraryService);
 
-  readonly source = signal<WorkoutSource>({ kind: 'day', dayType: 'push', variant: 'A' });
+  readonly source = signal<WorkoutSource>({ kind: 'day', dayType: 'push' });
   readonly routineName = signal<string>('');
   readonly currentExerciseIndex = signal(0);
   readonly session = signal<WorkoutSession | null>(null);
@@ -129,11 +131,7 @@ export class Workout {
       if (params['routineId']) {
         this.source.set({ kind: 'routine', routineId: params['routineId'] as string });
       } else {
-        this.source.set({
-          kind: 'day',
-          dayType: params['dayType'] as DayType,
-          variant: 'A',
-        });
+        this.source.set({ kind: 'day', dayType: params['dayType'] as DayType });
       }
 
       if (resume) {
@@ -155,14 +153,15 @@ export class Workout {
       this.createSessionFromRoutine(src.routineId);
       return;
     }
-    const choices = this.routineService.getChoicesForDay(src.dayType, src.variant);
+    // Enabled-aware choice groups: built-in options plus enabled catalog variations
+    const choices = this.exerciseLibrary.getChoicesForDay(src.dayType);
     if (choices.length > 0) {
       this.choiceGroups.set(choices);
       const init: Record<string, string> = {};
       for (const c of choices) init[c.groupId] = '';
       this.selectedChoices.set(init);
     } else {
-      const templates = this.routineService.getExercisesForDay(src.dayType, src.variant);
+      const templates = this.routineService.getExercisesForDay(src.dayType);
       this.createNewSessionFromPlan(templates);
     }
   }
@@ -179,11 +178,18 @@ export class Workout {
     const selected = this.selectedChoices();
     const selectedIds = new Set(Object.values(selected).filter(Boolean));
 
-    const allTemplates = this.routineService.getExercisesForDay(src.dayType, src.variant);
-    // Keep exercises without a choiceGroup, plus the chosen alternatives
-    const filtered = allTemplates.filter((t) => !t.choiceGroup || selectedIds.has(t.id));
+    // Fixed day members (no choice group) + the chosen alternatives. Chosen
+    // ids are resolved from the full catalog since enabled variations may not
+    // belong to the built-in day list.
+    const fixed = this.routineService
+      .getExercisesForDay(src.dayType)
+      .filter((t) => !t.choiceGroup);
+    const chosen = [...selectedIds]
+      .map((id) => this.routineService.getTemplateById(id))
+      .filter((t): t is ExerciseTemplate => !!t);
+    const templates = [...fixed, ...chosen].sort((a, b) => a.order - b.order);
 
-    this.createNewSessionFromPlan(filtered);
+    this.createNewSessionFromPlan(templates);
   }
 
   /** Is at least one exercise selected? */
@@ -204,7 +210,10 @@ export class Workout {
     this.routineName.set(routine.name);
 
     // Merge each config with its catalog template: the routine's own
-    // sets/reps/RIR/rest override the template defaults.
+    // sets/reps/RIR/rest override the template defaults. The catalog's
+    // strength range is stripped — a routine is "configured exactly as you
+    // want", so its authored rep range always wins, even under strength focus
+    // (the focus still applies its weight-priority threshold within it).
     const templates: ExerciseTemplate[] = [];
     const restByTemplateId = new Map<string, number | undefined>();
     for (const config of [...routine.exercises].sort((a, b) => a.order - b.order)) {
@@ -215,6 +224,8 @@ export class Workout {
         targetSets: config.targetSets,
         targetRepsMin: config.targetRepsMin,
         targetRepsMax: config.targetRepsMax,
+        strengthRepsMin: undefined,
+        strengthRepsMax: undefined,
         hasWarmupSets: config.hasWarmupSets,
         warmupSets: config.warmupSets,
         targetRirMin: config.targetRirMin ?? catalog.targetRirMin,
@@ -272,7 +283,6 @@ export class Workout {
       id: `ws-${new Date().toISOString().slice(0, 10)}-${dayType}-${String(Date.now()).slice(-4)}`,
       date: new Date().toISOString(),
       dayType,
-      dayVariant: src.kind === 'day' ? src.variant : 'A',
       exercises,
       routineId: routineContext?.routineId,
       completed: false,

@@ -30,6 +30,10 @@ progression targets for your next session, and keep every byte of your data on y
 - **JSON export/import** — one file containing your sessions, profile and custom routines; the
   flat, analysis-friendly schema doubles as the input for external analysis (Python/pandas, AI).
 - **Ad-hoc logging** — the Additional flow for free-form one-off workouts outside any routine.
+- **Exercise library** — a curated catalog (~85 exercises, EN/ES names + descriptions, grouped by
+  muscle) where you enable the exercises available in your pickers; each entry carries its own
+  engine metadata (compound/isolation, per-focus rep ranges, load increment). See
+  [docs/exercises/](docs/exercises/).
 
 ## Tech stack
 
