@@ -135,7 +135,7 @@ export class Analysis implements AfterViewInit, OnDestroy {
       avgRepsPerSet: 0,
       maxRepsInSet: 0,
       avgRir: 0,
-      rirTrend: 'estable',
+      rirTrend: 'stable',
       weeksSinceLastPR: 0,
       isStagnant: false,
       recommendation: '',
@@ -162,7 +162,7 @@ export class Analysis implements AfterViewInit, OnDestroy {
           labels: volData.labels,
           datasets: [
             {
-              label: 'Volumen semanal (kg)',
+              label: 'Weekly volume (kg)',
               data: volData.data,
               backgroundColor: '#10b981',
               borderRadius: 6,
@@ -208,7 +208,7 @@ export class Analysis implements AfterViewInit, OnDestroy {
         labels: chartData.labels,
         datasets: [
           {
-            label: 'Peso máximo (kg)',
+            label: 'Max weight (kg)',
             data: chartData.data,
             borderColor: '#34d399',
             backgroundColor: 'rgba(52, 211, 153, 0.15)',
@@ -259,7 +259,7 @@ export class Analysis implements AfterViewInit, OnDestroy {
       link.click();
     } catch (err) {
       console.error('Export error:', err);
-      alert('Error al exportar el informe.');
+      alert('Failed to export the report.');
     }
   }
 }

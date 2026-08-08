@@ -1,59 +1,91 @@
-# GymLog
+# Gym Tracker
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.0.3.
+A mobile-first workout tracker built for the gym floor: log sets in seconds, get calculated
+progression targets for your next session, and keep every byte of your data on your own device.
 
-## Development server
+## Screenshots
 
-To start a local development server, run:
+<!-- TODO: add screenshots to docs/screenshots/ -->
+<!-- ![Dashboard](docs/screenshots/dashboard.png) -->
+<!-- ![Workout](docs/screenshots/workout.png) -->
+<!-- ![Analysis](docs/screenshots/analysis.png) -->
 
-```bash
-ng serve
-```
+## Features
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+- **One-tap quick start** — built-in Push / Pull / Legs / Abs days with alternative-exercise
+  choices at the start of each session.
+- **Custom routines** — build fully-configured routines (per-exercise sets, rep ranges, RIR
+  targets, rest time) and start them with one tap from the Routines tab.
+- **Guided logging flow** — one exercise at a time, big touch targets, +/- steppers for weight,
+  reps, RIR, partial reps and eccentric seconds; per-exercise rest time; autosave and resume for
+  in-progress sessions.
+- **Calculated progression targets** — the next session is pre-filled with computed targets
+  (double progression autoregulated by your RIR trend), scaled to your experience level and
+  preserving your own set-to-set weight-drop pattern. Always editable, never enforced.
+- **User profile** — simple mode (pick your level) or advanced mode (wrist/ankle frame-size
+  assessment + estimated 1RM from reference lifts, classified against frame-adjusted strength
+  standards, per movement category).
+- **History & analysis** — session history and detail views, weight/volume progression charts,
+  weekly volume, RIR trend, stagnation detection with recommendations, PNG report export.
+- **JSON export/import** — one file containing your sessions, profile and custom routines; the
+  flat, analysis-friendly schema doubles as the input for external analysis (Python/pandas, AI).
+- **Ad-hoc logging** — the Additional flow for free-form one-off workouts outside any routine.
 
-## Code scaffolding
+## Tech stack
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+- [Angular 22](https://angular.dev) — standalone components, Signals, zoneless change detection
+- TypeScript
+- [Tailwind CSS v4](https://tailwindcss.com)
+- [Chart.js](https://www.chartjs.org) + [html-to-image](https://github.com/bubkoo/html-to-image)
+- `localStorage` persistence — **no backend**
+- [Vitest](https://vitest.dev) for unit tests, [angular-eslint](https://github.com/angular-eslint/angular-eslint) for linting
 
-```bash
-ng generate component component-name
-```
+See [architecture.md](architecture.md) for the reasoning behind each choice.
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## Getting started
 
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
+Prerequisites: Node.js 20+ and npm.
 
 ```bash
-ng e2e
+npm install
+npm start        # dev server at http://localhost:4200
+npm run build    # production build to dist/
+npm test         # unit tests (Vitest)
+npm run lint     # ESLint
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+No environment variables or configuration needed — there is no backend.
 
-## Additional Resources
+## Project structure
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+```
+src/app/
+├── core/
+│   ├── models/      # domain interfaces (workout, routine, profile, progression)
+│   └── services/    # signal-backed services (storage, routines, progression, analytics, export)
+├── features/        # one folder per routed screen (dashboard, workout, routines, ...)
+└── shared/          # cross-feature UI (header)
+```
+
+Full conventions and rationale in [architecture.md](architecture.md).
+
+## Data & privacy
+
+All data lives in your browser's `localStorage`. Nothing is ever sent anywhere. The only way data
+leaves (or enters) the device is the explicit JSON export/import — which is also your backup
+mechanism: export regularly.
+
+## Architecture
+
+The app is a pure client-side Angular application with signal-based state and localStorage
+persistence. Design decisions are documented as ADRs — see [architecture.md](architecture.md) and
+[docs/adr/](docs/adr/).
+
+## Roadmap / known limitations
+
+- Single-device only — no sync; export/import is the transfer mechanism.
+- Progression math uses a single global plate increment (1.25 kg); per-exercise increments are a
+  natural follow-up.
+- Strength-standard classification is calibrated for free-weight reference lifts; machine numbers
+  make it approximate.
+- No e2e test suite (deliberate — see ADR-0010).

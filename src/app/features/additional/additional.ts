@@ -24,11 +24,11 @@ export class Additional {
   // ─── Exercise selection phase ───
   readonly allExercises = this.routineService.getAllExercises();
   readonly categoryFilter = signal<Category | 'all'>('all');
-  /** IDs de los ejercicios seleccionados (multi-select) */
+  /** IDs of the selected exercises (multi-select) */
   readonly selectedTemplateIds = signal<string[]>([]);
 
   readonly categories: { value: Category | 'all'; label: string; emoji: string }[] = [
-    { value: 'all', label: 'Todos', emoji: '🏋️' },
+    { value: 'all', label: 'All', emoji: '🏋️' },
     { value: 'push', label: 'Push', emoji: '💪' },
     { value: 'pull', label: 'Pull', emoji: '🏋️' },
     { value: 'legs', label: 'Legs', emoji: '🦵' },
@@ -41,7 +41,7 @@ export class Additional {
     return this.allExercises.filter((ex) => ex.category === cat);
   });
 
-  /** Templates seleccionados, en orden */
+  /** Selected templates, in order */
   readonly selectedTemplates = computed(() =>
     this.selectedTemplateIds()
       .map((id) => this.allExercises.find((ex) => ex.id === id))
@@ -49,21 +49,21 @@ export class Additional {
   );
 
   // ─── Workout phase ───
-  /** Sets por ejercicio: Record<templateId, WorkoutSet[]> */
+  /** Sets per exercise: Record<templateId, WorkoutSet[]> */
   readonly exercisesData = signal<Record<string, WorkoutSet[]>>({});
-  /** Índice del ejercicio actual */
+  /** Index of the current exercise */
   readonly currentExerciseIndex = signal(0);
   readonly startTime = signal(Date.now());
   readonly durationMinutes = computed(() => Math.round((Date.now() - this.startTime()) / 60000));
 
-  /** Template del ejercicio actual */
+  /** Template of the current exercise */
   readonly currentTemplate = computed(() => {
     const templates = this.selectedTemplates();
     const idx = this.currentExerciseIndex();
     return templates[idx] ?? null;
   });
 
-  /** Sets del ejercicio actual */
+  /** Sets of the current exercise */
   readonly currentSets = computed(() => {
     const t = this.currentTemplate();
     if (!t) return [];
@@ -82,16 +82,16 @@ export class Additional {
   readonly completedSets = computed(() => this.currentSets().filter((s) => s.completed).length);
   readonly totalSets = computed(() => this.currentSets().length);
 
-  /** Si hay al menos una serie en cualquier ejercicio */
+  /** Whether any exercise has at least one set */
   readonly hasAnySets = computed(() => {
     const data = this.exercisesData();
     return Object.values(data).some((sets) => sets.length > 0);
   });
 
-  /** Número total de ejercicios en la rutina */
+  /** Total number of exercises in the routine */
   readonly totalExercises = computed(() => this.selectedTemplates().length);
 
-  /** Si estamos en el último ejercicio */
+  /** Whether we are on the last exercise */
   readonly isLastExercise = computed(() =>
     this.currentExerciseIndex() >= this.selectedTemplates().length - 1,
   );
@@ -149,7 +149,7 @@ export class Additional {
     }
   }
 
-  /** Obtiene clase de acento por categoría */
+  /** Accent class by category */
   getAccentClassByCategory(cat: string): string {
     switch (cat) {
       case 'push': return 'bg-blue-600 hover:bg-blue-500';
@@ -162,7 +162,7 @@ export class Additional {
 
   // ─── Selection actions ───
 
-  /** Toggle de selección múltiple */
+  /** Multi-select toggle */
   toggleExercise(templateId: string): void {
     this.selectedTemplateIds.update((ids) => {
       if (ids.includes(templateId)) {
@@ -172,10 +172,10 @@ export class Additional {
     });
   }
 
-  /** Confirma selección e inicia la rutina */
+  /** Confirm the selection and start the workout */
   confirmExercises(): void {
     if (this.selectedTemplateIds().length === 0) return;
-    // Inicializar datos vacíos para cada ejercicio
+    // Initialize empty data for each exercise
     const data: Record<string, WorkoutSet[]> = {};
     for (const id of this.selectedTemplateIds()) {
       data[id] = [];
@@ -187,7 +187,7 @@ export class Additional {
   }
 
   backToSelect(): void {
-    if (this.hasAnySets() && !confirm('¿Volver atrás? Perderás todas las series que hayas añadido.')) return;
+    if (this.hasAnySets() && !confirm('Go back? You will lose every set you added.')) return;
     this.phase.set('select');
     this.exercisesData.set({});
     this.currentExerciseIndex.set(0);
@@ -319,7 +319,7 @@ export class Additional {
   }
 
   discardWorkout(): void {
-    if (confirm('¿Descartar esta rutina adicional?')) {
+    if (confirm('Discard this additional workout?')) {
       this.router.navigate(['/']);
     }
   }

@@ -34,6 +34,11 @@ export class SetInput {
     s.partialReps = Math.max(0, (s.partialReps ?? 0) + delta);
   }
 
+  adjustEccentricSeconds(delta: number): void {
+    const s = this.set();
+    s.eccentricSeconds = Math.max(0, (s.eccentricSeconds ?? 0) + delta);
+  }
+
   toggleWarmup(): void {
     this.set().isWarmup = !this.set().isWarmup;
   }

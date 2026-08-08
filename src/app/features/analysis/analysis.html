@@ -2,11 +2,11 @@
 
   <!-- Header -->
   <header class="mb-6">
-    <h1 class="text-2xl font-bold">Análisis</h1>
-    <p class="text-gray-400 text-sm">Basado en {{ totalSessions() }} sesiones</p>
+    <h1 class="text-2xl font-bold">Analysis</h1>
+    <p class="text-gray-400 text-sm">Based on {{ totalSessions() }} sessions</p>
   </header>
 
-  <!-- Alertas / Warning Flags -->
+  <!-- Warning flags -->
   @if (warnings().length > 0) {
     <section class="mb-6 space-y-2">
       @for (warning of warnings(); track warning) {
@@ -20,9 +20,9 @@
     </section>
   }
 
-  <!-- Selector de ejercicio -->
+  <!-- Exercise selector -->
   <section class="mb-6">
-    <label class="text-sm text-gray-400 mb-2 block" for="exerciseSelect">Ejercicio</label>
+    <label class="text-sm text-gray-400 mb-2 block" for="exerciseSelect">Exercise</label>
     <select
       id="exerciseSelect"
       [(ngModel)]="selectedExercise"
@@ -35,20 +35,20 @@
     </select>
   </section>
 
-  <!-- Gráfico de progresión de peso -->
+  <!-- Weight progression chart -->
   <section class="mb-6 bg-gray-900 border border-gray-800 rounded-xl p-4">
-    <h2 class="text-lg font-semibold mb-4">Progresión de peso</h2>
+    <h2 class="text-lg font-semibold mb-4">Weight progression</h2>
     <div class="h-64">
       <canvas id="weightChart"></canvas>
     </div>
     <div class="mt-4 grid grid-cols-3 gap-3 text-center">
       <div>
         <p class="text-2xl font-bold text-emerald-400">{{ metrics().maxWeightEver }}kg</p>
-        <p class="text-xs text-gray-400">Máximo histórico</p>
+        <p class="text-xs text-gray-400">All-time max</p>
       </div>
       <div>
         <p class="text-2xl font-bold text-white">{{ metrics().currentMaxWeight }}kg</p>
-        <p class="text-xs text-gray-400">Actual</p>
+        <p class="text-xs text-gray-400">Current</p>
       </div>
       <div>
         <p
@@ -58,29 +58,29 @@
         >
           {{ metrics().weeksSinceLastPR }}
         </p>
-        <p class="text-xs text-gray-400">Semanas sin PR</p>
+        <p class="text-xs text-gray-400">Weeks without a PR</p>
       </div>
     </div>
   </section>
 
-  <!-- Gráfico de volumen semanal -->
+  <!-- Weekly volume chart -->
   <section class="mb-6 bg-gray-900 border border-gray-800 rounded-xl p-4">
-    <h2 class="text-lg font-semibold mb-4">Volumen semanal total</h2>
+    <h2 class="text-lg font-semibold mb-4">Total weekly volume</h2>
     <div class="h-64">
       <canvas id="volumeChart"></canvas>
     </div>
   </section>
 
-  <!-- Métricas del ejercicio seleccionado -->
+  <!-- Selected exercise metrics -->
   <section class="mb-6 bg-gray-900 border border-gray-800 rounded-xl p-4">
-    <h2 class="text-lg font-semibold mb-4">Métricas detalladas</h2>
+    <h2 class="text-lg font-semibold mb-4">Detailed metrics</h2>
     <div class="grid grid-cols-2 gap-4">
       <div class="bg-gray-800 rounded-lg p-3">
-        <p class="text-xs text-gray-400">Volumen promedio/sesión</p>
+        <p class="text-xs text-gray-400">Avg volume/session</p>
         <p class="text-xl font-bold">{{ metrics().avgVolumePerSession | number:'1.0-0' }} kg</p>
       </div>
       <div class="bg-gray-800 rounded-lg p-3">
-        <p class="text-xs text-gray-400">RIR medio</p>
+        <p class="text-xs text-gray-400">Average RIR</p>
         <p
           class="text-xl font-bold"
           [class.text-emerald-400]="metrics().avgRir <= 2"
@@ -91,23 +91,23 @@
         </p>
       </div>
       <div class="bg-gray-800 rounded-lg p-3">
-        <p class="text-xs text-gray-400">Reps promedio</p>
+        <p class="text-xs text-gray-400">Average reps</p>
         <p class="text-xl font-bold">{{ metrics().avgRepsPerSet | number:'1.1-1' }}</p>
       </div>
       <div class="bg-gray-800 rounded-lg p-3">
-        <p class="text-xs text-gray-400">Tendencia RIR</p>
+        <p class="text-xs text-gray-400">RIR trend</p>
         <p
           class="text-xl font-bold"
-          [class.text-emerald-400]="metrics().rirTrend === 'bajando'"
-          [class.text-amber-400]="metrics().rirTrend === 'estable'"
-          [class.text-rose-400]="metrics().rirTrend === 'subiendo'"
+          [class.text-emerald-400]="metrics().rirTrend === 'falling'"
+          [class.text-amber-400]="metrics().rirTrend === 'stable'"
+          [class.text-rose-400]="metrics().rirTrend === 'rising'"
         >
           {{ metrics().rirTrend }}
         </p>
       </div>
     </div>
 
-    <!-- Recomendación -->
+    <!-- Recommendation -->
     @if (metrics().recommendation) {
       <div
         class="mt-4 bg-gray-800 rounded-lg p-3 border-l-4"
@@ -122,14 +122,14 @@
 
   <!-- Resumen global -->
   <section class="mb-6 bg-gray-900 border border-gray-800 rounded-xl p-4">
-    <h2 class="text-lg font-semibold mb-4">Resumen global</h2>
+    <h2 class="text-lg font-semibold mb-4">Global summary</h2>
     <div class="grid grid-cols-2 gap-4">
       <div class="bg-gray-800 rounded-lg p-3">
-        <p class="text-xs text-gray-400">Sesiones totales</p>
+        <p class="text-xs text-gray-400">Total sessions</p>
         <p class="text-xl font-bold">{{ globalMetrics().totalSessions }}</p>
       </div>
       <div class="bg-gray-800 rounded-lg p-3">
-        <p class="text-xs text-gray-400">Consistencia</p>
+        <p class="text-xs text-gray-400">Consistency</p>
         <p
           class="text-xl font-bold"
           [class.text-emerald-400]="globalMetrics().consistencyScore >= 80"
@@ -140,25 +140,25 @@
         </p>
       </div>
       <div class="bg-gray-800 rounded-lg p-3">
-        <p class="text-xs text-gray-400">Tendencia general</p>
+        <p class="text-xs text-gray-400">Overall trend</p>
         <p
           class="text-xl font-bold"
           [class.text-emerald-400]="globalMetrics().isProgressing"
           [class.text-rose-400]="!globalMetrics().isProgressing"
         >
-          {{ globalMetrics().isProgressing ? 'Progresando ↑' : 'Cuidado →' }}
+          {{ globalMetrics().isProgressing ? 'Progressing ↑' : 'Watch out →' }}
         </p>
       </div>
       <div class="bg-gray-800 rounded-lg p-3">
-        <p class="text-xs text-gray-400">Peso corporal</p>
+        <p class="text-xs text-gray-400">Bodyweight</p>
         <p class="text-xl font-bold">{{ currentBodyWeight() }}kg</p>
       </div>
     </div>
   </section>
 
-  <!-- Botón exportar informe -->
+  <!-- Export report button -->
   <button (click)="exportReport()"
     class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl min-h-[48px] transition-colors">
-    📊 Exportar informe como imagen
+    📊 Export report as image
   </button>
 </div>

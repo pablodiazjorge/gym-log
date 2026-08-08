@@ -1,8 +1,10 @@
 import { Component, computed, inject, viewChild, ElementRef } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { RoutineService } from '../../core/services/routine.service';
+import { RoutineLibraryService } from '../../core/services/routine-library.service';
 import { StorageService } from '../../core/services/storage.service';
 import { ExportService } from '../../core/services/export.service';
+import { ProfileService } from '../../core/services/profile.service';
 import { DayInfo } from '../../core/models/workout.model';
 
 @Component({
@@ -14,6 +16,8 @@ import { DayInfo } from '../../core/models/workout.model';
 export class Dashboard {
   private readonly router = inject(Router);
   private readonly routineService = inject(RoutineService);
+  private readonly routineLibrary = inject(RoutineLibraryService);
+  private readonly profileService = inject(ProfileService);
   readonly storage = inject(StorageService);
   private readonly exportService = inject(ExportService);
 
@@ -47,18 +51,20 @@ export class Dashboard {
     }
   }
 
-  getMuscleLabel(dayType: string): string {
+  getDayTypeLabel(dayType: string): string {
     switch (dayType) {
-      case 'push': return 'Pecho, hombro, tríceps';
-      case 'pull': return 'Espalda, bíceps';
-      case 'legs': return 'Cuádriceps, isquios, glúteo, femoral, gemelos';
-      case 'abs': return 'Abdominales';
-      default: return '';
+      case 'push': return 'Push';
+      case 'pull': return 'Pull';
+      case 'legs': return 'Legs';
+      case 'abs': return 'Abs';
+      case 'additional': return 'Extra';
+      case 'routine': return 'Routine';
+      default: return dayType;
     }
   }
 
   getDayName(iso: string): string {
-    const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     return days[new Date(iso).getDay()];
   }
 
@@ -72,7 +78,10 @@ export class Dashboard {
 
   resumeWorkout(): void {
     const session = this.storage.currentSession();
-    if (session) {
+    if (!session) return;
+    if (session.dayType === 'routine' && session.routineId) {
+      this.router.navigate(['/workout/routine', session.routineId], { queryParams: { resume: 'true' } });
+    } else {
       this.router.navigate(['/workout', session.dayType], { queryParams: { resume: 'true' } });
     }
   }
@@ -94,11 +103,18 @@ export class Dashboard {
     const file = input.files?.[0];
     if (!file) return;
     try {
-      const sessions = await this.exportService.importFromFile(file);
-      const count = this.storage.importSessions(sessions);
-      alert(`Importadas ${count} sesiones nuevas.`);
+      const result = await this.exportService.importFromFile(file);
+      const count = this.storage.importSessions(result.sessions);
+      const routineCount = result.routines ? this.routineLibrary.importRoutines(result.routines) : 0;
+      // Only adopt the imported profile when none exists yet (new-device convenience)
+      if (result.user && !this.profileService.profile()) {
+        this.profileService.saveProfile(result.user);
+      }
+      const parts = [`Imported ${count} new session${count === 1 ? '' : 's'}.`];
+      if (routineCount > 0) parts.push(`${routineCount} routine${routineCount === 1 ? '' : 's'}.`);
+      alert(parts.join(' '));
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Error al importar');
+      alert(err instanceof Error ? err.message : 'Import failed');
     } finally {
       input.value = '';
     }

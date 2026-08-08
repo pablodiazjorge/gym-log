@@ -6,8 +6,24 @@ export const routes: Routes = [
     loadComponent: () => import('./features/dashboard/dashboard').then((m) => m.Dashboard),
   },
   {
+    path: 'workout/routine/:routineId',
+    loadComponent: () => import('./features/workout/workout').then((m) => m.Workout),
+  },
+  {
     path: 'workout/:dayType',
     loadComponent: () => import('./features/workout/workout').then((m) => m.Workout),
+  },
+  {
+    path: 'routines',
+    loadComponent: () => import('./features/routines/routines-list').then((m) => m.RoutinesList),
+  },
+  {
+    path: 'routines/new',
+    loadComponent: () => import('./features/routines/routine-editor').then((m) => m.RoutineEditor),
+  },
+  {
+    path: 'routines/:routineId/edit',
+    loadComponent: () => import('./features/routines/routine-editor').then((m) => m.RoutineEditor),
   },
   {
     path: 'history',
@@ -24,5 +40,9 @@ export const routes: Routes = [
   {
     path: 'additional',
     loadComponent: () => import('./features/additional/additional').then((m) => m.Additional),
+  },
+  {
+    path: 'profile',
+    loadComponent: () => import('./features/profile/profile').then((m) => m.Profile),
   },
 ];

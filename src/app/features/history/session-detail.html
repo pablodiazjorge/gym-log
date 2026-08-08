@@ -9,12 +9,12 @@
           {{ getDayLabel(session.dayType, session.dayVariant, session.date) }}
         </span>
         @if (!session.completed) {
-          <span class="text-xs px-2 py-1 rounded bg-amber-900/30 text-amber-400 font-medium">Incompleta</span>
+          <span class="text-xs px-2 py-1 rounded bg-amber-900/30 text-amber-400 font-medium">Incomplete</span>
         }
       </div>
       <h2 class="text-xl font-bold text-white">{{ formatDate(session.date) }}</h2>
       <div class="flex items-center gap-3 mt-1 text-sm text-gray-400">
-        <span>{{ session.exercises.length }} ejercicios</span>
+        <span>{{ session.exercises.length }} exercises</span>
         @if (session.durationMinutes) { <span>{{ session.durationMinutes }} min</span> }
         @if (session.bodyWeightKg) { <span>{{ session.bodyWeightKg }} kg</span> }
       </div>
@@ -28,7 +28,12 @@
       @for (exercise of session.exercises; track exercise.templateId) {
         <div class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
           <div class="flex items-center justify-between p-4 pb-2">
-            <p class="text-sm font-medium text-gray-200">{{ exercise.exerciseName }}</p>
+            <div class="min-w-0">
+              <p class="text-sm font-medium text-gray-200">{{ exercise.exerciseName }}</p>
+              @if (exercise.restSeconds) {
+                <p class="text-xs text-sky-400/70">{{ exercise.restSeconds }}s rest</p>
+              }
+            </div>
             @if (getMaxWeight(exercise) > 0) {
               <span class="text-emerald-400 font-bold text-sm">{{ getMaxWeight(exercise) }} kg</span>
             }
@@ -39,8 +44,8 @@
               <thead>
                 <tr class="text-gray-500">
                   <th class="text-left font-medium pb-2 w-6">#</th>
-                  <th class="text-left font-medium pb-2">Tipo</th>
-                  <th class="text-right font-medium pb-2">Peso</th>
+                  <th class="text-left font-medium pb-2">Type</th>
+                  <th class="text-right font-medium pb-2">Weight</th>
                   <th class="text-right font-medium pb-2">Reps</th>
                   <th class="text-right font-medium pb-2">RIR</th>
                 </tr>
@@ -51,13 +56,21 @@
                     <td class="py-2 text-gray-500">{{ set.setNumber }}</td>
                     <td class="py-2">
                       @if (set.isWarmup) {
-                        <span class="text-[10px] px-1.5 py-0.5 bg-amber-900/30 text-amber-400 rounded">Aprox</span>
+                        <span class="text-[10px] px-1.5 py-0.5 bg-amber-900/30 text-amber-400 rounded">Warm-up</span>
                       } @else {
-                        <span class="text-[10px] px-1.5 py-0.5 bg-gray-800 text-gray-500 rounded">Trabajo</span>
+                        <span class="text-[10px] px-1.5 py-0.5 bg-gray-800 text-gray-500 rounded">Work</span>
                       }
                     </td>
                     <td class="py-2 text-right text-gray-200 font-medium tabular-nums">{{ set.weightKg }} kg</td>
-                    <td class="py-2 text-right text-gray-200 tabular-nums">{{ set.reps }}</td>
+                    <td class="py-2 text-right text-gray-200 tabular-nums">
+                      {{ set.reps }}
+                      @if ((set.partialReps ?? 0) > 0) {
+                        <span class="text-violet-400">+{{ set.partialReps }}</span>
+                      }
+                      @if ((set.eccentricSeconds ?? 0) > 0) {
+                        <span class="text-cyan-400 text-[10px]"> {{ set.eccentricSeconds }}s ecc</span>
+                      }
+                    </td>
                     <td class="py-2 text-right text-gray-500 tabular-nums">{{ set.rir }}</td>
                   </tr>
                 }
@@ -75,7 +88,7 @@
         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
         </svg>
-        Exportar
+        Export
       </button>
       <button (click)="deleteSession()"
         class="py-3 px-4 bg-rose-600/10 hover:bg-rose-600/20 text-rose-400 rounded-xl border border-rose-500/20 min-h-[48px] flex items-center justify-center transition-colors">
@@ -88,9 +101,9 @@
 
   @if (!session()) {
     <div class="text-center py-16">
-      <p class="text-gray-500 text-sm">Sesión no encontrada</p>
+      <p class="text-gray-500 text-sm">Session not found</p>
       <a routerLink="/history" class="inline-block mt-3 py-2 px-4 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm rounded-xl transition-colors">
-        ← Volver al historial
+        ← Back to history
       </a>
     </div>
   }

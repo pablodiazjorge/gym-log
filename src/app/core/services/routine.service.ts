@@ -1,27 +1,32 @@
 import { Injectable } from '@angular/core';
 import { DayInfo, ExerciseTemplate } from '../models/workout.model';
+import { Routine, RoutineExerciseConfig } from '../models/routine.model';
 
 /**
- * Servicio con la rutina PPL + Abs hardcoded.
- * 4 tipos de sesión: Push, Pull, Legs, Abs.
- * Cada una puede tener ejercicios a elegir al inicio.
+ * Exercise catalog + built-in PPL + Abs routine provider.
+ * 4 built-in session types: Push, Pull, Legs, Abs — each may offer
+ * alternative exercises to choose from at the start (choice groups).
+ *
+ * NOTE: ExerciseTemplate ids are Spanish-derived slugs kept as stable FKs into
+ * the user's logged history — they are internal opaque keys, exempt from the
+ * English rewrite (ADR-0008). Only human-facing names/notes are English.
  */
 @Injectable({ providedIn: 'root' })
 export class RoutineService {
-  // ─── Tipos de sesión disponibles ───
+  // ─── Available session types ───
   private readonly sessionTypes: { dayType: 'push' | 'pull' | 'legs' | 'abs'; dayVariant: 'A'; label: string; muscleLabel: string; emoji: string }[] = [
-    { dayType: 'push', dayVariant: 'A', label: 'Push', muscleLabel: 'Pecho, hombro, tríceps', emoji: '💪' },
-    { dayType: 'pull', dayVariant: 'A', label: 'Pull', muscleLabel: 'Espalda, bíceps', emoji: '🏋️' },
-    { dayType: 'legs', dayVariant: 'A', label: 'Legs', muscleLabel: 'Cuádriceps, isquios, glúteo, femoral, gemelos', emoji: '🦵' },
-    { dayType: 'abs', dayVariant: 'A', label: 'Abs', muscleLabel: 'Abdominales', emoji: '🪨' },
+    { dayType: 'push', dayVariant: 'A', label: 'Push', muscleLabel: 'Chest, shoulders, triceps', emoji: '💪' },
+    { dayType: 'pull', dayVariant: 'A', label: 'Pull', muscleLabel: 'Back, biceps', emoji: '🏋️' },
+    { dayType: 'legs', dayVariant: 'A', label: 'Legs', muscleLabel: 'Quads, hamstrings, glutes, calves', emoji: '🦵' },
+    { dayType: 'abs', dayVariant: 'A', label: 'Abs', muscleLabel: 'Abdominals', emoji: '🪨' },
   ];
 
-  // ─── Ejercicios de la rutina ───
+  // ─── Routine exercises ───
   private readonly allExercises: ExerciseTemplate[] = [
-    // ── PUSH (elegir: press inclinado o press plano) ──
+    // ── PUSH (choose: incline press or flat press) ──
     {
       id: 'press-inclinado-maquina',
-      name: 'Press inclinado en máquina',
+      name: 'Incline Machine Press',
       category: 'push',
       order: 1,
       targetSets: 4,
@@ -33,7 +38,7 @@ export class RoutineService {
     },
     {
       id: 'press-plano',
-      name: 'Press plano',
+      name: 'Flat Press',
       category: 'push',
       order: 1,
       targetSets: 4,
@@ -45,7 +50,7 @@ export class RoutineService {
     },
     {
       id: 'press-inclinado-smith',
-      name: 'Press inclinado Smith',
+      name: 'Incline Smith Press',
       category: 'push',
       order: 1,
       targetSets: 4,
@@ -67,7 +72,7 @@ export class RoutineService {
     },
     {
       id: 'triceps-polea-vertical',
-      name: 'Tríceps en polea vertical',
+      name: 'Cable Triceps Pushdown',
       category: 'push',
       order: 3,
       targetSets: 3,
@@ -77,7 +82,7 @@ export class RoutineService {
     },
     {
       id: 'elevaciones-laterales-banco-inclinado',
-      name: 'Elevaciones laterales en banco inclinado',
+      name: 'Incline Bench Lateral Raises',
       category: 'push',
       order: 4,
       targetSets: 3,
@@ -96,10 +101,10 @@ export class RoutineService {
       hasWarmupSets: false,
     },
 
-    // ── PULL (elegir: jalón pecho barra o mag neutro o dominadas o jalón 1 mano; curl banco inclinado o martillo) ──
+    // ── PULL (choose: bar lat pulldown, MAG neutral, pull-ups or 1-arm pulldown; incline bench curl or hammer curl) ──
     {
       id: 'jalon-pecho-agarre-ancho',
-      name: 'Jalón al pecho (barra y straps, agarre ancho, prono)',
+      name: 'Lat Pulldown (bar & straps, wide pronated grip)',
       category: 'pull',
       order: 1,
       targetSets: 4,
@@ -111,7 +116,7 @@ export class RoutineService {
     },
     {
       id: 'jalon-pecho-agarre-mag-neutro',
-      name: 'Jalón al pecho (agarre MAG ancho, neutro)',
+      name: 'Lat Pulldown (wide MAG grip, neutral)',
       category: 'pull',
       order: 1,
       targetSets: 4,
@@ -123,7 +128,7 @@ export class RoutineService {
     },
     {
       id: 'dominadas-agarre-prono',
-      name: 'Dominadas con agarre prono',
+      name: 'Pronated-Grip Pull-Ups',
       category: 'pull',
       order: 1,
       targetSets: 4,
@@ -132,11 +137,11 @@ export class RoutineService {
       hasWarmupSets: true,
       warmupSets: 2,
       choiceGroup: 'pull-main',
-      notes: 'Agarre prono ancho. Si no llegas a 6, usar banda elástica o lastre negativo.',
+      notes: 'Wide pronated grip. If you cannot reach 6 reps, use a band or negative reps.',
     },
     {
       id: 'jalon-lat-1-mano',
-      name: 'Jalón lat (1 mano)',
+      name: 'Single-Arm Lat Pulldown',
       category: 'pull',
       order: 1,
       targetSets: 4,
@@ -145,11 +150,11 @@ export class RoutineService {
       hasWarmupSets: true,
       warmupSets: 2,
       choiceGroup: 'pull-main',
-      notes: 'Agarrar el asa individual. Tirar hacia el pecho, codo pegado al cuerpo.',
+      notes: 'Grab the single handle. Pull toward the chest, elbow close to the body.',
     },
     {
       id: 'remo-t-agarre-neutro',
-      name: 'Remo en T con agarre neutro (ancho de hombros)',
+      name: 'T-Bar Row (neutral shoulder-width grip)',
       category: 'pull',
       order: 2,
       targetSets: 3,
@@ -159,7 +164,7 @@ export class RoutineService {
     },
     {
       id: 'curl-biceps-banco-inclinado',
-      name: 'Curl de bíceps en banco inclinado',
+      name: 'Incline Bench Biceps Curl',
       category: 'pull',
       order: 3,
       targetSets: 4,
@@ -170,7 +175,7 @@ export class RoutineService {
     },
     {
       id: 'curl-martillo',
-      name: 'Curl martillo',
+      name: 'Hammer Curl',
       category: 'pull',
       order: 3,
       targetSets: 4,
@@ -180,10 +185,10 @@ export class RoutineService {
       choiceGroup: 'pull-curl',
     },
 
-    // ── LEGS (ejercicio principal a elegir: hack squat, prensa inclinada o sentadillas lastradas) ──
+    // ── LEGS (main exercise to choose: hack squat, incline leg press or weighted squats) ──
     {
       id: 'hack-squat-maquina',
-      name: 'Hack squat en máquina',
+      name: 'Machine Hack Squat',
       category: 'legs',
       order: 1,
       targetSets: 4,
@@ -197,7 +202,7 @@ export class RoutineService {
     },
     {
       id: 'prensa-inclinada',
-      name: 'Prensa inclinada',
+      name: 'Incline Leg Press',
       category: 'legs',
       order: 1,
       targetSets: 4,
@@ -208,11 +213,11 @@ export class RoutineService {
       targetRirMin: 1,
       targetRirMax: 2,
       choiceGroup: 'legs-main',
-      notes: 'Pies bajos, alineados con hombros. Rango controlado, lumbar apoyado.',
+      notes: 'Feet low, shoulder-width. Controlled range, lower back supported.',
     },
     {
       id: 'sentadillas-lastradas-casa',
-      name: 'Sentadillas lastradas (casa)',
+      name: 'Weighted Squats (home)',
       category: 'legs',
       order: 1,
       targetSets: 4,
@@ -223,11 +228,11 @@ export class RoutineService {
       targetRirMin: 1,
       targetRirMax: 2,
       choiceGroup: 'legs-main',
-      notes: 'Con mochila lastrada o mancuernas en casa. Rango profundo controlado.',
+      notes: 'With a weighted backpack or dumbbells at home. Deep controlled range.',
     },
     {
       id: 'curl-femoral-sentado',
-      name: 'Curl femoral sentado',
+      name: 'Seated Leg Curl',
       category: 'legs',
       order: 2,
       targetSets: 3,
@@ -240,7 +245,7 @@ export class RoutineService {
     },
     {
       id: 'rdl-una-pierna',
-      name: 'RDL a una pierna',
+      name: 'Single-Leg RDL',
       category: 'legs',
       order: 2,
       targetSets: 3,
@@ -250,11 +255,11 @@ export class RoutineService {
       targetRirMin: 2,
       targetRirMax: 2,
       choiceGroup: 'legs-femoral',
-      notes: 'Torso recto, pierna trasera como contrapeso.',
+      notes: 'Torso straight, rear leg as counterweight.',
     },
     {
       id: 'hip-thrust',
-      name: 'Hip thrust',
+      name: 'Hip Thrust',
       category: 'legs',
       order: 3,
       targetSets: 3,
@@ -267,7 +272,7 @@ export class RoutineService {
     },
     {
       id: 'abductor-maquina',
-      name: 'Abductor en máquina',
+      name: 'Machine Hip Abduction',
       category: 'legs',
       order: 3,
       targetSets: 3,
@@ -277,11 +282,11 @@ export class RoutineService {
       targetRirMin: 2,
       targetRirMax: 2,
       choiceGroup: 'legs-glute',
-      notes: 'Inclinado 10-20° hacia adelante. Pausa en contracción.',
+      notes: 'Lean 10-20° forward. Pause at peak contraction.',
     },
     {
       id: 'elevacion-gemelos-maquina-pie',
-      name: 'Elevación de gemelos en máquina de pie',
+      name: 'Standing Machine Calf Raise',
       category: 'legs',
       order: 4,
       targetSets: 2,
@@ -294,7 +299,7 @@ export class RoutineService {
     },
     {
       id: 'elevacion-gemelos-sentado',
-      name: 'Elevación de gemelos sentado',
+      name: 'Seated Calf Raise',
       category: 'legs',
       order: 4,
       targetSets: 2,
@@ -307,7 +312,7 @@ export class RoutineService {
     },
     {
       id: 'bulgara-smith',
-      name: 'Búlgara Smith',
+      name: 'Smith Bulgarian Split Squat',
       category: 'legs',
       order: 5,
       targetSets: 3,
@@ -319,10 +324,10 @@ export class RoutineService {
       choiceGroup: 'legs-bulgara',
     },
 
-    // ── ABS (elegir un ejercicio) ──
+    // ── ABS (choose one exercise) ──
     {
       id: 'abs-colgado-barra',
-      name: 'Abs colgado de barra',
+      name: 'Hanging Leg Raises',
       category: 'abs',
       order: 1,
       targetSets: 4,
@@ -334,7 +339,7 @@ export class RoutineService {
     },
     {
       id: 'crunch-polea',
-      name: 'Crunch con polea',
+      name: 'Cable Crunch',
       category: 'abs',
       order: 1,
       targetSets: 4,
@@ -346,7 +351,7 @@ export class RoutineService {
     },
     {
       id: 'dragon-flight',
-      name: 'Dragon flight',
+      name: 'Dragon Flag',
       category: 'abs',
       order: 1,
       targetSets: 4,
@@ -358,9 +363,9 @@ export class RoutineService {
     },
   ];
 
-  // ─── Métodos públicos ───
+  // ─── Public methods ───
 
-  /** Devuelve TODOS los ejercicios candidatos para una sesión (incluye alternativas de choiceGroup sin filtrar) */
+  /** ALL candidate exercises for a session (choice-group alternatives included, unfiltered) */
   getExercisesForDay(dayType: 'push' | 'pull' | 'legs' | 'abs', _variant: 'A' | 'B'): ExerciseTemplate[] {
     return this.allExercises
       .filter((ex) => ex.category === dayType)
@@ -368,8 +373,8 @@ export class RoutineService {
   }
 
   /**
-   * Devuelve los grupos de elección para una sesión.
-   * Si no hay choices, devuelve array vacío.
+   * Choice groups for a session.
+   * Returns an empty array when there is nothing to choose.
    */
   getChoicesForDay(dayType: 'push' | 'pull' | 'legs' | 'abs', dayVariant: 'A' | 'B'): { groupId: string; label: string; options: ExerciseTemplate[] }[] {
     const all = this.getExercisesForDay(dayType, dayVariant);
@@ -390,23 +395,23 @@ export class RoutineService {
     }));
   }
 
-  /** Etiqueta legible para un grupo de elección */
+  /** Human-readable label for a choice group */
   private getChoiceLabel(groupId: string): string {
     switch (groupId) {
-      case 'push-main': return 'Ejercicio principal de pecho';
-      case 'pull-main': return 'Ejercicio principal de espalda';
-      case 'pull-curl': return 'Ejercicio de bíceps';
-      case 'legs-main': return 'Ejercicio principal de pierna';
-      case 'legs-femoral': return 'Ejercicio de femoral';
-      case 'legs-glute': return 'Ejercicio de glúteo';
-      case 'legs-calves': return 'Ejercicio de gemelos';
-      case 'legs-bulgara': return 'Búlgara (extra)';
-      case 'abs-main': return 'Ejercicio de abdominales';
-      default: return 'Elige ejercicio';
+      case 'push-main': return 'Main chest exercise';
+      case 'pull-main': return 'Main back exercise';
+      case 'pull-curl': return 'Biceps exercise';
+      case 'legs-main': return 'Main leg exercise';
+      case 'legs-femoral': return 'Hamstring exercise';
+      case 'legs-glute': return 'Glute exercise';
+      case 'legs-calves': return 'Calf exercise';
+      case 'legs-bulgara': return 'Bulgarian split squat (extra)';
+      case 'abs-main': return 'Abs exercise';
+      default: return 'Choose an exercise';
     }
   }
 
-  /** Lista de los 4 tipos de sesión disponibles */
+  /** The 4 available built-in session types */
   getTrainingDays(): DayInfo[] {
     return this.sessionTypes.map((st, i) => ({
       weekday: i + 1,
@@ -418,7 +423,7 @@ export class RoutineService {
     }));
   }
 
-  /** Dado un día de la semana (1-4), devuelve la info de la sesión */
+  /** Session info for a given weekday index (1-4) */
   getDayInfo(weekday: number): DayInfo | null {
     const st = this.sessionTypes[weekday - 1];
     if (!st) return null;
@@ -432,13 +437,55 @@ export class RoutineService {
     };
   }
 
-  /** Devuelve TODOS los ejercicios de todas las categorías */
+  /** ALL exercises across every category */
   getAllExercises(): ExerciseTemplate[] {
     return [...this.allExercises].sort((a, b) => a.category.localeCompare(b.category) || a.order - b.order);
   }
 
-  /** Busca un template por su id */
+  /** Look up a template by id */
   getTemplateById(id: string): ExerciseTemplate | undefined {
     return this.allExercises.find((ex) => ex.id === id);
+  }
+
+  /**
+   * The 4 built-in days derived as read-only Routine objects so the Routines
+   * tab can list them uniformly next to custom ones. For choice groups, the
+   * first option is used as the representative exercise — starting a built-in
+   * day through the day-card flow still goes through the live choice-selection
+   * UX; this derivation only feeds the Routines list and "duplicate to
+   * customize".
+   */
+  getBuiltInRoutines(): Routine[] {
+    return this.sessionTypes.map((st) => {
+      const seenGroups = new Set<string>();
+      const exercises: RoutineExerciseConfig[] = [];
+      for (const ex of this.getExercisesForDay(st.dayType, st.dayVariant)) {
+        if (ex.choiceGroup) {
+          if (seenGroups.has(ex.choiceGroup)) continue; // first option represents the group
+          seenGroups.add(ex.choiceGroup);
+        }
+        exercises.push({
+          templateId: ex.id,
+          order: ex.order,
+          targetSets: ex.targetSets,
+          targetRepsMin: ex.targetRepsMin,
+          targetRepsMax: ex.targetRepsMax,
+          hasWarmupSets: ex.hasWarmupSets,
+          warmupSets: ex.warmupSets,
+          targetRirMin: ex.targetRirMin,
+          targetRirMax: ex.targetRirMax,
+          notes: ex.notes,
+        });
+      }
+      return {
+        id: `built-in-${st.dayType}`,
+        name: st.label,
+        source: 'built-in' as const,
+        builtInDayType: st.dayType,
+        exercises,
+        createdAt: '',
+        updatedAt: '',
+      };
+    });
   }
 }

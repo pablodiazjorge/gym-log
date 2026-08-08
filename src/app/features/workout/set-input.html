@@ -17,9 +17,9 @@
     >{{ set().setNumber }}</span>
 
     @if (set().skipped) {
-      <span class="text-xs px-1.5 py-0.5 rounded bg-rose-900/40 text-rose-400 font-medium flex-shrink-0">No realizada</span>
+      <span class="text-xs px-1.5 py-0.5 rounded bg-rose-900/40 text-rose-400 font-medium flex-shrink-0">Skipped</span>
     } @else if (set().isWarmup) {
-      <span class="text-xs px-1.5 py-0.5 rounded bg-amber-900/40 text-amber-400 font-medium flex-shrink-0">Aprox</span>
+      <span class="text-xs px-1.5 py-0.5 rounded bg-amber-900/40 text-amber-400 font-medium flex-shrink-0">Warm-up</span>
     }
 
     <span class="flex-1 text-sm tabular-nums">
@@ -33,7 +33,12 @@
         @if ((set().partialReps ?? 0) > 0) {
           <span class="text-gray-500"> + </span>
           <span class="text-violet-400 font-semibold">{{ set().partialReps }}</span>
-          <span class="text-violet-500 text-xs"> parc.</span>
+          <span class="text-violet-500 text-xs"> part.</span>
+        }
+        @if ((set().eccentricSeconds ?? 0) > 0) {
+          <span class="text-gray-500"> · </span>
+          <span class="text-cyan-400 font-semibold">{{ set().eccentricSeconds }}s</span>
+          <span class="text-cyan-500 text-xs"> ecc.</span>
         }
       }
     </span>
@@ -68,19 +73,19 @@
           [class.text-amber-400]="set().isWarmup"
         >{{ set().setNumber }}</span>
         @if (set().isWarmup) {
-          <span class="text-xs font-medium text-amber-400">Aproximación</span>
+          <span class="text-xs font-medium text-amber-400">Warm-up</span>
         }
       </div>
       @if (!set().isWarmup) {
-        <span class="text-xs text-gray-500">Trabajo</span>
+        <span class="text-xs text-gray-500">Work</span>
       }
     </div>
 
     <!-- 3-column grid: Weight | Reps | RIR -->
     <div class="grid grid-cols-3 gap-3 px-4 pb-3">
-      <!-- PESO -->
+      <!-- WEIGHT -->
       <div class="bg-gray-800 rounded-lg p-2">
-        <label class="block text-xs text-gray-500 text-center mb-1">Peso</label>
+        <span class="block text-xs text-gray-500 text-center mb-1">Weight</span>
         <div class="flex items-center justify-between">
           <button (click)="adjustWeight(-2.5)"
             class="w-7 h-7 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center justify-center text-sm font-bold text-white min-h-[28px] transition-colors">
@@ -101,7 +106,7 @@
 
       <!-- REPS -->
       <div class="bg-gray-800 rounded-lg p-2">
-        <label class="block text-xs text-gray-500 text-center mb-1">Reps</label>
+        <span class="block text-xs text-gray-500 text-center mb-1">Reps</span>
         <div class="flex items-center justify-between">
           <button (click)="adjustReps(-1)"
             class="w-7 h-7 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center justify-center text-sm font-bold text-white min-h-[28px] transition-colors">
@@ -121,7 +126,7 @@
 
       <!-- RIR -->
       <div class="bg-gray-800 rounded-lg p-2">
-        <label class="block text-xs text-gray-500 text-center mb-1">RIR</label>
+        <span class="block text-xs text-gray-500 text-center mb-1">RIR</span>
         <div class="flex items-center justify-between">
           <button (click)="adjustRir(-0.5)"
             class="w-7 h-7 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center justify-center text-sm font-bold text-white min-h-[28px] transition-colors">
@@ -140,11 +145,11 @@
       </div>
     </div>
 
-    <!-- Parciales (opcional, solo series de trabajo) -->
+    <!-- Partials + eccentric tempo (work sets only) -->
     @if (!set().isWarmup) {
-      <div class="px-4 pb-2">
+      <div class="px-4 pb-2 space-y-2">
         <div class="bg-violet-900/20 border border-violet-800/30 rounded-lg p-2 flex items-center justify-between">
-          <span class="text-xs text-violet-400 font-medium">Parciales</span>
+          <span class="text-xs text-violet-400 font-medium">Partials</span>
           <div class="flex items-center gap-3">
             <button (click)="adjustPartialReps(-1)"
               class="w-7 h-7 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center justify-center text-sm font-bold text-white min-h-[28px] transition-colors">
@@ -154,6 +159,23 @@
               step="1" min="0"
               class="w-12 bg-transparent text-center text-base font-bold text-violet-300 focus:outline-none tabular-nums" />
             <button (click)="adjustPartialReps(1)"
+              class="w-7 h-7 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center justify-center text-sm font-bold text-white min-h-[28px] transition-colors">
+              +
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-cyan-900/20 border border-cyan-800/30 rounded-lg p-2 flex items-center justify-between">
+          <span class="text-xs text-cyan-400 font-medium">Eccentric (s)</span>
+          <div class="flex items-center gap-3">
+            <button (click)="adjustEccentricSeconds(-1)"
+              class="w-7 h-7 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center justify-center text-sm font-bold text-white min-h-[28px] transition-colors">
+              −
+            </button>
+            <input type="number" [ngModel]="set().eccentricSeconds ?? 0" (ngModelChange)="set().eccentricSeconds = $event"
+              step="1" min="0"
+              class="w-12 bg-transparent text-center text-base font-bold text-cyan-300 focus:outline-none tabular-nums" />
+            <button (click)="adjustEccentricSeconds(1)"
               class="w-7 h-7 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center justify-center text-sm font-bold text-white min-h-[28px] transition-colors">
               +
             </button>
@@ -177,7 +199,7 @@
             </span>
             <span class="text-xs font-medium"
               [class.text-amber-400]="set().isWarmup"
-              [class.text-gray-500]="!set().isWarmup">Aproximación</span>
+              [class.text-gray-500]="!set().isWarmup">Warm-up</span>
           </button>
         </div>
       }
@@ -187,7 +209,7 @@
         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
         </svg>
-        Serie completada
+        Set completed
       </button>
 
       <button (click)="skipSet()"
@@ -195,7 +217,7 @@
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
         </svg>
-        No realizada
+        Skipped
       </button>
     </div>
   </div>

@@ -28,6 +28,7 @@ export class History {
       legs: 'Legs',
       abs: 'Abs',
       additional: 'Extra',
+      routine: 'Routine',
     };
     const label = map[dayType] ?? dayType;
     if (date) {
@@ -38,7 +39,7 @@ export class History {
   }
 
   private getDayName(iso: string): string {
-    const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     return days[new Date(iso).getDay()];
   }
 
@@ -49,13 +50,14 @@ export class History {
       case 'legs': return '#f59e0b';
       case 'abs': return '#ec4899';
       case 'additional': return '#a855f7';
+      case 'routine': return '#8b5cf6';
       default: return '#71717a';
     }
   }
 
   formatDate(iso: string): string {
     const d = new Date(iso);
-    return d.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
+    return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
   }
 
   getMaxWeight(session: WorkoutSession): number {
@@ -71,7 +73,7 @@ export class History {
   deleteSession(id: string, event: Event): void {
     event.stopPropagation();
     event.preventDefault();
-    if (confirm('¿Eliminar esta sesión?')) this.storage.deleteSession(id);
+    if (confirm('Delete this session?')) this.storage.deleteSession(id);
   }
 
   exportAll(): void {

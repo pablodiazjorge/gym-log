@@ -23,7 +23,7 @@ export class SessionDetail {
 
   formatDate(iso: string): string {
     const d = new Date(iso);
-    return d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    return d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   }
 
   getAccentColor(dayType: string): string {
@@ -33,6 +33,7 @@ export class SessionDetail {
       case 'legs': return '#f59e0b';
       case 'abs': return '#ec4899';
       case 'additional': return '#a855f7';
+      case 'routine': return '#8b5cf6';
       default: return '#71717a';
     }
   }
@@ -44,6 +45,7 @@ export class SessionDetail {
       legs: 'Legs',
       abs: 'Abs',
       additional: 'Extra',
+      routine: 'Routine',
     };
     const label = map[dayType] ?? dayType;
     if (date) {
@@ -54,7 +56,7 @@ export class SessionDetail {
   }
 
   private getDayName(iso: string): string {
-    const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     return days[new Date(iso).getDay()];
   }
 
@@ -74,7 +76,7 @@ export class SessionDetail {
   deleteSession(): void {
     const s = this.session();
     if (!s) return;
-    if (confirm('¿Eliminar esta sesión?')) {
+    if (confirm('Delete this session?')) {
       this.storage.deleteSession(s.id);
       this.router.navigate(['/history']);
     }

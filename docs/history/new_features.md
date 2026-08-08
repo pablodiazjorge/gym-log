@@ -1,6 +1,10 @@
-## 🔬 Análisis con Python (para el futuro)
+> **Historical note** — the design property described here ("the export JSON is intentionally
+> flat and pandas-friendly") is now documented in [architecture.md](../../architecture.md)
+> (Data model section). The snippet is kept as a starting point for future external analysis.
 
-Como dices que quieres analizar los datos más tarde, este formato está pensado para **pandas**. Un script de análisis rápido sería:
+## 🔬 Python analysis (for the future)
+
+The export format is designed for **pandas**. A quick analysis script:
 
 ```python
 import pandas as pd
@@ -9,7 +13,7 @@ import json
 with open('gym_tracker_sample_data.json') as f:
     data = json.load(f)
 
-# Flatten a DataFrame: una fila por serie
+# Flatten to a DataFrame: one row per set
 rows = []
 for session in data['sessions']:
     for ex in session['exercises']:
@@ -23,19 +27,19 @@ for session in data['sessions']:
                 'weightKg': s['weightKg'],
                 'reps': s['reps'],
                 'rir': s['rir'],
-                'volume': s['weightKg'] * s['reps']  # volumen de la serie
+                'volume': s['weightKg'] * s['reps']  # set volume
             })
 
 df = pd.DataFrame(rows)
 
-# Progresión de peso máximo en press inclinado (solo series de trabajo)
+# Max-weight progression on the incline press (work sets only)
 press = df[(df['templateId'] == 'press-inclinado-maquina') & (~df['isWarmup'])]
 max_weight = press.groupby('date')['weightKg'].max()
 print(max_weight)
 
-# Volumen total por sesión
+# Total volume per session
 volume_per_session = df[~df['isWarmup']].groupby('date')['volume'].sum()
 print(volume_per_session)
 ```
 
-Esto te dará gráficos de progresión de peso, volumen semanal, evolución del RIR medio, etc.
+This gives max-weight progression, weekly volume, average-RIR evolution, and similar charts.

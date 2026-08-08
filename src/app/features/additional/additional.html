@@ -3,12 +3,12 @@
   @if (phase() === 'select') {
     <div class="flex-1 flex flex-col p-4">
       <div class="text-center mb-6">
-        <h1 class="text-2xl font-bold mb-1">🏋️ Rutina adicional</h1>
+        <h1 class="text-2xl font-bold mb-1">🏋️ Additional workout</h1>
         <p class="text-gray-400 text-sm">
           @if (selectedTemplateIds().length === 0) {
-            Elige uno o varios ejercicios para crear tu rutina
+            Pick one or more exercises to build your workout
           } @else {
-            <span class="text-violet-400 font-medium">{{ selectedTemplateIds().length }} ejercicio(s) seleccionado(s)</span>
+            <span class="text-violet-400 font-medium">{{ selectedTemplateIds().length }} exercise(s) selected</span>
           }
         </p>
       </div>
@@ -53,8 +53,8 @@
             <div class="flex-1 min-w-0">
               <p class="font-medium text-white truncate">{{ exercise.name }}</p>
               <p class="text-xs text-gray-500 mt-0.5">
-                {{ exercise.targetSets }} series × {{ exercise.targetRepsMin }}-{{ exercise.targetRepsMax }} reps
-                @if (exercise.hasWarmupSets) { · {{ exercise.warmupSets }} aprox }
+                {{ exercise.targetSets }} sets × {{ exercise.targetRepsMin }}-{{ exercise.targetRepsMax }} reps
+                @if (exercise.hasWarmupSets) { · {{ exercise.warmupSets }} warm-up }
               </p>
             </div>
             <span class="text-xs px-2 py-0.5 rounded font-medium flex-shrink-0"
@@ -66,7 +66,7 @@
 
         @if (filteredExercises().length === 0) {
           <div class="text-center py-12">
-            <p class="text-gray-500 text-sm">No hay ejercicios en esta categoría</p>
+            <p class="text-gray-500 text-sm">No exercises in this category</p>
           </div>
         }
       </div>
@@ -77,11 +77,11 @@
           [disabled]="selectedTemplateIds().length === 0"
           class="w-full py-4 rounded-xl font-bold text-white transition-colors min-h-[48px]"
           [class]="selectedTemplateIds().length > 0 ? 'bg-violet-600 hover:bg-violet-500' : 'bg-gray-800 text-gray-500 cursor-not-allowed'">
-          {{ selectedTemplateIds().length > 0 ? 'Empezar rutina (' + selectedTemplateIds().length + ' ejercicios) →' : 'Selecciona al menos un ejercicio' }}
+          {{ selectedTemplateIds().length > 0 ? 'Start workout (' + selectedTemplateIds().length + ' exercises) →' : 'Select at least one exercise' }}
         </button>
         <button (click)="goHome()"
           class="w-full py-3 text-gray-500 hover:text-gray-300 text-sm transition-colors">
-          Volver
+          Back
         </button>
       </div>
     </div>
@@ -114,7 +114,7 @@
       <!-- Exercise name -->
       <h1 class="text-lg font-bold text-center">{{ template.name }}</h1>
       <p class="text-sm text-gray-400 text-center">
-        {{ completedSets() }}/{{ totalSets() }} series · {{ durationMinutes() }} min
+        {{ completedSets() }}/{{ totalSets() }} sets · {{ durationMinutes() }} min
       </p>
 
       <!-- Progress dots for exercise navigation -->
@@ -160,9 +160,9 @@
           </span>
 
           @if (set.skipped) {
-            <span class="text-xs px-1.5 py-0.5 rounded bg-rose-900/40 text-rose-400 font-medium flex-shrink-0">Saltada</span>
+            <span class="text-xs px-1.5 py-0.5 rounded bg-rose-900/40 text-rose-400 font-medium flex-shrink-0">Skipped</span>
           } @else if (set.isWarmup) {
-            <span class="text-xs px-1.5 py-0.5 rounded bg-amber-900/40 text-amber-400 font-medium flex-shrink-0">Aprox</span>
+            <span class="text-xs px-1.5 py-0.5 rounded bg-amber-900/40 text-amber-400 font-medium flex-shrink-0">Warm-up</span>
           }
 
           <span class="flex-1 text-sm tabular-nums">
@@ -176,7 +176,7 @@
               @if ((set.partialReps ?? 0) > 0) {
                 <span class="text-gray-500"> + </span>
                 <span class="text-violet-400 font-semibold">{{ set.partialReps }}</span>
-                <span class="text-violet-500 text-xs"> parc.</span>
+                <span class="text-violet-500 text-xs"> part.</span>
               }
             }
           </span>
@@ -195,7 +195,7 @@
       @if (currentSets().length === 0) {
         <div class="text-center py-16">
           <p class="text-4xl mb-4">📝</p>
-          <p class="text-gray-500 text-sm">Añade tu primera serie abajo</p>
+          <p class="text-gray-500 text-sm">Add your first set below</p>
         </div>
       }
     </main>
@@ -213,7 +213,7 @@
           [class.bg-gray-900]="currentExerciseIndex() === 0"
           [class.text-gray-600]="currentExerciseIndex() === 0"
           [class.cursor-not-allowed]="currentExerciseIndex() === 0">
-          ← Anterior
+          ← Previous
         </button>
         <span class="text-xs text-gray-500 flex-shrink-0">
           {{ currentExerciseIndex() + 1 }} / {{ totalExercises() }}
@@ -221,7 +221,7 @@
         @if (!isLastExercise()) {
           <button (click)="nextExercise()"
             class="flex-1 py-2 px-3 rounded-lg text-xs font-medium bg-violet-600/30 text-violet-300 hover:bg-violet-600/50 transition-colors">
-            Siguiente →
+            Next →
           </button>
         } @else {
           <div class="flex-1"></div>
@@ -236,15 +236,15 @@
           [class.text-amber-400]="currentIsWarmup()"
           [class.bg-gray-800]="!currentIsWarmup()"
           [class.text-gray-400]="!currentIsWarmup()">
-          <span>{{ currentIsWarmup() ? '🔥 Aproximación' : '💪 Trabajo' }}</span>
+          <span>{{ currentIsWarmup() ? '🔥 Warm-up' : '💪 Work' }}</span>
         </button>
       </div>
 
       <!-- 3-column grid: Weight | Reps | RIR -->
       <div class="grid grid-cols-3 gap-3 mb-3">
-        <!-- PESO -->
+        <!-- WEIGHT -->
         <div class="bg-gray-800 rounded-lg p-2">
-          <label class="block text-xs text-gray-500 text-center mb-1">Peso</label>
+          <span class="block text-xs text-gray-500 text-center mb-1">Weight</span>
           <div class="flex items-center justify-between">
             <button (click)="adjustWeight(-2.5)"
               class="w-7 h-7 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center justify-center text-sm font-bold text-white min-h-[28px] transition-colors">−</button>
@@ -261,7 +261,7 @@
 
         <!-- REPS -->
         <div class="bg-gray-800 rounded-lg p-2">
-          <label class="block text-xs text-gray-500 text-center mb-1">Reps</label>
+          <span class="block text-xs text-gray-500 text-center mb-1">Reps</span>
           <div class="flex items-center justify-between">
             <button (click)="adjustReps(-1)"
               class="w-7 h-7 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center justify-center text-sm font-bold text-white min-h-[28px] transition-colors">−</button>
@@ -277,7 +277,7 @@
 
         <!-- RIR -->
         <div class="bg-gray-800 rounded-lg p-2">
-          <label class="block text-xs text-gray-500 text-center mb-1">RIR</label>
+          <span class="block text-xs text-gray-500 text-center mb-1">RIR</span>
           <div class="flex items-center justify-between">
             <button (click)="adjustRir(-0.5)"
               class="w-7 h-7 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center justify-center text-sm font-bold text-white min-h-[28px] transition-colors">−</button>
@@ -294,7 +294,7 @@
 
       <!-- Partial reps -->
       <div class="flex items-center gap-3 mb-3">
-        <span class="text-xs text-gray-500">Parciales:</span>
+        <span class="text-xs text-gray-500">Partials:</span>
         <button (click)="adjustPartialReps(-1)"
           class="w-7 h-7 bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center justify-center text-sm font-bold text-white transition-colors">−</button>
         <span class="text-sm font-semibold text-violet-400 w-6 text-center tabular-nums">{{ currentPartialReps() }}</span>
@@ -306,14 +306,14 @@
       <button (click)="addSet()"
         class="w-full py-3.5 rounded-xl font-bold text-white transition-colors min-h-[48px]"
         [class]="getAccentBtnClass()">
-        + Añadir serie {{ nextSetNumber() }}
+        + Add set {{ nextSetNumber() }}
       </button>
 
       <!-- Finish button (visible when any exercise has sets) -->
       @if (hasAnySets()) {
         <button (click)="finishWorkout()"
           class="w-full mt-3 py-3 bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30 font-medium rounded-xl text-sm transition-colors">
-          ✅ Guardar rutina completa
+          ✅ Save full workout
         </button>
       }
     </footer>

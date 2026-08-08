@@ -7,13 +7,13 @@
           <h1 class="text-2xl font-bold mb-2">
             {{ dayType() === 'push' ? '💪 Push' : dayType() === 'pull' ? '🏋️ Pull' : dayType() === 'legs' ? '🦵 Legs' : '🪨 Abs' }}
           </h1>
-          <p class="text-gray-400 text-sm">Elige al menos un ejercicio para empezar</p>
+          <p class="text-gray-400 text-sm">Pick at least one exercise to start</p>
         </div>
 
         <div class="space-y-6">
           @for (group of choiceGroups(); track group.groupId) {
             <div>
-              <label class="block text-sm font-semibold text-gray-300 mb-3">{{ group.label }}</label>
+              <p class="block text-sm font-semibold text-gray-300 mb-3">{{ group.label }}</p>
               <div class="space-y-2">
                 @for (option of group.options; track option.id) {
                   <button
@@ -28,8 +28,8 @@
                     [class.hover:border-gray-600]="selectedChoices()[group.groupId] !== option.id">
                     <p class="font-medium text-white">{{ option.name }}</p>
                     <p class="text-xs text-gray-500 mt-0.5">
-                      {{ option.targetSets }} series × {{ option.targetRepsMin }}-{{ option.targetRepsMax }} reps
-                      @if (option.hasWarmupSets) { · {{ option.warmupSets }} aprox }
+                      {{ option.targetSets }} sets × {{ option.targetRepsMin }}-{{ option.targetRepsMax }} reps
+                      @if (option.hasWarmupSets) { · {{ option.warmupSets }} warm-up }
                     </p>
                   </button>
                 }
@@ -48,12 +48,12 @@
           [class.bg-gray-800]="!hasAnySelection()"
           [class.text-gray-500]="!hasAnySelection()"
           [class.cursor-not-allowed]="!hasAnySelection()">
-          Empezar entrenamiento
+          Start workout
         </button>
 
         <button (click)="goHome()"
           class="w-full mt-3 py-3 text-gray-500 hover:text-gray-300 text-sm transition-colors">
-          Volver
+          Back
         </button>
       </div>
     </div>
@@ -69,7 +69,7 @@
           [class.bg-gray-700]="!ex.sets.every(s => s.completed) && i !== currentExerciseIndex()"
           [class.w-7]="i === currentExerciseIndex() && !ex.sets.every(s => s.completed)"
           [class]="i === currentExerciseIndex() && !ex.sets.every(s => s.completed) ? accentDotClass : ''"
-          [attr.aria-label]="'Ir al ejercicio ' + (i + 1)"></button>
+          [attr.aria-label]="'Go to exercise ' + (i + 1)"></button>
       }
     </div>
 
@@ -82,9 +82,9 @@
               <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
           </div>
-          <h2 class="text-2xl font-bold text-white">¡Entrenamiento completado!</h2>
+          <h2 class="text-2xl font-bold text-white">Workout complete!</h2>
           <p class="text-gray-400 mt-1 text-sm">
-            {{ dayType() === 'push' ? 'Push' : dayType() === 'pull' ? 'Pull' : dayType() === 'legs' ? 'Legs' : 'Abs' }} · {{ durationMinutes() }} min
+            {{ dayLabel() }} · {{ durationMinutes() }} min
           </p>
         </div>
         <div class="space-y-2">
@@ -97,25 +97,26 @@
                 }
               </div>
               <p class="text-xs text-gray-500 mt-0.5">
-                {{ getWorkCount(ex) }} series
-                @if (getWarmupCount(ex) > 0) { + {{ getWarmupCount(ex) }} aprox }
+                {{ getWorkCount(ex) }} sets
+                @if (getWarmupCount(ex) > 0) { + {{ getWarmupCount(ex) }} warm-up }
+                @if (ex.restSeconds) { · {{ ex.restSeconds }}s rest }
               </p>
             </div>
           }
         </div>
 
-        <!-- Observaciones de la sesión -->
+        <!-- Session notes -->
         <div class="bg-gray-900 border border-gray-800 rounded-xl p-4">
-          <label class="block text-xs font-medium text-gray-400 mb-2">Observaciones</label>
-          <textarea [(ngModel)]="session.notes" rows="3"
-            placeholder="¿Cómo te has sentido? ¿Alguna molestia? ¿Notas sobre la técnica?..."
+          <label class="block text-xs font-medium text-gray-400 mb-2" for="sessionNotes">Notes</label>
+          <textarea id="sessionNotes" [(ngModel)]="session.notes" rows="3"
+            placeholder="How did it feel? Any discomfort? Technique notes?..."
             class="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-gray-500 resize-none transition-colors"></textarea>
         </div>
 
         <div class="flex gap-2">
           <button (click)="finishWorkout()"
             class="flex-1 py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl min-h-[48px] transition-colors">
-            Guardar y cerrar
+            Save & close
           </button>
           <button (click)="exportCurrentSession()"
             class="w-14 flex items-center justify-center bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl border border-gray-700 transition-colors min-h-[48px]">
@@ -129,7 +130,7 @@
 
     <!-- Active workout -->
     @if (!isSummary()) {
-      <!-- Header fijo -->
+      <!-- Sticky header -->
       <header class="bg-gray-900/95 backdrop-blur border-b border-gray-800 px-4 py-3 sticky top-0 z-10">
         <div class="flex items-center justify-between mb-2">
           <button (click)="goToPrevious()" [disabled]="currentExerciseIndex() === 0"
@@ -140,9 +141,9 @@
           </button>
           <div class="text-center">
             <p class="text-xs font-semibold uppercase tracking-wider" [ngClass]="accentTextClass">
-              {{ dayType() === 'push' ? 'Push' : dayType() === 'pull' ? 'Pull' : dayType() === 'legs' ? 'Legs' : 'Abs' }}
+              {{ dayLabel() }}
             </p>
-            <h1 class="text-lg font-bold">Ejercicio {{ currentExerciseIndex() + 1 }}/{{ exerciseCount() }}</h1>
+            <h1 class="text-lg font-bold">Exercise {{ currentExerciseIndex() + 1 }}/{{ exerciseCount() }}</h1>
           </div>
           <button (click)="discardWorkout()"
             class="p-2 -mr-2 text-gray-500 hover:text-rose-400 min-h-[48px] min-w-[48px] transition-colors">
@@ -154,20 +155,47 @@
         <div class="text-center">
           <h2 class="text-base font-semibold">{{ currentExercise()?.exerciseName }}</h2>
           <p class="text-sm text-gray-400">
-            Series: {{ completedCount() }}/{{ totalSetCount() }} hechas
-            @if (hasWarmupSets()) { · con aproximación }
+            Sets: {{ completedCount() }}/{{ totalSetCount() }} done
+            @if (hasWarmupSets()) { · with warm-up }
           </p>
         </div>
       </header>
 
-      <!-- Lista de sets (scrollable) -->
+      <!-- Set list (scrollable) -->
       <main class="flex-1 overflow-y-auto p-4 space-y-3">
+        <!-- Rest time for this exercise (one value for all its sets) -->
+        @if (currentExercise(); as ex) {
+          <div class="bg-sky-900/20 border border-sky-800/30 rounded-xl p-3 flex items-center justify-between">
+            <span class="text-xs text-sky-400 font-medium">Rest between sets</span>
+            <div class="flex items-center gap-2">
+              @for (preset of [60, 90, 120, 180]; track preset) {
+                <button (click)="setRestSeconds(preset)"
+                  class="px-2 py-1 rounded-lg text-xs font-medium transition-colors"
+                  [class.bg-sky-600]="ex.restSeconds === preset"
+                  [class.text-white]="ex.restSeconds === preset"
+                  [class.bg-gray-800]="ex.restSeconds !== preset"
+                  [class.text-gray-400]="ex.restSeconds !== preset"
+                  [class.hover:bg-gray-700]="ex.restSeconds !== preset">
+                  {{ preset >= 60 ? (preset / 60) + "'" : preset + 's' }}
+                </button>
+              }
+              <div class="flex items-center gap-1 ml-1">
+                <button (click)="adjustRestSeconds(-15)"
+                  class="w-7 h-7 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center justify-center text-sm font-bold text-white transition-colors">−</button>
+                <span class="text-sm font-semibold text-sky-300 w-10 text-center tabular-nums">{{ ex.restSeconds ?? '—' }}</span>
+                <button (click)="adjustRestSeconds(15)"
+                  class="w-7 h-7 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center justify-center text-sm font-bold text-white transition-colors">+</button>
+              </div>
+            </div>
+          </div>
+        }
+
         @for (set of currentExercise()?.sets ?? []; track set.setNumber) {
           <app-set-input [set]="set" [hasWarmup]="hasWarmupSets()" (setCompleted)="onSetCompleted($event)"></app-set-input>
         }
       </main>
 
-      <!-- Footer fijo -->
+      <!-- Sticky footer -->
       <footer class="bg-gray-900/95 backdrop-blur border-t border-gray-800 px-4 py-3 sticky bottom-0 pb-16">
         <div class="flex items-center justify-between mb-3">
           <button (click)="goToPrevious()" [disabled]="currentExerciseIndex() === 0"
@@ -175,16 +203,16 @@
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
             </svg>
-            Anterior
+            Previous
           </button>
           <button (click)="goToSummary()"
             class="text-sm text-gray-500 hover:text-gray-300 min-h-[48px] px-2 transition-colors">
-            {{ durationMinutes() }} min · Terminar
+            {{ durationMinutes() }} min · Finish
           </button>
           @if (!isLastExercise()) {
             <button (click)="goToNext()"
               class="text-sm text-gray-400 hover:text-white flex items-center gap-1 min-h-[48px] px-3 transition-colors">
-              Siguiente
+              Next
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
               </svg>
@@ -192,7 +220,7 @@
           } @else {
             <button (click)="goToSummary()"
               class="text-sm text-emerald-400 hover:text-emerald-300 font-medium flex items-center gap-1 min-h-[48px] px-3 transition-colors">
-              Finalizar
+              Complete
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
               </svg>
@@ -201,7 +229,7 @@
         </div>
         <button (click)="discardWorkout()"
           class="w-full bg-rose-600/20 text-rose-400 hover:bg-rose-600/30 font-medium py-2 rounded-lg text-sm transition-colors">
-          Descartar sesión
+          Discard session
         </button>
       </footer>
     }
@@ -211,7 +239,7 @@
     <div class="flex-1 flex items-center justify-center">
       <div class="text-center">
         <div class="w-8 h-8 border-2 border-gray-700 border-t-gray-400 rounded-full animate-spin mx-auto mb-3"></div>
-        <p class="text-gray-500 text-sm">Cargando...</p>
+        <p class="text-gray-500 text-sm">Loading...</p>
       </div>
     </div>
   }

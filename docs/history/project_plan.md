@@ -1,3 +1,8 @@
+> **Historical document** — this is the literal original spec/prompt (in Spanish) that generated
+> the first version of the app. It is kept unmodified as a record of the original design
+> rationale. Current design documentation lives in [architecture.md](../../architecture.md);
+> see ADR-0005 and ADR-0008 for decisions that trace back to this document.
+
 # PROMPT: Gym Tracker App - Angular + LocalStorage
 
 ## 1. OBJETIVO

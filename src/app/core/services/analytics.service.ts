@@ -20,13 +20,13 @@ export interface ExerciseMetrics {
   firstDate: string;
   lastDate: string;
 
-  // Progresión de peso
+  // Weight progression
   maxWeightEver: number;
   maxWeightDate: string;
   currentMaxWeight: number;
   weightProgression: WeightPoint[];
 
-  // Volumen
+  // Volume
   totalVolumeEver: number;
   avgVolumePerSession: number;
   volumeProgression: VolumePoint[];
@@ -37,9 +37,9 @@ export interface ExerciseMetrics {
 
   // RIR
   avgRir: number;
-  rirTrend: 'subiendo' | 'bajando' | 'estable';
+  rirTrend: 'rising' | 'falling' | 'stable';
 
-  // Estancamiento
+  // Stagnation
   weeksSinceLastPR: number;
   isStagnant: boolean;
   recommendation: string;
@@ -48,7 +48,7 @@ export interface ExerciseMetrics {
 export interface VariantComparison {
   avgWeight: number;
   avgVolume: number;
-  winner: 'A' | 'B' | 'empate';
+  winner: 'A' | 'B' | 'tie';
 }
 
 export interface WeeklyVolumeEntry {
@@ -61,29 +61,36 @@ export interface GlobalMetrics {
   totalSessions: number;
   totalExercises: number;
   totalSets: number;
-  totalWorkoutsByDayType: { push: number; pull: number; legs: number; abs: number; additional: number };
+  totalWorkoutsByDayType: {
+    push: number;
+    pull: number;
+    legs: number;
+    abs: number;
+    additional: number;
+    routine: number;
+  };
 
-  // Frecuencia
+  // Frequency
   avgSessionsPerWeek: number;
   consistencyScore: number;
 
-  // Volumen semanal
+  // Weekly volume
   weeklyVolume: WeeklyVolumeEntry[];
 
-  // Peso corporal
+  // Bodyweight
   bodyWeightProgression: { date: string; weight: number }[];
 
-  // Comparativa variantes
+  // Variant comparison
   variantComparison: {
     pullA: VariantComparison;
     pullB: VariantComparison;
-    pullWinner: 'A' | 'B' | 'empate';
+    pullWinner: 'A' | 'B' | 'tie';
     pushA: VariantComparison;
     pushB: VariantComparison;
-    pushWinner: 'A' | 'B' | 'empate';
+    pushWinner: 'A' | 'B' | 'tie';
   };
 
-  // Tendencias
+  // Trends
   isProgressing: boolean;
   warningFlags: string[];
 }
@@ -92,19 +99,19 @@ export interface GlobalMetrics {
 
 @Injectable({ providedIn: 'root' })
 export class AnalyticsService {
-  // ─── Helpers privados ───
+  // ─── Private helpers ───
 
-  /** Filtra solo series de trabajo (no warmup) */
+  /** Only completed work sets (no warmups) */
   private getWorkSets(exercise: WorkoutExercise): WorkoutSet[] {
     return exercise.sets.filter((s) => !s.isWarmup && s.completed);
   }
 
-  /** Calcula volumen de una serie: peso × reps */
+  /** Volume of one set: weight × reps */
   private getSetVolume(set: WorkoutSet): number {
     return set.weightKg * set.reps;
   }
 
-  /** Obtiene el número de semana ISO de una fecha */
+  /** ISO week number of a date */
   private getWeekNumber(dateStr: string): number {
     const d = new Date(dateStr);
     const dayNum = d.getUTCDay() || 7;
@@ -113,7 +120,7 @@ export class AnalyticsService {
     return Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
   }
 
-  /** Obtiene el lunes de la semana que contiene una fecha */
+  /** Monday of the week containing a date */
   private getMondayOfWeek(dateStr: string): string {
     const d = new Date(dateStr);
     const day = d.getDay();
@@ -122,7 +129,7 @@ export class AnalyticsService {
     return d.toISOString().split('T')[0];
   }
 
-  // ─── Datos formateados para gráficos ───
+  // ─── Chart-ready data ───
 
   getWeightChartData(
     templateId: string,
@@ -218,7 +225,7 @@ export class AnalyticsService {
     };
   }
 
-  // ─── Métricas por ejercicio ───
+  // ─── Per-exercise metrics ───
 
   getExerciseMetrics(
     templateId: string,
@@ -234,7 +241,7 @@ export class AnalyticsService {
 
     const exerciseName =
       relevantSessions[0]?.exercises.find((e) => e.templateId === templateId)
-        ?.exerciseName ?? 'Desconocido';
+        ?.exerciseName ?? 'Unknown';
 
     if (relevantSessions.length === 0) {
       return {
@@ -253,14 +260,14 @@ export class AnalyticsService {
         avgRepsPerSet: 0,
         maxRepsInSet: 0,
         avgRir: 0,
-        rirTrend: 'estable',
+        rirTrend: 'stable',
         weeksSinceLastPR: 0,
         isStagnant: false,
-        recommendation: 'Sin datos suficientes',
+        recommendation: 'Not enough data',
       };
     }
 
-    // Peso máximo histórico
+    // All-time max weight
     let maxWeightEver = 0;
     let maxWeightDate = '';
     const weightProgression: WeightPoint[] = [];
@@ -282,7 +289,7 @@ export class AnalyticsService {
         ? weightProgression[weightProgression.length - 1].maxWeight
         : 0;
 
-    // Volumen
+    // Volume
     let totalVolumeEver = 0;
     const volumeProgression: VolumePoint[] = [];
 
@@ -342,8 +349,8 @@ export class AnalyticsService {
 
     const avgRir = rirCount > 0 ? totalRir / rirCount : 0;
 
-    // Tendencia RIR: comparar últimas 3 sesiones vs 3 anteriores
-    let rirTrend: 'subiendo' | 'bajando' | 'estable' = 'estable';
+    // RIR trend: last 3 sessions vs previous 3
+    let rirTrend: 'rising' | 'falling' | 'stable' = 'stable';
     if (rirPerSession.length >= 4) {
       const recent = rirPerSession.slice(-3);
       const previous = rirPerSession.slice(-6, -3);
@@ -351,12 +358,12 @@ export class AnalyticsService {
       const previousAvg =
         previous.reduce((sum, r) => sum + r.avgRir, 0) / previous.length;
       const diff = recentAvg - previousAvg;
-      if (diff > 0.3) rirTrend = 'subiendo';
-      else if (diff < -0.3) rirTrend = 'bajando';
-      else rirTrend = 'estable';
+      if (diff > 0.3) rirTrend = 'rising';
+      else if (diff < -0.3) rirTrend = 'falling';
+      else rirTrend = 'stable';
     }
 
-    // Detección de estancamiento
+    // Stagnation detection
     const stagnation = this.detectStagnation({
       templateId,
       exerciseName,
@@ -402,7 +409,7 @@ export class AnalyticsService {
     };
   }
 
-  // ─── Métricas de todos los ejercicios ───
+  // ─── Metrics for every exercise ───
 
   getAllExercisesMetrics(sessions: WorkoutSession[]): ExerciseMetrics[] {
     const completed = sessions.filter((s) => s.completed);
@@ -421,7 +428,7 @@ export class AnalyticsService {
     return [...templateIds].map((id) => this.getExerciseMetrics(id, sessions));
   }
 
-  // ─── Detección de estancamiento ───
+  // ─── Stagnation detection ───
 
   detectStagnation(metrics: ExerciseMetrics): {
     isStagnant: boolean;
@@ -430,10 +437,10 @@ export class AnalyticsService {
   } {
     const progression = metrics.weightProgression;
     if (progression.length < 2) {
-      return { isStagnant: false, weeks: 0, suggestion: 'Sin datos suficientes' };
+      return { isStagnant: false, weeks: 0, suggestion: 'Not enough data' };
     }
 
-    // Calcular semanas desde último PR
+    // Weeks since last PR
     const lastPRDate = new Date(metrics.maxWeightDate);
     const today = new Date();
     const weeksSinceLastPR = Math.max(
@@ -441,7 +448,7 @@ export class AnalyticsService {
       Math.floor((today.getTime() - lastPRDate.getTime()) / (7 * 86400000)),
     );
 
-    // Ver si el peso máximo no sube en las últimas 3 sesiones
+    // Max weight flat over the last 3 sessions?
     const lastThree = progression.slice(-3);
     let isStagnant = false;
     if (lastThree.length >= 3) {
@@ -453,29 +460,29 @@ export class AnalyticsService {
       isStagnant = allSame || (notIncreasing && weeksSinceLastPR >= 3);
     }
 
-    // Sugerencia según semanas de estancamiento
-    let suggestion = '';
+    // Suggestion based on weeks stagnant
+    let suggestion: string;
     if (!isStagnant) {
-      suggestion = 'Sigue progresando, vas bien 💪';
+      suggestion = 'Still progressing, keep it up 💪';
     } else if (weeksSinceLastPR < 3) {
-      suggestion = 'Mantén, puede ser adaptación';
+      suggestion = 'Hold steady — could just be adaptation';
     } else if (weeksSinceLastPR <= 4) {
-      suggestion = 'Intenta +1 rep o +1 kg la próxima vez';
+      suggestion = 'Try +1 rep or +1 kg next time';
     } else if (weeksSinceLastPR <= 6) {
-      suggestion = 'Revisa técnica, descanso o nutrición';
+      suggestion = 'Review technique, rest or nutrition';
     } else {
-      suggestion = 'Considera cambio de ejercicio o deload';
+      suggestion = 'Consider swapping the exercise or a deload';
     }
 
     return { isStagnant, weeks: weeksSinceLastPR, suggestion };
   }
 
-  // ─── Comparativa A vs B ───
+  // ─── A vs B comparison ───
 
   compareVariants(
     sessions: WorkoutSession[],
     dayType: 'push' | 'pull',
-  ): { variantA: VariantComparison; variantB: VariantComparison; winner: 'A' | 'B' | 'empate' } {
+  ): { variantA: VariantComparison; variantB: VariantComparison; winner: 'A' | 'B' | 'tie' } {
     const completed = sessions.filter(
       (s) => s.completed && s.dayType === dayType,
     );
@@ -515,15 +522,15 @@ export class AnalyticsService {
     const variantA: VariantComparison = { ...aStats, winner: 'A' };
     const variantB: VariantComparison = { ...bStats, winner: 'B' };
 
-    let winner: 'A' | 'B' | 'empate';
+    let winner: 'A' | 'B' | 'tie';
     if (aStats.avgVolume > bStats.avgVolume) winner = 'A';
     else if (bStats.avgVolume > aStats.avgVolume) winner = 'B';
-    else winner = 'empate';
+    else winner = 'tie';
 
     return { variantA, variantB, winner };
   }
 
-  // ─── Métricas globales ───
+  // ─── Global metrics ───
 
   getGlobalMetrics(sessions: WorkoutSession[]): GlobalMetrics {
     const completed = sessions
@@ -532,8 +539,8 @@ export class AnalyticsService {
 
     const totalSessions = completed.length;
 
-    // Conteo por dayType
-    const totalWorkoutsByDayType = { push: 0, pull: 0, legs: 0, abs: 0, additional: 0 };
+    // Count per dayType
+    const totalWorkoutsByDayType = { push: 0, pull: 0, legs: 0, abs: 0, additional: 0, routine: 0 };
     const uniqueExercises = new Set<string>();
     let totalSets = 0;
 
@@ -547,7 +554,7 @@ export class AnalyticsService {
 
     const totalExercises = uniqueExercises.size;
 
-    // Promedio de sesiones por semana
+    // Average sessions per week
     let avgSessionsPerWeek = 0;
     if (completed.length >= 2) {
       const firstDate = new Date(completed[0].date);
@@ -559,7 +566,7 @@ export class AnalyticsService {
       avgSessionsPerWeek = Math.round((totalSessions / totalWeeks) * 10) / 10;
     }
 
-    // Consistencia: basada en días entre sesiones del mismo tipo
+    // Consistency: based on days between sessions of the same type
     let consistencyScore = 100;
     if (completed.length >= 4) {
       const typeGaps: number[] = [];
@@ -575,12 +582,12 @@ export class AnalyticsService {
       }
       if (typeGaps.length > 0) {
         const avgGap = typeGaps.reduce((a, b) => a + b, 0) / typeGaps.length;
-        const deviation = Math.abs(avgGap - 7); // ideal es cada 7 días
+        const deviation = Math.abs(avgGap - 7); // ideal is every 7 days
         consistencyScore = Math.max(0, Math.min(100, 100 - deviation * 10));
       }
     }
 
-    // Volumen semanal
+    // Weekly volume
     const weeklyMap = new Map<
       string,
       { total: number; breakdown: Record<string, number> }
@@ -613,17 +620,17 @@ export class AnalyticsService {
         dayTypeBreakdown: entry.breakdown,
       }));
 
-    // Peso corporal
+    // Bodyweight
     const bodyWeightProgression = completed
       .filter((s) => s.bodyWeightKg != null)
       .map((s) => ({ date: s.date, weight: s.bodyWeightKg! }));
 
-    // Comparativa variantes
+    // Variant comparison
     const pullComparison = this.compareVariants(sessions, 'pull');
     const pushComparison = this.compareVariants(sessions, 'push');
 
-    // Tendencia general: comparar últimas 2 semanas completas
-    let isProgressing = true; // default: asumir progreso con pocos datos
+    // Overall trend: compare last 2 full weeks
+    let isProgressing = true; // default: assume progress with little data
     if (weeklyVolume.length >= 2) {
       const last = weeklyVolume[weeklyVolume.length - 1].totalVolume;
       const prev = weeklyVolume[weeklyVolume.length - 2].totalVolume;
@@ -637,17 +644,17 @@ export class AnalyticsService {
     for (const m of allMetrics) {
       if (m.isStagnant && m.weeksSinceLastPR >= 4) {
         warningFlags.push(
-          `Estancamiento en ${m.exerciseName} (${m.weeksSinceLastPR} semanas sin PR)`,
+          `Stagnation on ${m.exerciseName} (${m.weeksSinceLastPR} weeks without a PR)`,
         );
       }
-      if (m.rirTrend === 'subiendo' && m.weeksSinceLastPR >= 3) {
+      if (m.rirTrend === 'rising' && m.weeksSinceLastPR >= 3) {
         warningFlags.push(
-          `${m.exerciseName}: RIR subiendo sin progresión — posible baja intensidad`,
+          `${m.exerciseName}: RIR rising without progression — intensity may be too low`,
         );
       }
     }
 
-    // Verificar si volumen de algún dayType bajó significativamente
+    // Check whether any dayType's volume dropped significantly
     if (weeklyVolume.length >= 4) {
       const recent4 = weeklyVolume.slice(-4);
       const prev4 = weeklyVolume.slice(-8, -4);
@@ -663,9 +670,7 @@ export class AnalyticsService {
             prev4.length;
           if (prevAvg > 0 && recentAvg < prevAvg * 0.8) {
             const pct = Math.round((1 - recentAvg / prevAvg) * 100);
-            warningFlags.push(
-              `Volumen de ${type === 'push' ? 'push' : type === 'pull' ? 'pull' : type === 'legs' ? 'piernas' : 'abs'} bajó ${pct}%`,
-            );
+            warningFlags.push(`${capitalize(type)} volume dropped ${pct}%`);
           }
         }
       }
@@ -692,4 +697,8 @@ export class AnalyticsService {
       warningFlags,
     };
   }
+}
+
+function capitalize(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }
