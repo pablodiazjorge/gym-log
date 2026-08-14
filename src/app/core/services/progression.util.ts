@@ -354,7 +354,18 @@ export function suggestNextSessionSets(input: SuggestionInput): SuggestionResult
   const repsMin = useStrengthRange ? template.strengthRepsMin! : template.targetRepsMin;
   const repsMax = useStrengthRange ? template.strengthRepsMax! : template.targetRepsMax;
 
-  const workSets = lastSets.filter((s) => !s.isWarmup && s.completed && !s.skipped && s.weightKg > 0);
+  const loggedWorkSets = lastSets.filter((s) => !s.isWarmup && s.completed && !s.skipped);
+  /**
+   * Bodyweight only when EVERY work set is unloaded (pull-ups, dips, hanging leg
+   * raises…). Those used to be filtered out by a blanket `weightKg > 0` and so
+   * reported "no previous data" forever, however long the history was.
+   *
+   * The `every` matters: a single 0 kg ramp-up set logged among weighted ones
+   * would otherwise become set 1, and every weight ratio is taken against set 1
+   * — dragging the whole exercise's suggestion to 0 kg.
+   */
+  const isBodyweight = loggedWorkSets.length > 0 && loggedWorkSets.every((s) => s.weightKg === 0);
+  const workSets = isBodyweight ? loggedWorkSets : loggedWorkSets.filter((s) => s.weightKg > 0);
   if (workSets.length === 0) {
     return {
       basis: 'no-history',
@@ -386,12 +397,21 @@ export function suggestNextSessionSets(input: SuggestionInput): SuggestionResult
   // range, extrapolating rep-by-rep is meaningless — recalculate the load
   // from the estimated 1RM instead. Skipped under maintenance and whenever
   // the fatigue gates said HOLD.
+  // Meaningless without external load: the 1RM back-solve would divide a zero.
   const rangeSwitched =
+    !isBodyweight &&
     focus !== 'maintenance' &&
     gateAction !== 'hold' &&
     (set1.reps > repsMax + 2 || set1.reps < repsMin - 2);
 
-  const action = rangeSwitched ? 'add-weight' : gateAction;
+  // Without a belt there is no weight to add, so every "add weight" verdict
+  // becomes rep progression instead.
+  const weightAction = gateAction === 'add-weight' || gateAction === 'add-weight-aggressive';
+  const action: ProgressionAction = rangeSwitched
+    ? 'add-weight'
+    : isBodyweight && weightAction
+      ? 'add-reps'
+      : gateAction;
 
   // Scale the per-session weight step so WEEKLY progression stays constant
   // regardless of how often the exercise is trained.
@@ -432,7 +452,12 @@ export function suggestNextSessionSets(input: SuggestionInput): SuggestionResult
   const targets: SetTarget[] = [];
   let setNumber = 1;
 
-  for (const warmup of lastSets.filter((s) => s.isWarmup)) {
+  // Skipped warm-ups are excluded: they used to carry weightKg 0 into the ratio
+  // and propose a 0 kg warm-up for the next session. `completed` is NOT required
+  // — an unticked warm-up still describes the shape the user wants, and
+  // dropping it would delete the warm-ups from the next session, which then
+  // becomes the history and perpetuates the loss.
+  for (const warmup of lastSets.filter((s) => s.isWarmup && !s.skipped)) {
     const ratio = set1.weightKg > 0 ? warmup.weightKg / set1.weightKg : 0;
     targets.push({
       setNumber: setNumber++,
@@ -444,7 +469,8 @@ export function suggestNextSessionSets(input: SuggestionInput): SuggestionResult
   }
 
   for (const ws of workSets) {
-    const weightRatio = ws.weightKg / set1.weightKg;
+    // Guarded: set1.weightKg is 0 for bodyweight work, which would yield NaN.
+    const weightRatio = set1.weightKg > 0 ? ws.weightKg / set1.weightKg : 0;
     // On a range switch the old per-set rep deltas belong to the old range — reset them
     const repsDelta = rangeSwitched ? 0 : ws.reps - set1.reps;
     const rirDelta = ws.rir - set1.rir;
@@ -539,4 +565,83 @@ function round1(n: number): number {
 
 function round2(n: number): number {
   return Math.round(n * 100) / 100;
+}
+
+// ─── Session set construction ───
+
+/** The subset of a template that decides the shape of an exercise's sets */
+export type SetPlan = Pick<
+  ExerciseTemplate,
+  'targetSets' | 'targetRepsMin' | 'hasWarmupSets' | 'warmupSets' | 'targetRirMin'
+>;
+
+/**
+ * Build the sets for one exercise of a new session.
+ *
+ * `planIsAuthoritative` (routine-driven sessions) makes the PLAN decide the
+ * structure — how many sets exist and which of them are warm-ups — while the
+ * suggested targets only supply values, matched **by role**: the n-th warm-up
+ * target fills the n-th warm-up slot, the n-th work target the n-th work slot.
+ *
+ * Without it (day-driven sessions) the catalog template is only a default, so
+ * the recorded history may extend it and decides which sets are warm-ups.
+ *
+ * Regression guard: matching targets by flat index used to let a history with
+ * no warm-ups occupy the warm-up slots, silently dropping the warm-up sets a
+ * routine had configured — and, because that session became the new history,
+ * the loss perpetuated itself. `Math.max` likewise made lowering `targetSets`
+ * in the routine editor a no-op whenever the last session had more sets.
+ */
+export function buildSetsForExercise(
+  plan: SetPlan,
+  targets: SetTarget[],
+  planIsAuthoritative: boolean,
+): WorkoutSet[] {
+  const warmupCount = plan.hasWarmupSets ? (plan.warmupSets ?? 0) : 0;
+  const totalSets = planIsAuthoritative
+    ? plan.targetSets + warmupCount
+    : Math.max(plan.targetSets + warmupCount, targets.length);
+  const defaultRir = plan.targetRirMin ?? 2;
+  const warmupTargets = targets.filter((t) => t.isWarmup);
+  const workTargets = targets.filter((t) => !t.isWarmup);
+  const lastWorkTarget = workTargets[workTargets.length - 1];
+  const lastWarmupTarget = warmupTargets[warmupTargets.length - 1];
+
+  const firstWorkTarget = workTargets[0];
+  /**
+   * Weight for a warm-up slot the history has nothing for — the usual case when
+   * a routine adds warm-up sets to an exercise that never had them. Half the
+   * first work set is a conventional, safe opener; without it the slot came out
+   * at 0 kg and had to be typed in every single session.
+   */
+  const derivedWarmupWeight = firstWorkTarget
+    ? roundToPlate(firstWorkTarget.weightKg * 0.5, PLATE_INCREMENT_KG)
+    : 0;
+
+  const sets: WorkoutSet[] = [];
+  for (let i = 0; i < totalSets; i++) {
+    const isWarmup = planIsAuthoritative
+      ? i < warmupCount
+      : (targets[i]?.isWarmup ?? i < warmupCount);
+    const target = planIsAuthoritative
+      ? isWarmup
+        ? warmupTargets[i]
+        : workTargets[i - warmupCount]
+      : targets[i];
+    const fallbackWeight = isWarmup
+      ? (lastWarmupTarget?.weightKg ?? derivedWarmupWeight)
+      : (lastWorkTarget?.weightKg ?? 0);
+    sets.push({
+      setNumber: i + 1,
+      isWarmup,
+      weightKg: target?.weightKg ?? fallbackWeight,
+      reps: target?.reps ?? plan.targetRepsMin,
+      partialReps: 0,
+      rir: target?.rir ?? defaultRir,
+      completed: false,
+      skipped: false,
+      notes: '',
+    });
+  }
+  return sets;
 }

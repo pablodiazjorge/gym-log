@@ -117,6 +117,12 @@ export class Dashboard {
       }
       const parts = [`Imported ${count} new session${count === 1 ? '' : 's'}.`];
       if (routineCount > 0) parts.push(`${routineCount} routine${routineCount === 1 ? '' : 's'}.`);
+      // Silently dropping malformed entries would look like data loss, so say so.
+      if (result.skippedSessions > 0) {
+        parts.push(
+          `${result.skippedSessions} session${result.skippedSessions === 1 ? '' : 's'} skipped (malformed).`,
+        );
+      }
       alert(parts.join(' '));
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Import failed');

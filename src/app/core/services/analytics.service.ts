@@ -85,9 +85,14 @@ export interface GlobalMetrics {
 export class AnalyticsService {
   // ─── Private helpers ───
 
-  /** Only completed work sets (no warmups) */
+  /**
+   * Only completed work sets (no warmups, no skipped). Skipped sets stay
+   * `completed: true` by design, so without the `!s.skipped` guard they entered
+   * every metric as a real 0 kg × 0 rep set — and fed rirTrend back into the
+   * progression engine.
+   */
   private getWorkSets(exercise: WorkoutExercise): WorkoutSet[] {
-    return exercise.sets.filter((s) => !s.isWarmup && s.completed);
+    return exercise.sets.filter((s) => !s.isWarmup && s.completed && !s.skipped);
   }
 
   /** Volume of one set: weight × reps */
@@ -415,8 +420,13 @@ export class AnalyticsService {
       return { isStagnant: false, weeks: 0, suggestion: 'Not enough data' };
     }
 
-    // Weeks since last PR
+    // Weeks since last PR. maxWeightDate stays empty for bodyweight exercises
+    // (their max never beats the initial 0), and `new Date('')` → NaN, which
+    // Math.max propagates all the way to a literal "NaN" on screen.
     const lastPRDate = new Date(metrics.maxWeightDate);
+    if (!metrics.maxWeightDate || Number.isNaN(lastPRDate.getTime())) {
+      return { isStagnant: false, weeks: 0, suggestion: 'No weight PR to track — progress by reps' };
+    }
     const today = new Date();
     const weeksSinceLastPR = Math.max(
       0,

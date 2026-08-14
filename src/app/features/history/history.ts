@@ -60,11 +60,12 @@ export class History {
     return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
   }
 
+  /** Only real work sets: warm-ups, skipped and never-completed sets don't count */
   getMaxWeight(session: WorkoutSession): number {
     let max = 0;
     for (const ex of session.exercises) {
       for (const s of ex.sets) {
-        if (!s.isWarmup && s.weightKg > max) max = s.weightKg;
+        if (!s.isWarmup && s.completed && !s.skipped && s.weightKg > max) max = s.weightKg;
       }
     }
     return max;

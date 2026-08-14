@@ -8,6 +8,8 @@ import { ProgressionService } from '../../core/services/progression.service';
 import { ProfileService } from '../../core/services/profile.service';
 import { ExerciseLibraryService } from '../../core/services/exercise-library.service';
 import { WorkoutSession, WorkoutExercise, WorkoutSet, ExerciseTemplate } from '../../core/models/workout.model';
+import { buildSetsForExercise } from '../../core/services/progression.util';
+import { elapsedMinutes, minutesSince } from '../../shared/elapsed-minutes';
 import { SetInput } from './set-input';
 
 import { NgClass } from '@angular/common';
@@ -67,7 +69,7 @@ export class Workout {
   readonly isLastExercise = computed(() => this.currentExerciseIndex() >= this.exerciseCount() - 1);
   readonly allCompleted = computed(() => this.exercises().every((ex) => ex.sets.every((s) => s.completed)));
   readonly hasWarmupSets = computed(() => this.currentExercise()?.sets.some((s) => s.isWarmup) ?? false);
-  readonly durationMinutes = computed(() => Math.round((Date.now() - this.startTime()) / 60000));
+  readonly durationMinutes = elapsedMinutes(this.startTime);
   readonly completedCount = computed(() => this.currentExercise()?.sets.filter((s) => s.completed).length ?? 0);
   readonly totalSetCount = computed(() => this.currentExercise()?.sets.length ?? 0);
   readonly currentExerciseDone = computed(() => {
@@ -148,6 +150,7 @@ export class Workout {
    * authoring time, create the session directly.
    */
   private initWorkflow(): void {
+    if (!this.guardUnfinishedSession()) return;
     const src = this.source();
     if (src.kind === 'routine') {
       this.createSessionFromRoutine(src.routineId);
@@ -164,6 +167,31 @@ export class Workout {
       const templates = this.routineService.getExercisesForDay(src.dayType);
       this.createNewSessionFromPlan(templates);
     }
+  }
+
+  /**
+   * Creating a session overwrites the saved in-progress one (StorageService
+   * writes a single key), so a half-finished workout used to vanish without a
+   * word. Ask first. Returns false when the caller must stop.
+   */
+  private guardUnfinishedSession(): boolean {
+    const existing = this.storage.currentSession();
+    if (!existing || existing.completed) return true;
+    const discard = confirm(
+      'You have an unfinished workout.\n\n' +
+        'OK — discard it and start the new one.\n' +
+        'Cancel — go back and resume it.',
+    );
+    if (discard) {
+      // Deliberately NOT cleared here: on the day flow the picker comes first
+      // and the new session is only created on confirmSelection(), so clearing
+      // now would leave the user with neither if they back out. The pending
+      // saveCurrentSession() in createNewSessionFromPlan overwrites it anyway.
+      return true;
+    }
+    // Home shows the "unfinished session" banner with a working Resume action.
+    this.router.navigate(['/']);
+    return false;
   }
 
   /** The user picks an exercise inside a choice group */
@@ -247,30 +275,15 @@ export class Workout {
   ): void {
     const src = this.source();
     const suggestions = this.progression.getSuggestionsForTemplates(templates);
+    // A routine is authored deliberately, so its structure (how many sets, how
+    // many of them warm-ups) always wins over whatever shape the last session
+    // happened to have. Day-based workouts keep the old behaviour: the catalog
+    // template is a default, so the user's own habits may extend it.
+    const planIsAuthoritative = !!routineContext;
 
     const exercises: WorkoutExercise[] = templates.map((template) => {
       const suggestion = suggestions.get(template.id);
-      const targets = suggestion?.setTargets ?? [];
-      const warmupCount = template.hasWarmupSets ? (template.warmupSets ?? 0) : 0;
-      const totalSets = Math.max(template.targetSets + warmupCount, targets.length);
-      const defaultRir = template.targetRirMin ?? 2;
-      const lastWorkTarget = [...targets].reverse().find((t) => !t.isWarmup);
-
-      const sets: WorkoutSet[] = [];
-      for (let i = 0; i < totalSets; i++) {
-        const target = targets[i];
-        sets.push({
-          setNumber: i + 1,
-          isWarmup: target?.isWarmup ?? i < warmupCount,
-          weightKg: target?.weightKg ?? lastWorkTarget?.weightKg ?? 0,
-          reps: target?.reps ?? template.targetRepsMin,
-          partialReps: 0,
-          rir: target?.rir ?? defaultRir,
-          completed: false,
-          skipped: false,
-          notes: '',
-        });
-      }
+      const sets = buildSetsForExercise(template, suggestion?.setTargets ?? [], planIsAuthoritative);
 
       const restSeconds =
         routineContext?.restByTemplateId.get(template.id) ?? suggestion?.restSeconds;
@@ -296,6 +309,14 @@ export class Workout {
     const existing = this.storage.currentSession();
     if (existing) {
       this.session.set(existing);
+      // Without this the clock restarted on every resume and the saved duration
+      // only covered the last stretch. Capped at 4 h: resuming the next day
+      // would otherwise record a session lasting hundreds of minutes.
+      const startedAt = new Date(existing.date).getTime();
+      const elapsedMs = Date.now() - startedAt;
+      if (!Number.isNaN(startedAt) && elapsedMs >= 0 && elapsedMs <= 4 * 3600_000) {
+        this.startTime.set(startedAt);
+      }
       if (existing.dayType === 'routine' && existing.routineId) {
         const routine =
           this.routineLibrary.getRoutineById(existing.routineId) ??
@@ -310,23 +331,99 @@ export class Workout {
     }
   }
 
-  goToPrevious(): void { if (this.currentExerciseIndex() > 0) this.currentExerciseIndex.update((i) => i - 1); }
-  goToNext(): void { if (this.currentExerciseIndex() < this.exerciseCount() - 1) this.currentExerciseIndex.update((i) => i + 1); }
+  /**
+   * Pending auto-advance. Uncancelled it fires 500 ms after the last set of an
+   * exercise is completed — including right after the user taps that set to
+   * reopen it, which yanked them into the next exercise mid-edit.
+   */
+  private advanceTimer: ReturnType<typeof setTimeout> | null = null;
 
-  goToSummary(): void { this.isSummary.set(true); }
+  private cancelAdvance(): void {
+    if (this.advanceTimer !== null) {
+      clearTimeout(this.advanceTimer);
+      this.advanceTimer = null;
+    }
+  }
+
+  goToPrevious(): void {
+    this.cancelAdvance();
+    if (this.currentExerciseIndex() > 0) this.currentExerciseIndex.update((i) => i - 1);
+  }
+
+  goToNext(): void {
+    this.cancelAdvance();
+    if (this.currentExerciseIndex() < this.exerciseCount() - 1) this.currentExerciseIndex.update((i) => i + 1);
+  }
+
+  /**
+   * Jump to an exercise from the progress dots. Also leaves the summary — the
+   * dots render on top of it and were dead controls there, which left the
+   * summary with no way back to the exercises.
+   */
+  goToExercise(index: number): void {
+    this.cancelAdvance();
+    this.currentExerciseIndex.set(index);
+    this.isSummary.set(false);
+  }
+
+  goToSummary(): void {
+    this.cancelAdvance();
+    this.isSummary.set(true);
+  }
+
+  /**
+   * Replace a set in the current exercise by set number.
+   *
+   * The exercise object is replaced, not mutated: `currentExercise` is a
+   * computed, and a computed that re-evaluates to an `Object.is`-equal value
+   * does not bump its version, so every signal derived from it (completedCount,
+   * hasWarmupSets, totalSetCount, currentExerciseDone) kept serving a stale
+   * cache until the exercise index changed.
+   */
+  private replaceSet(updatedSet: WorkoutSet): WorkoutExercise | null {
+    const s = this.session();
+    const index = this.currentExerciseIndex();
+    const current = s?.exercises[index];
+    if (!s || !current) return null;
+    const updated: WorkoutExercise = {
+      ...current,
+      sets: current.sets.map((st) => (st.setNumber === updatedSet.setNumber ? updatedSet : st)),
+    };
+    const exercises = [...s.exercises];
+    exercises[index] = updated;
+    const next: WorkoutSession = { ...s, exercises };
+    this.session.set(next);
+    this.storage.saveCurrentSession(next);
+    return updated;
+  }
 
   onSetCompleted(updatedSet: WorkoutSet): void {
-    const s = this.session();
-    if (!s) return;
-
-    const exercise = this.exercises()[this.currentExerciseIndex()];
-    const idx = exercise.sets.findIndex((st) => st.setNumber === updatedSet.setNumber);
-    if (idx >= 0) exercise.sets[idx] = updatedSet;
-    this.session.update((prev) => ({ ...prev!, exercises: [...prev!.exercises] }));
-    this.storage.saveCurrentSession(s);
+    const exercise = this.replaceSet(updatedSet);
+    if (!exercise) return;
     const allDone = exercise.sets.every((st) => st.completed);
-    if (allDone && !this.isLastExercise()) setTimeout(() => this.goToNext(), 500);
+    this.cancelAdvance();
+    if (allDone && !this.isLastExercise()) {
+      const from = this.currentExerciseIndex();
+      this.advanceTimer = setTimeout(() => {
+        this.advanceTimer = null;
+        // Only advance if the user has not moved (or reopened a set) meanwhile.
+        if (this.currentExerciseIndex() === from && !this.isSummary()) this.goToNext();
+      }, 500);
+    }
     if (this.allCompleted()) this.isSummary.set(true);
+  }
+
+  /** A completed set was tapped to be edited again */
+  onSetReopened(updatedSet: WorkoutSet): void {
+    this.cancelAdvance();
+    this.replaceSet(updatedSet);
+    // The exercise is no longer finished, so the summary must step aside.
+    this.isSummary.set(false);
+  }
+
+  /** An edit that must persist before the set is completed (e.g. the warm-up flag) */
+  onSetChanged(updatedSet: WorkoutSet): void {
+    this.replaceSet(updatedSet);
   }
 
   // ─── Bodyweight weekly check-in (summary screen) ───
@@ -400,7 +497,8 @@ export class Workout {
     const s = this.session();
     if (!s) return;
     s.completed = true;
-    s.durationMinutes = this.durationMinutes();
+    // Computed here rather than read off the ticking signal, which can be a tick behind.
+    s.durationMinutes = minutesSince(this.startTime());
     this.storage.saveSession(s);
     this.storage.clearCurrentSession();
     this.router.navigate(['/']);
@@ -417,10 +515,11 @@ export class Workout {
     if (s) this.exportService.exportSession(s);
   }
 
+  /** Skipped sets keep their pre-filled weight now, so they must be excluded here */
   getMaxWeight(ex: WorkoutExercise): number {
-    const ws = ex.sets.filter((st) => !st.isWarmup && st.completed);
+    const ws = ex.sets.filter((st) => !st.isWarmup && st.completed && !st.skipped);
     return ws.length > 0 ? Math.max(...ws.map((st) => st.weightKg)) : 0;
   }
-  getWorkCount(ex: WorkoutExercise): number { return ex.sets.filter((s) => !s.isWarmup).length; }
-  getWarmupCount(ex: WorkoutExercise): number { return ex.sets.filter((s) => s.isWarmup).length; }
+  getWorkCount(ex: WorkoutExercise): number { return ex.sets.filter((s) => !s.isWarmup && !s.skipped).length; }
+  getWarmupCount(ex: WorkoutExercise): number { return ex.sets.filter((s) => s.isWarmup && !s.skipped).length; }
 }

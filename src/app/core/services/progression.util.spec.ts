@@ -605,3 +605,139 @@ describe('suggestNextSessionSets', () => {
     expect(result.targets).toHaveLength(1); // only the one valid work set
   });
 });
+
+// ─── Bodyweight exercises (regression: they used to have no history at all) ───
+
+describe('suggestNextSessionSets — bodyweight exercises', () => {
+  const pullUps = template({
+    id: 'pronated-pull-ups',
+    name: 'Pull-ups',
+    category: 'pull',
+    isCompound: true,
+    targetRepsMin: 6,
+    targetRepsMax: 10,
+  });
+
+  /** Real shape from the 5-aug session: 10/8/7/5 reps at bodyweight */
+  const bodyweightHistory = (): WorkoutSet[] => [
+    workSet({ setNumber: 1, weightKg: 0, reps: 10, rir: 2 }),
+    workSet({ setNumber: 2, weightKg: 0, reps: 8, rir: 2 }),
+    workSet({ setNumber: 3, weightKg: 0, reps: 7, rir: 2 }),
+  ];
+
+  it('uses the history instead of reporting "no previous data"', () => {
+    // The old `weightKg > 0` filter emptied workSets for every bodyweight
+    // exercise, so however many sessions were logged the answer was always
+    // basis 'no-history' with template defaults.
+    const result = suggestNextSessionSets({
+      template: pullUps,
+      lastSets: bodyweightHistory(),
+      level: 'intermediate',
+      rirTrend: 'stable',
+      avgRecentRir: 2,
+    });
+
+    expect(result.basis).toBe('computed');
+    expect(result.targets).toHaveLength(3);
+  });
+
+  it('progresses by reps and never invents a weight', () => {
+    const result = suggestNextSessionSets({
+      template: pullUps,
+      lastSets: bodyweightHistory(),
+      level: 'intermediate',
+      rirTrend: 'stable',
+      avgRecentRir: 2,
+    });
+
+    expect(result.targets.every((t) => t.weightKg === 0)).toBe(true);
+    expect(result.targets.every((t) => Number.isFinite(t.reps) && t.reps > 0)).toBe(true);
+    // Per-set rep shape is preserved relative to set 1 (10/8/7 → deltas 0/−2/−3)
+    const [a, b, c] = result.targets.map((t) => t.reps);
+    expect(b).toBe(a - 2);
+    expect(c).toBe(a - 3);
+  });
+
+  it('never produces NaN, whatever the rep count', () => {
+    for (const reps of [1, 5, 10, 20, 40]) {
+      const result = suggestNextSessionSets({
+        template: pullUps,
+        lastSets: [workSet({ weightKg: 0, reps, rir: 0 })],
+        level: 'beginner',
+        rirTrend: 'falling',
+        avgRecentRir: 0,
+      });
+      for (const t of result.targets) {
+        expect(Number.isNaN(t.weightKg)).toBe(false);
+        expect(Number.isNaN(t.reps)).toBe(false);
+        expect(Number.isNaN(t.rir)).toBe(false);
+      }
+    }
+  });
+});
+
+// ─── Skipped warm-ups must not seed the next session ───
+
+describe('suggestNextSessionSets — skipped warm-ups', () => {
+  it('ignores a skipped warm-up instead of proposing it at 0 kg', () => {
+    // Real case: seated-leg-curl on 13-aug had its warm-up skipped, which left
+    // weightKg 0 and produced a 0 kg warm-up target for the next session.
+    const result = suggestNextSessionSets({
+      template: template({ hasWarmupSets: true, warmupSets: 1 }),
+      lastSets: [
+        workSet({ setNumber: 1, isWarmup: true, skipped: true, weightKg: 0, reps: 0 }),
+        ...lastSessionSets().map((s, i) => ({ ...s, setNumber: i + 2 })),
+      ],
+      level: 'intermediate',
+      rirTrend: 'stable',
+      avgRecentRir: 2,
+    });
+
+    expect(result.targets.filter((t) => t.isWarmup)).toEqual([]);
+    expect(result.targets.every((t) => t.weightKg > 0)).toBe(true);
+  });
+});
+
+// ─── Mixed 0 kg / loaded history (regression: all targets collapsed to 0 kg) ───
+
+describe('suggestNextSessionSets — a stray 0 kg set among loaded ones', () => {
+  it('does not drag the whole exercise to 0 kg', () => {
+    // Real case: t-bar-row on 12-aug was logged as 0×15, 10×12, 15×10, 15×9,
+    // 15×7, 15×7 (the first two were ramp-ups the warm-up bug left unflagged).
+    // Treating set 1 as the reference made every weight ratio 0.
+    const result = suggestNextSessionSets({
+      template: template({ id: 't-bar-row', targetRepsMin: 8, targetRepsMax: 12 }),
+      lastSets: [
+        workSet({ setNumber: 1, weightKg: 0, reps: 15, rir: 6 }),
+        workSet({ setNumber: 2, weightKg: 10, reps: 12, rir: 3 }),
+        workSet({ setNumber: 3, weightKg: 15, reps: 10, rir: 2 }),
+        workSet({ setNumber: 4, weightKg: 15, reps: 9, rir: 1.5 }),
+      ],
+      level: 'intermediate',
+      rirTrend: 'stable',
+      avgRecentRir: 2,
+    });
+
+    expect(result.basis).toBe('computed');
+    expect(result.targets.every((t) => t.weightKg > 0)).toBe(true);
+    // The 0 kg set is ignored, so the reference is the 10 kg one and the
+    // heaviest target tracks the 15 kg sets.
+    expect(Math.max(...result.targets.map((t) => t.weightKg))).toBeGreaterThanOrEqual(15);
+  });
+
+  it('still treats a fully unloaded exercise as bodyweight', () => {
+    const result = suggestNextSessionSets({
+      template: template({ id: 'pronated-pull-ups', targetRepsMin: 6, targetRepsMax: 10 }),
+      lastSets: [
+        workSet({ setNumber: 1, weightKg: 0, reps: 10 }),
+        workSet({ setNumber: 2, weightKg: 0, reps: 8 }),
+      ],
+      level: 'intermediate',
+      rirTrend: 'stable',
+      avgRecentRir: 2,
+    });
+
+    expect(result.basis).toBe('computed');
+    expect(result.targets.every((t) => t.weightKg === 0)).toBe(true);
+  });
+});

@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { ExportData, WorkoutSession } from '../models/workout.model';
 import { Routine } from '../models/routine.model';
 import { UserProfile } from '../models/profile.model';
+import { isValidSession } from './storage.service';
 import { ProfileService } from './profile.service';
 import { RoutineLibraryService } from './routine-library.service';
 import { ExerciseLibraryService } from './exercise-library.service';
@@ -12,6 +13,8 @@ export interface ImportResult {
   user?: UserProfile;
   routines?: Routine[];
   enabledExerciseIds?: string[];
+  /** Entries dropped because they did not match the expected shape */
+  skippedSessions: number;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -45,8 +48,13 @@ export class ExportService {
           if (!data.sessions || !Array.isArray(data.sessions)) {
             throw new Error('Invalid format: missing "sessions" array');
           }
+          // The ExportData annotation is erased at runtime, so each entry has to
+          // be checked: importing a malformed session used to persist it and
+          // break History and Analysis with no way back from the UI.
+          const sessions = data.sessions.filter(isValidSession);
           resolve({
-            sessions: data.sessions,
+            sessions,
+            skippedSessions: data.sessions.length - sessions.length,
             user: data.user,
             routines: Array.isArray(data.routines) ? data.routines : undefined,
             enabledExerciseIds: Array.isArray(data.enabledExerciseIds)

@@ -4,6 +4,7 @@ import { RoutineService } from '../../core/services/routine.service';
 import { ExerciseLibraryService } from '../../core/services/exercise-library.service';
 import { StorageService } from '../../core/services/storage.service';
 import { ExerciseTemplate, WorkoutSession, WorkoutExercise, WorkoutSet } from '../../core/models/workout.model';
+import { elapsedMinutes, minutesSince } from '../../shared/elapsed-minutes';
 import { FormsModule } from '@angular/forms';
 
 type Category = 'push' | 'pull' | 'legs' | 'abs';
@@ -56,7 +57,7 @@ export class Additional {
   /** Index of the current exercise */
   readonly currentExerciseIndex = signal(0);
   readonly startTime = signal(Date.now());
-  readonly durationMinutes = computed(() => Math.round((Date.now() - this.startTime()) / 60000));
+  readonly durationMinutes = elapsedMinutes(this.startTime);
 
   /** Template of the current exercise */
   readonly currentTemplate = computed(() => {
@@ -311,7 +312,7 @@ export class Additional {
       date: new Date().toISOString(),
       dayType: 'additional',
       exercises,
-      durationMinutes: this.durationMinutes(),
+      durationMinutes: minutesSince(this.startTime()),
       completed: true,
     };
 

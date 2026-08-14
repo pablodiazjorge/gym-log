@@ -1,10 +1,28 @@
 @import "tailwindcss";
 
+:root {
+  /* Height of the global sticky header (h-12) — sticky children offset by this */
+  --app-header-h: 3rem;
+  /* Height of the fixed bottom nav (h-16) plus the device safe area */
+  --app-nav-h: 4rem;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
 @layer base {
   body {
     @apply bg-gray-950 text-white antialiased;
     -webkit-tap-highlight-color: transparent;
     font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 
   /* Hide number input spinners */
@@ -37,6 +55,44 @@
 
 .safe-bottom {
   padding-bottom: var(--safe-bottom);
+}
+
+/*
+ * Global so every horizontal scroller can use it. It lived in additional.css,
+ * a component stylesheet with emulated encapsulation, so the other two
+ * templates that reference the class got nothing.
+ */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/*
+ * Keyboard focus was invisible everywhere: 22 uses of `focus:outline-none` and
+ * no replacement ring. UNLAYERED on purpose — inside `@layer base` this loses
+ * to Tailwind's `utilities` layer, where focus:outline-none lives, so the ring
+ * never appeared. focus-visible keeps it off for touch.
+ */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid #10b981;
+  outline-offset: 2px;
+  border-radius: 0.25rem;
+}
+
+/*
+ * Every <select> uses appearance-none without replacing the native arrow, so
+ * they read as plain text inputs. Unlayered on purpose: the padding-right has
+ * to beat the p-2/p-2.5/p-3 utilities on those elements.
+ */
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.6rem center;
+  background-size: 1rem 1rem;
+  padding-right: 2.1rem;
 }
 
 /* ─── Tap highlight override ─── */

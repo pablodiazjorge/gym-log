@@ -14,16 +14,23 @@ export class Header {
   private readonly router = inject(Router);
   private readonly location = inject(Location);
 
-  readonly isHome = toSignal(
+  /**
+   * The current URL as a signal. `router.url` is a plain property, so a computed
+   * reading it directly has no reactive producer: it memoises on first read and
+   * never updates. That froze the title on 'Gym Tracker' for the whole session.
+   */
+  private readonly url = toSignal(
     this.router.events.pipe(
       filter((e) => e instanceof NavigationEnd),
-      map(() => this.router.url === '/'),
+      map(() => this.router.url),
     ),
-    { initialValue: true },
+    { initialValue: this.router.url },
   );
 
+  readonly isHome = computed(() => this.url() === '/');
+
   readonly title = computed(() => {
-    const url = this.router.url;
+    const url = this.url();
     if (url === '/') return 'Gym Tracker';
     if (url.startsWith('/workout')) return 'Workout';
     if (url.startsWith('/routines/new')) return 'New routine';

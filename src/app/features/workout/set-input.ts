@@ -13,6 +13,10 @@ export class SetInput {
   readonly hasWarmup = input(false);
 
   readonly setCompleted = output<WorkoutSet>();
+  /** A completed set was tapped to be edited again */
+  readonly setReopened = output<WorkoutSet>();
+  /** An edit that must persist before the set is completed (e.g. the warm-up flag) */
+  readonly setChanged = output<WorkoutSet>();
 
   adjustWeight(delta: number): void {
     const s = this.set();
@@ -40,7 +44,11 @@ export class SetInput {
   }
 
   toggleWarmup(): void {
-    this.set().isWarmup = !this.set().isWarmup;
+    const s = this.set();
+    s.isWarmup = !s.isWarmup;
+    // Emit so the parent persists it: otherwise the flag is lost if the set is
+    // never completed, and hasWarmupSets() keeps a stale value.
+    this.setChanged.emit({ ...s });
   }
 
   completeSet(): void {
@@ -50,13 +58,25 @@ export class SetInput {
     if (navigator.vibrate) navigator.vibrate(30);
   }
 
+  /**
+   * Skipping keeps the typed weight/reps instead of zeroing them, so the set can
+   * be reopened without data loss. Every consumer filters on `skipped`, so the
+   * retained values never reach a metric.
+   */
   skipSet(): void {
     const s = this.set();
     s.skipped = true;
-    s.weightKg = 0;
-    s.reps = 0;
     s.completed = true;
     this.setCompleted.emit({ ...s });
     if (navigator.vibrate) navigator.vibrate(30);
+  }
+
+  /** Back to the editable state — the only way out of a mistyped set */
+  reopenSet(): void {
+    const s = this.set();
+    s.completed = false;
+    s.skipped = false;
+    this.setReopened.emit({ ...s });
+    if (navigator.vibrate) navigator.vibrate(15);
   }
 }

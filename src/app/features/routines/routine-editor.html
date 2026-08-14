@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-gray-950 text-white p-4 pb-24">
+<div class="min-h-dvh bg-gray-950 text-white p-4 pb-24">
   <!-- ===== Exercise picker overlay ===== -->
   @if (isPicking()) {
     <div class="mb-6">
@@ -126,17 +126,19 @@
               </div>
             </div>
 
-            <!-- Reps range -->
-            <div class="bg-gray-800 rounded-lg p-2 flex items-center justify-between">
-              <span class="text-xs text-gray-500">Reps</span>
-              <div class="flex items-center gap-1">
-                <button (click)="adjustRepsMin(i, -1)" class="w-6 h-6 bg-gray-700 hover:bg-gray-600 rounded flex items-center justify-center text-xs font-bold text-white transition-colors">−</button>
-                <span class="text-sm font-semibold text-white tabular-nums">{{ row.targetRepsMin }}</span>
-                <button (click)="adjustRepsMin(i, 1)" class="w-6 h-6 bg-gray-700 hover:bg-gray-600 rounded flex items-center justify-center text-xs font-bold text-white transition-colors">+</button>
-                <span class="text-xs text-gray-500 mx-0.5">–</span>
-                <button (click)="adjustRepsMax(i, -1)" class="w-6 h-6 bg-gray-700 hover:bg-gray-600 rounded flex items-center justify-center text-xs font-bold text-white transition-colors">−</button>
-                <span class="text-sm font-semibold text-white tabular-nums">{{ row.targetRepsMax }}</span>
-                <button (click)="adjustRepsMax(i, 1)" class="w-6 h-6 bg-gray-700 hover:bg-gray-600 rounded flex items-center justify-center text-xs font-bold text-white transition-colors">+</button>
+            <!-- Reps range — full width: seven controls never fit in a half
+                 column, Tailwind's button reset let flex-shrink squash the ±
+                 buttons to ~10px slivers on a phone. -->
+            <div class="col-span-2 bg-gray-800 rounded-lg p-2 flex items-center justify-between gap-2">
+              <span class="text-xs text-gray-500 flex-shrink-0">Reps</span>
+              <div class="flex items-center gap-1 min-w-0">
+                <button (click)="adjustRepsMin(i, -1)" class="w-6 h-6 flex-shrink-0 bg-gray-700 hover:bg-gray-600 rounded flex items-center justify-center text-xs font-bold text-white transition-colors">−</button>
+                <span class="text-sm font-semibold text-white tabular-nums w-5 text-center">{{ row.targetRepsMin }}</span>
+                <button (click)="adjustRepsMin(i, 1)" class="w-6 h-6 flex-shrink-0 bg-gray-700 hover:bg-gray-600 rounded flex items-center justify-center text-xs font-bold text-white transition-colors">+</button>
+                <span class="text-xs text-gray-500 mx-0.5 flex-shrink-0">–</span>
+                <button (click)="adjustRepsMax(i, -1)" class="w-6 h-6 flex-shrink-0 bg-gray-700 hover:bg-gray-600 rounded flex items-center justify-center text-xs font-bold text-white transition-colors">−</button>
+                <span class="text-sm font-semibold text-white tabular-nums w-5 text-center">{{ row.targetRepsMax }}</span>
+                <button (click)="adjustRepsMax(i, 1)" class="w-6 h-6 flex-shrink-0 bg-gray-700 hover:bg-gray-600 rounded flex items-center justify-center text-xs font-bold text-white transition-colors">+</button>
               </div>
             </div>
 
