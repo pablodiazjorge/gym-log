@@ -1,4 +1,4 @@
-<div class="min-h-dvh bg-gray-950 text-white p-4 pb-24">
+<div class="min-h-dvh bg-gray-950 text-white p-4 pb-nav">
   <!-- Header -->
   <header class="mb-6">
     <h1 class="text-2xl font-bold">Gym Tracker</h1>
@@ -48,6 +48,42 @@
       }
     </div>
   </div>
+
+  <!-- Body check-in -->
+  <a routerLink="/measurements"
+    class="block mb-6 rounded-xl p-4 border transition-all"
+    [class.bg-gray-900]="!checkInDue()"
+    [class.border-gray-800]="!checkInDue()"
+    [class.hover:border-gray-700]="!checkInDue()"
+    [class.bg-sky-900/20]="checkInDue()"
+    [class.border-sky-700/40]="checkInDue()"
+    [class.hover:border-sky-600/60]="checkInDue()">
+    <div class="flex items-center gap-4">
+      <div class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 bg-sky-500/10">
+        ⚖️
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="flex justify-between items-center gap-2 mb-1">
+          <h3 class="font-semibold text-white">Body check-in</h3>
+          @if (checkInDue()) {
+            <span class="text-[10px] px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 font-medium flex-shrink-0">Due</span>
+          } @else {
+            <svg class="w-5 h-5 text-gray-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+            </svg>
+          }
+        </div>
+        <p class="text-sm text-gray-400 truncate tabular-nums">
+          @if (latestWeight(); as w) {
+            <span class="text-gray-200 font-medium">{{ w.weightKg }} kg</span>
+            @if (latestWaist(); as t) { <span class="text-gray-600"> · </span><span class="text-gray-200 font-medium">{{ t.value }} cm</span> }
+          } @else {
+            Log your weight and waist
+          }
+        </p>
+      </div>
+    </div>
+  </a>
 
   <!-- Training days -->
   <div class="mb-6">

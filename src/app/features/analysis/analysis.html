@@ -1,4 +1,4 @@
-<div #analysisContainer class="min-h-dvh bg-gray-950 text-white p-4 pb-24">
+<div #analysisContainer class="min-h-dvh bg-gray-950 text-white p-4 pb-nav">
 
   <!-- Header -->
   <header class="mb-6">
@@ -152,6 +152,12 @@
       <div class="bg-gray-800 rounded-lg p-3">
         <p class="text-xs text-gray-400">Bodyweight</p>
         <p class="text-xl font-bold">{{ currentBodyWeight() }}kg</p>
+        <!-- Paired here rather than given its own cell: waist only means
+             something next to the weight, and a fifth card would leave the
+             two-column grid with a hole. -->
+        @if (globalMetrics().waistProgression.length > 0) {
+          <p class="text-xs text-gray-400 mt-0.5">{{ currentWaist() }}cm waist</p>
+        }
       </div>
     </div>
   </section>

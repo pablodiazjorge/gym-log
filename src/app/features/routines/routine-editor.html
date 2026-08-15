@@ -1,4 +1,4 @@
-<div class="min-h-dvh bg-gray-950 text-white p-4 pb-24">
+<div class="min-h-dvh bg-gray-950 text-white p-4 pb-nav">
   <!-- ===== Exercise picker overlay ===== -->
   @if (isPicking()) {
     <div class="mb-6">
@@ -142,8 +142,9 @@
               </div>
             </div>
 
-            <!-- Rest -->
-            <div class="bg-gray-800 rounded-lg p-2 flex items-center justify-between">
+            <!-- Rest — also full width, so the two wide rows stay symmetric
+                 instead of leaving a hole next to a half-width cell. -->
+            <div class="col-span-2 bg-gray-800 rounded-lg p-2 flex items-center justify-between">
               <span class="text-xs text-gray-500">Rest (s)</span>
               <div class="flex items-center gap-2">
                 <button (click)="adjustRest(i, -15)" class="w-6 h-6 bg-gray-700 hover:bg-gray-600 rounded flex items-center justify-center text-xs font-bold text-white transition-colors">−</button>

@@ -741,3 +741,36 @@ describe('suggestNextSessionSets — a stray 0 kg set among loaded ones', () => 
     expect(result.targets.every((t) => t.weightKg === 0)).toBe(true);
   });
 });
+
+// ─── Bodyweight at the top of the rep range ───
+
+describe('suggestNextSessionSets — bodyweight at the rep ceiling', () => {
+  it('keeps adding reps past repsMax instead of freezing', () => {
+    // Real case: pull-ups at 10 reps with a 6-10 template. Clamping at repsMax
+    // returned the exact same targets session after session while claiming to
+    // progress — and there is no weight to add without a belt.
+    const pullUps = template({ id: 'pronated-pull-ups', targetRepsMin: 6, targetRepsMax: 10, isCompound: true });
+    const result = suggestNextSessionSets({
+      template: pullUps,
+      lastSets: [workSet({ setNumber: 1, weightKg: 0, reps: 10, rir: 2 })],
+      level: 'intermediate',
+      rirTrend: 'stable',
+      avgRecentRir: 2,
+    });
+
+    expect(result.targets[0].reps).toBeGreaterThan(10);
+    expect(result.targets.every((t) => t.weightKg === 0)).toBe(true);
+  });
+
+  it('still clamps at repsMax when there is weight to add', () => {
+    const result = suggestNextSessionSets({
+      template: template({ targetRepsMin: 8, targetRepsMax: 12 }),
+      lastSets: [workSet({ setNumber: 1, weightKg: 50, reps: 12, rir: 3 })],
+      level: 'intermediate',
+      rirTrend: 'stable',
+      avgRecentRir: 3,
+    });
+
+    expect(result.targets.every((t) => t.reps <= 12)).toBe(true);
+  });
+});

@@ -1,4 +1,4 @@
-<div class="min-h-dvh bg-gray-950 text-white p-4 pb-24">
+<div class="min-h-dvh bg-gray-950 text-white p-4 pb-nav">
   @if (session(); as session) {
     <!-- Header -->
     <div class="mb-6">
@@ -55,14 +55,24 @@
                   <tr class="border-t border-gray-800/50">
                     <td class="py-2 text-gray-500">{{ set.setNumber }}</td>
                     <td class="py-2">
-                      @if (set.isWarmup) {
+                      @if (set.skipped) {
+                        <!-- Skipped sets keep their weight/reps now, so without
+                             this badge they read as sets actually performed. -->
+                        <span class="text-[10px] px-1.5 py-0.5 bg-rose-900/40 text-rose-400 rounded">Skipped</span>
+                      } @else if (set.isWarmup) {
                         <span class="text-[10px] px-1.5 py-0.5 bg-amber-900/30 text-amber-400 rounded">Warm-up</span>
                       } @else {
                         <span class="text-[10px] px-1.5 py-0.5 bg-gray-800 text-gray-500 rounded">Work</span>
                       }
                     </td>
-                    <td class="py-2 text-right text-gray-200 font-medium tabular-nums">{{ set.weightKg }} kg</td>
-                    <td class="py-2 text-right text-gray-200 tabular-nums">
+                    <td class="py-2 text-right font-medium tabular-nums"
+                      [class.text-gray-200]="!set.skipped"
+                      [class.text-gray-600]="set.skipped"
+                      [class.line-through]="set.skipped">{{ set.weightKg }} kg</td>
+                    <td class="py-2 text-right tabular-nums"
+                      [class.text-gray-200]="!set.skipped"
+                      [class.text-gray-600]="set.skipped"
+                      [class.line-through]="set.skipped">
                       {{ set.reps }}
                       @if ((set.partialReps ?? 0) > 0) {
                         <span class="text-violet-400">+{{ set.partialReps }}</span>

@@ -99,7 +99,7 @@
             −
           </button>
           <div class="flex-1 text-center">
-            <input type="number" [ngModel]="set().weightKg" (ngModelChange)="set().weightKg = $event"
+            <input type="number" [ngModel]="set().weightKg" (ngModelChange)="setWeight($event)"
               step="0.5" min="0"
               class="w-full bg-transparent text-center text-lg font-bold text-white focus:outline-none tabular-nums" />
             <span class="text-xs text-gray-500">kg</span>
@@ -120,7 +120,7 @@
             −
           </button>
           <div class="flex-1 text-center">
-            <input type="number" [ngModel]="set().reps" (ngModelChange)="set().reps = $event"
+            <input type="number" [ngModel]="set().reps" (ngModelChange)="setReps($event)"
               step="1" min="0"
               class="w-full bg-transparent text-center text-lg font-bold text-white focus:outline-none tabular-nums" />
           </div>
@@ -140,7 +140,7 @@
             −
           </button>
           <div class="flex-1 text-center">
-            <input type="number" [ngModel]="set().rir" (ngModelChange)="set().rir = $event"
+            <input type="number" [ngModel]="set().rir" (ngModelChange)="setRir($event)"
               step="0.5" min="0"
               class="w-full bg-transparent text-center text-lg font-bold text-white focus:outline-none tabular-nums" />
           </div>
@@ -162,7 +162,7 @@
               class="w-7 h-7 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center justify-center text-sm font-bold text-white min-h-[28px] transition-colors">
               −
             </button>
-            <input type="number" [ngModel]="set().partialReps ?? 0" (ngModelChange)="set().partialReps = $event"
+            <input type="number" [ngModel]="set().partialReps ?? 0" (ngModelChange)="setPartialReps($event)"
               step="1" min="0"
               class="w-12 bg-transparent text-center text-base font-bold text-violet-300 focus:outline-none tabular-nums" />
             <button (click)="adjustPartialReps(1)"
@@ -179,7 +179,7 @@
               class="w-7 h-7 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center justify-center text-sm font-bold text-white min-h-[28px] transition-colors">
               −
             </button>
-            <input type="number" [ngModel]="set().eccentricSeconds ?? 0" (ngModelChange)="set().eccentricSeconds = $event"
+            <input type="number" [ngModel]="set().eccentricSeconds ?? 0" (ngModelChange)="setEccentricSeconds($event)"
               step="1" min="0"
               class="w-12 bg-transparent text-center text-base font-bold text-cyan-300 focus:outline-none tabular-nums" />
             <button (click)="adjustEccentricSeconds(1)"

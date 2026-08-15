@@ -1,8 +1,4 @@
-/* Additional Exercise screen — inherits from styles.css (Tailwind) */
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
+/* Additional Exercise screen — inherits from styles.css (Tailwind).
+   .scrollbar-hide lives in src/styles.css now: as a component stylesheet this
+   file is scoped by emulated encapsulation, so the copy that used to sit here
+   only worked on this one screen. */

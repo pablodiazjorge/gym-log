@@ -1,8 +1,8 @@
-<div class="min-h-dvh bg-gray-950 text-white p-4 pb-24">
+<div class="min-h-dvh bg-gray-950 text-white p-4 pb-nav">
   <!-- Transparent backdrop that closes an open action menu -->
   @if (menuOpenFor()) {
     <button (click)="menuOpenFor.set(null)"
-      class="fixed inset-0 z-[60] cursor-default bg-transparent"
+      class="fixed inset-0 z-40 cursor-default bg-transparent"
       aria-label="Close menu"></button>
   }
   <header class="mb-6 flex items-center justify-between">
@@ -56,7 +56,7 @@
           </button>
 
           @if (menuOpenFor() === routine.id) {
-            <div class="absolute right-2 top-14 z-[70] bg-gray-800 border border-gray-700 rounded-xl shadow-xl overflow-hidden">
+            <div class="absolute right-2 top-14 z-[60] bg-gray-800 border border-gray-700 rounded-xl shadow-xl overflow-hidden">
               <button (click)="duplicateRoutine(routine, $event)"
                 class="block w-full text-left px-4 py-3 text-sm text-gray-200 hover:bg-gray-700 transition-colors">
                 Duplicate to customize
@@ -107,7 +107,7 @@
           </button>
 
           @if (menuOpenFor() === routine.id) {
-            <div class="absolute right-2 top-14 z-[70] bg-gray-800 border border-gray-700 rounded-xl shadow-xl overflow-hidden">
+            <div class="absolute right-2 top-14 z-[60] bg-gray-800 border border-gray-700 rounded-xl shadow-xl overflow-hidden">
               <button (click)="editRoutine(routine, $event)"
                 class="block w-full text-left px-4 py-3 text-sm text-gray-200 hover:bg-gray-700 transition-colors">
                 Edit

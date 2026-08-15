@@ -6,6 +6,7 @@ import { StorageService } from '../../core/services/storage.service';
 import { ExportService } from '../../core/services/export.service';
 import { ProfileService } from '../../core/services/profile.service';
 import { ExerciseLibraryService } from '../../core/services/exercise-library.service';
+import { MeasurementService } from '../../core/services/measurement.service';
 import { DayInfo } from '../../core/models/workout.model';
 
 @Component({
@@ -20,6 +21,7 @@ export class Dashboard {
   private readonly routineLibrary = inject(RoutineLibraryService);
   private readonly profileService = inject(ProfileService);
   private readonly exerciseLibrary = inject(ExerciseLibraryService);
+  private readonly measurements = inject(MeasurementService);
   readonly storage = inject(StorageService);
   private readonly exportService = inject(ExportService);
 
@@ -31,6 +33,26 @@ export class Dashboard {
   readonly lastSession = computed(() => {
     const sessions = this.storage.sessions();
     return sessions.length > 0 ? sessions[sessions.length - 1] : null;
+  });
+
+  // ─── Body check-in ───
+
+  /** Latest weight from either source — a check-in or the end of a session */
+  readonly latestWeight = computed(() => {
+    // Reads storage.sessions() and measurements.latestWeight() underneath, so
+    // this stays reactive despite going through a plain method.
+    this.storage.sessions();
+    this.measurements.latestWeight();
+    return this.profileService.getLatestLoggedBodyWeight();
+  });
+
+  readonly latestWaist = this.measurements.latestWaist;
+
+  /** Nudge after a week without a weigh-in — same cadence as the session prompt */
+  readonly checkInDue = computed(() => {
+    const latest = this.latestWeight();
+    if (!latest) return true;
+    return (Date.now() - new Date(latest.date).getTime()) / 86400000 >= 7;
   });
 
   getAccentColor(dayType: string): string {
@@ -108,6 +130,9 @@ export class Dashboard {
       const result = await this.exportService.importFromFile(file);
       const count = this.storage.importSessions(result.sessions);
       const routineCount = result.routines ? this.routineLibrary.importRoutines(result.routines) : 0;
+      const measurementCount = result.measurements
+        ? this.measurements.importMeasurements(result.measurements)
+        : 0;
       if (result.enabledExerciseIds) {
         this.exerciseLibrary.importEnabledIds(result.enabledExerciseIds);
       }
@@ -117,6 +142,9 @@ export class Dashboard {
       }
       const parts = [`Imported ${count} new session${count === 1 ? '' : 's'}.`];
       if (routineCount > 0) parts.push(`${routineCount} routine${routineCount === 1 ? '' : 's'}.`);
+      if (measurementCount > 0) {
+        parts.push(`${measurementCount} check-in${measurementCount === 1 ? '' : 's'}.`);
+      }
       // Silently dropping malformed entries would look like data loss, so say so.
       if (result.skippedSessions > 0) {
         parts.push(

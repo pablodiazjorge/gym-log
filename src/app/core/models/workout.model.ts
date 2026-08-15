@@ -1,5 +1,6 @@
 // ─── Core workout interfaces ───
 
+import { BodyMeasurement } from './measurement.model';
 import { UserProfile } from './profile.model';
 import { Routine } from './routine.model';
 
@@ -121,5 +122,6 @@ export interface ExportData {
   user?: UserProfile; // included when a profile exists
   routines?: Routine[]; // user-created custom routines (export/import is the only backup channel)
   enabledExerciseIds?: string[]; // user's enabled exercise subset (ADR-0011)
+  measurements?: BodyMeasurement[]; // body check-ins (export/import is the only backup channel)
   sessions: WorkoutSession[];
 }

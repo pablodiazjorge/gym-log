@@ -6,6 +6,7 @@ import {
   UserProfile,
 } from '../models/profile.model';
 import { StorageService } from './storage.service';
+import { MeasurementService, moreRecent } from './measurement.service';
 import {
   computeCategoryLevel,
   computeFrameSize,
@@ -18,6 +19,7 @@ const PROFILE_KEY = 'gym_user_profile';
 @Injectable({ providedIn: 'root' })
 export class ProfileService {
   private readonly storage = inject(StorageService);
+  private readonly measurements = inject(MeasurementService);
 
   /** Current user profile (null = never configured) */
   readonly profile = signal<UserProfile | null>(null);
@@ -83,7 +85,10 @@ export class ProfileService {
   }
 
   /**
-   * Most recent bodyweight logged on a completed session (weekly check-in).
+   * Most recent bodyweight from either source: a completed session, or a body
+   * check-in logged outside one. The check-in screen exists precisely so a
+   * weigh-in does not require a training day, so sessions can no longer be
+   * assumed to be the fresher of the two — whichever is more recent wins.
    */
   getLatestLoggedBodyWeight(): { weightKg: number; date: string } | null {
     const withWeight = this.storage
@@ -91,7 +96,12 @@ export class ProfileService {
       .filter((s) => s.completed && s.bodyWeightKg != null)
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     const latest = withWeight[0];
-    return latest ? { weightKg: latest.bodyWeightKg!, date: latest.date } : null;
+    const fromSession = latest ? { weightKg: latest.bodyWeightKg!, date: latest.date } : null;
+
+    const checkIn = this.measurements.latestWeight();
+    const fromCheckIn = checkIn ? { weightKg: checkIn.value, date: checkIn.date } : null;
+
+    return moreRecent(fromSession, fromCheckIn);
   }
 
   /**

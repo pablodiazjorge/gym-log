@@ -3,9 +3,11 @@
 :root {
   /* Height of the global sticky header (h-12) — sticky children offset by this */
   --app-header-h: 3rem;
-  /* Height of the fixed bottom nav (h-16) plus the device safe area */
-  --app-nav-h: 4rem;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+  /* Fixed bottom nav: h-16 plus the device safe area it pads itself with */
+  --app-nav-h: calc(4rem + env(safe-area-inset-bottom, 0px));
+  /* What a page must reserve so the nav never covers its last element */
+  --nav-clearance: calc(var(--app-nav-h) + 2rem);
 }
 
 @layer base {
@@ -51,6 +53,15 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/*
+ * Bottom clearance for the fixed nav. Replaces the hardcoded pb-24, which was
+ * exactly 6rem and stopped being enough once viewport-fit=cover made
+ * env(safe-area-inset-bottom) resolve to a real 24-34px on gesture-nav phones.
+ */
+.pb-nav {
+  padding-bottom: var(--nav-clearance);
 }
 
 .safe-bottom {

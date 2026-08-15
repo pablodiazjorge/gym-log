@@ -2,10 +2,41 @@ import { Injectable, inject } from '@angular/core';
 import { ExportData, WorkoutSession } from '../models/workout.model';
 import { Routine } from '../models/routine.model';
 import { UserProfile } from '../models/profile.model';
+import { BodyMeasurement } from '../models/measurement.model';
 import { isValidSession } from './storage.service';
+import { MeasurementService, isValidMeasurement } from './measurement.service';
 import { ProfileService } from './profile.service';
 import { RoutineLibraryService } from './routine-library.service';
 import { ExerciseLibraryService } from './exercise-library.service';
+
+const LEVELS = ['beginner', 'intermediate', 'advanced'];
+
+/** The fields the progression engine indexes by; anything else is optional */
+export function isValidProfile(value: unknown): value is UserProfile {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const p = value as Partial<UserProfile>;
+  return LEVELS.includes(p.experienceLevelManual as string);
+}
+
+/** Enough shape for RoutineLibraryService and the session builder to be safe */
+export function isValidRoutine(value: unknown): value is Routine {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const r = value as Partial<Routine>;
+  if (typeof r.id !== 'string' || !r.id) return false;
+  if (typeof r.name !== 'string' || !r.name.trim()) return false;
+  if (!Array.isArray(r.exercises) || r.exercises.length === 0) return false;
+  return r.exercises.every(
+    (ex) =>
+      !!ex &&
+      typeof ex === 'object' &&
+      typeof ex.templateId === 'string' &&
+      Number.isFinite(ex.targetSets) &&
+      ex.targetSets >= 1 &&
+      Number.isFinite(ex.targetRepsMin) &&
+      Number.isFinite(ex.targetRepsMax) &&
+      ex.targetRepsMin <= ex.targetRepsMax,
+  );
+}
 
 /** Result of parsing an import file */
 export interface ImportResult {
@@ -13,6 +44,7 @@ export interface ImportResult {
   user?: UserProfile;
   routines?: Routine[];
   enabledExerciseIds?: string[];
+  measurements?: BodyMeasurement[];
   /** Entries dropped because they did not match the expected shape */
   skippedSessions: number;
 }
@@ -22,6 +54,7 @@ export class ExportService {
   private readonly profileService = inject(ProfileService);
   private readonly routineLibrary = inject(RoutineLibraryService);
   private readonly exerciseLibrary = inject(ExerciseLibraryService);
+  private readonly measurementService = inject(MeasurementService);
 
   private readonly appName = 'GymTracker';
   private readonly version = '2.0'; // v2: English exercise ids, no dayVariant (see docs/migration-v2.md)
@@ -52,13 +85,23 @@ export class ExportService {
           // be checked: importing a malformed session used to persist it and
           // break History and Analysis with no way back from the UI.
           const sessions = data.sessions.filter(isValidSession);
+          const routines = Array.isArray(data.routines)
+            ? data.routines.filter(isValidRoutine)
+            : undefined;
           resolve({
             sessions,
             skippedSessions: data.sessions.length - sessions.length,
-            user: data.user,
-            routines: Array.isArray(data.routines) ? data.routines : undefined,
+            // A profile without experienceLevelManual makes resolveLevel return
+            // undefined, which then indexes the aggressiveness table with it and
+            // throws on the workout screen — on a fresh device, where the
+            // imported profile is the one that gets adopted.
+            user: isValidProfile(data.user) ? data.user : undefined,
+            routines,
             enabledExerciseIds: Array.isArray(data.enabledExerciseIds)
-              ? data.enabledExerciseIds
+              ? data.enabledExerciseIds.filter((id): id is string => typeof id === 'string')
+              : undefined,
+            measurements: Array.isArray(data.measurements)
+              ? data.measurements.filter(isValidMeasurement)
               : undefined,
           });
         } catch (err) {
@@ -74,6 +117,7 @@ export class ExportService {
     const user = this.profileService.profile();
     const routines = this.routineLibrary.customRoutines();
     const enabledExerciseIds = [...this.exerciseLibrary.enabledIds()];
+    const measurements = this.measurementService.measurements();
     return {
       version: this.version,
       exportDate: new Date().toISOString(),
@@ -81,6 +125,7 @@ export class ExportService {
       ...(user ? { user } : {}),
       ...(routines.length > 0 ? { routines } : {}),
       ...(enabledExerciseIds.length > 0 ? { enabledExerciseIds } : {}),
+      ...(measurements.length > 0 ? { measurements } : {}),
       sessions,
     };
   }

@@ -1,0 +1,8 @@
+/* Body check-in screen — styling comes from Tailwind in the template.
+
+   The native date picker indicator is near-black on the dark surface, so it
+   has to be inverted to stay visible. */
+input[type='date']::-webkit-calendar-picker-indicator {
+  filter: invert(0.7);
+  cursor: pointer;
+}

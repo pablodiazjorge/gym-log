@@ -15,6 +15,7 @@ import { Chart, registerables } from 'chart.js';
 import { toPng } from 'html-to-image';
 import { AnalyticsService, ExerciseMetrics, GlobalMetrics } from '../../core/services/analytics.service';
 import { StorageService } from '../../core/services/storage.service';
+import { MeasurementService } from '../../core/services/measurement.service';
 import { WorkoutSession } from '../../core/models/workout.model';
 
 // Register all Chart.js components
@@ -29,6 +30,7 @@ Chart.register(...registerables);
 export class Analysis implements AfterViewInit, OnDestroy {
   private readonly analyticsService = inject(AnalyticsService);
   private readonly storage = inject(StorageService);
+  private readonly measurementService = inject(MeasurementService);
 
   readonly analysisContainer = viewChild<ElementRef<HTMLDivElement>>('analysisContainer');
 
@@ -57,7 +59,10 @@ export class Analysis implements AfterViewInit, OnDestroy {
   readonly selectedExercise = signal<string>('');
 
   readonly globalMetrics = computed<GlobalMetrics>(() =>
-    this.analyticsService.getGlobalMetrics(this.sessions()),
+    this.analyticsService.getGlobalMetrics(
+      this.sessions(),
+      this.measurementService.measurements(),
+    ),
   );
 
   readonly metrics = computed<ExerciseMetrics>(() => {
@@ -73,6 +78,11 @@ export class Analysis implements AfterViewInit, OnDestroy {
   readonly currentBodyWeight = computed(() => {
     const bw = this.globalMetrics().bodyWeightProgression;
     return bw.length > 0 ? bw[bw.length - 1].weight : '—';
+  });
+
+  readonly currentWaist = computed(() => {
+    const waist = this.globalMetrics().waistProgression;
+    return waist.length > 0 ? waist[waist.length - 1].waistCm : '—';
   });
 
 

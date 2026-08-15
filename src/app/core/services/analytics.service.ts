@@ -1,5 +1,7 @@
 import { Injectable } from '@angular/core';
 import { WorkoutSession, WorkoutExercise, WorkoutSet } from '../models/workout.model';
+import { BodyMeasurement } from '../models/measurement.model';
+import { BodyWeightPoint, mergeWeightSeries } from './measurement.service';
 
 // ─── Analytics interfaces ───
 
@@ -71,8 +73,11 @@ export interface GlobalMetrics {
   // Weekly volume
   weeklyVolume: WeeklyVolumeEntry[];
 
-  // Bodyweight
-  bodyWeightProgression: { date: string; weight: number }[];
+  // Bodyweight — sessions and body check-ins merged, oldest first
+  bodyWeightProgression: BodyWeightPoint[];
+
+  /** Waist readings, oldest first. Only body check-ins carry these. */
+  waistProgression: { date: string; waistCm: number }[];
 
   // Trends
   isProgressing: boolean;
@@ -464,7 +469,10 @@ export class AnalyticsService {
 
   // ─── Global metrics ───
 
-  getGlobalMetrics(sessions: WorkoutSession[]): GlobalMetrics {
+  getGlobalMetrics(
+    sessions: WorkoutSession[],
+    measurements: BodyMeasurement[] = [],
+  ): GlobalMetrics {
     const completed = sessions
       .filter((s) => s.completed)
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -552,10 +560,13 @@ export class AnalyticsService {
         dayTypeBreakdown: entry.breakdown,
       }));
 
-    // Bodyweight
-    const bodyWeightProgression = completed
-      .filter((s) => s.bodyWeightKg != null)
-      .map((s) => ({ date: s.date, weight: s.bodyWeightKg! }));
+    // Bodyweight — sessions and check-ins share one series (see mergeWeightSeries)
+    const bodyWeightProgression = mergeWeightSeries(completed, measurements);
+
+    const waistProgression = measurements
+      .filter((m) => m.waistCm != null)
+      .map((m) => ({ date: m.date, waistCm: m.waistCm! }))
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
     // Overall trend: compare last 2 full weeks
     let isProgressing = true; // default: assume progress with little data
@@ -613,6 +624,7 @@ export class AnalyticsService {
       consistencyScore: Math.round(consistencyScore),
       weeklyVolume,
       bodyWeightProgression,
+      waistProgression,
       isProgressing,
       warningFlags,
     };

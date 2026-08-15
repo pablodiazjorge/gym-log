@@ -435,7 +435,12 @@ export function suggestNextSessionSets(input: SuggestionInput): SuggestionResult
         break;
       case 'add-reps':
         newSet1Weight = set1.weightKg;
-        newSet1Reps = Math.min(set1.reps + AGGRESSIVENESS[level].repsStep, repsMax);
+        // Bodyweight work has no load to add, so clamping at repsMax would
+        // freeze it forever while still claiming to progress. Let the reps grow
+        // past the range instead — that IS the progression until a belt appears.
+        newSet1Reps = isBodyweight
+          ? set1.reps + AGGRESSIVENESS[level].repsStep
+          : Math.min(set1.reps + AGGRESSIVENESS[level].repsStep, repsMax);
         break;
       case 'add-weight':
         newSet1Weight = roundUpFrom(set1.weightKg, 1 + step, increment);
@@ -628,16 +633,19 @@ export function buildSetsForExercise(
         ? warmupTargets[i]
         : workTargets[i - warmupCount]
       : targets[i];
-    const fallbackWeight = isWarmup
-      ? (lastWarmupTarget?.weightKg ?? derivedWarmupWeight)
-      : (lastWorkTarget?.weightKg ?? 0);
+    // Fall back to the last target OF THE SAME ROLE, as a whole: taking only
+    // the weight from it left reps and RIR on the template defaults, so a
+    // filled-in slot mixed a real load with a generic rep count.
+    const fallback = isWarmup ? lastWarmupTarget : lastWorkTarget;
+    const source = target ?? fallback;
+    const fallbackWeight = isWarmup ? derivedWarmupWeight : 0;
     sets.push({
       setNumber: i + 1,
       isWarmup,
-      weightKg: target?.weightKg ?? fallbackWeight,
-      reps: target?.reps ?? plan.targetRepsMin,
+      weightKg: source?.weightKg ?? fallbackWeight,
+      reps: source?.reps ?? plan.targetRepsMin,
       partialReps: 0,
-      rir: target?.rir ?? defaultRir,
+      rir: source?.rir ?? defaultRir,
       completed: false,
       skipped: false,
       notes: '',

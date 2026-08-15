@@ -10,13 +10,36 @@ import { WorkoutSet } from '../../core/models/workout.model';
 })
 export class SetInput {
   readonly set = input.required<WorkoutSet>();
-  readonly hasWarmup = input(false);
 
   readonly setCompleted = output<WorkoutSet>();
   /** A completed set was tapped to be edited again */
   readonly setReopened = output<WorkoutSet>();
   /** An edit that must persist before the set is completed (e.g. the warm-up flag) */
   readonly setChanged = output<WorkoutSet>();
+
+  // Angular's NumberValueAccessor emits null when a number input is cleared —
+  // the normal gesture before typing a new value. Without these guards that
+  // null landed in the set and, if "Set completed" was pressed right then, in
+  // the saved JSON.
+  setWeight(value: number | null): void {
+    this.set().weightKg = Math.max(0, value ?? 0);
+  }
+
+  setReps(value: number | null): void {
+    this.set().reps = Math.max(0, value ?? 0);
+  }
+
+  setRir(value: number | null): void {
+    this.set().rir = Math.max(0, value ?? 0);
+  }
+
+  setPartialReps(value: number | null): void {
+    this.set().partialReps = Math.max(0, value ?? 0);
+  }
+
+  setEccentricSeconds(value: number | null): void {
+    this.set().eccentricSeconds = Math.max(0, value ?? 0);
+  }
 
   adjustWeight(delta: number): void {
     const s = this.set();

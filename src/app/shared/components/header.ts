@@ -41,6 +41,7 @@ export class Header {
     if (url.startsWith('/history')) return 'History';
     if (url.startsWith('/analysis')) return 'Analysis';
     if (url.startsWith('/additional')) return 'Additional exercise';
+    if (url.startsWith('/measurements')) return 'Body check-in';
     if (url.startsWith('/profile')) return 'Profile';
     return 'Gym Tracker';
   });

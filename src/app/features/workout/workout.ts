@@ -486,16 +486,43 @@ export class Workout {
     this.persistCurrent();
   }
 
+  /** Session notes live on the session object and had no persistence hook at all */
+  setNotes(value: string): void {
+    const s = this.session();
+    if (!s) return;
+    s.notes = value;
+    this.persistCurrent();
+  }
+
   private persistCurrent(): void {
     const s = this.session();
     if (!s) return;
-    this.session.update((prev) => ({ ...prev!, exercises: [...prev!.exercises] }));
-    this.storage.saveCurrentSession(s);
+    // Persist the object the signal ends up holding, not the pre-update one.
+    const next: WorkoutSession = { ...s, exercises: [...s.exercises] };
+    this.session.set(next);
+    this.storage.saveCurrentSession(next);
   }
 
   finishWorkout(): void {
     const s = this.session();
     if (!s) return;
+    // A set reopened for editing and never re-completed would be saved as
+    // incomplete and vanish from every metric. Say so before it's too late.
+    const pending = s.exercises.reduce(
+      (n, ex) => n + ex.sets.filter((st) => !st.completed).length,
+      0,
+    );
+    if (pending > 0) {
+      const ok = confirm(
+        `${pending} set${pending === 1 ? '' : 's'} still open.\n\n` +
+          'They will be saved as not completed and left out of your stats.\n\n' +
+          'OK — save anyway.  Cancel — go back and finish them.',
+      );
+      if (!ok) {
+        this.isSummary.set(false);
+        return;
+      }
+    }
     s.completed = true;
     // Computed here rather than read off the ticking signal, which can be a tick behind.
     s.durationMinutes = minutesSince(this.startTime());
