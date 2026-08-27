@@ -279,7 +279,7 @@ export interface SuggestionInput {
 }
 
 export interface SuggestionResult {
-  basis: 'computed' | 'no-history';
+  basis: 'computed' | 'no-history' | 'last-session';
   action?: ProgressionAction;
   targets: SetTarget[];
   rationale: string;
@@ -493,6 +493,38 @@ export function suggestNextSessionSets(input: SuggestionInput): SuggestionResult
     : buildRationale(action, rirTrend, level, focus, frequency);
 
   return { basis: 'computed', action, targets, rationale };
+}
+
+/**
+ * Verbatim prefill for users who turned progression suggestions OFF:
+ * copy the last session's performed sets (completed && !skipped) as targets —
+ * weight, reps, RIR and warm-up flag unchanged, set numbers renumbered 1..n.
+ * 0 kg sets are kept (bodyweight); verbatim means verbatim. Falls back to
+ * template defaults when nothing was performed.
+ */
+export function targetsFromLastSession(
+  lastSets: WorkoutSet[],
+  template: ExerciseTemplate,
+): SuggestionResult {
+  const performed = lastSets.filter((s) => s.completed && !s.skipped);
+  if (performed.length === 0) {
+    return {
+      basis: 'no-history',
+      targets: targetsFromTemplateDefaults(template, midpointRir(template)),
+      rationale: 'No previous data for this exercise — using template defaults.',
+    };
+  }
+  return {
+    basis: 'last-session',
+    targets: performed.map((s, i) => ({
+      setNumber: i + 1,
+      isWarmup: s.isWarmup,
+      weightKg: s.weightKg,
+      reps: s.reps,
+      rir: s.rir,
+    })),
+    rationale: 'Progression suggestions off — pre-filled from your last logged session.',
+  };
 }
 
 // ─── Internal helpers ───

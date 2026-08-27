@@ -66,10 +66,33 @@ export const HAMSTRINGS_GLUTES_EXERCISES: ExerciseTemplate[] = [
     builtInDay: true,
   },
   {
+    id: 'machine-hip-adduction',
+    name: 'Machine Hip Adduction',
+    nameEs: 'Aductores en máquina',
+    // The mirror-image machine, and easy to confuse with abduction: pads on the
+    // INSIDE of the knees, squeezing them together. Trains the adductors (inner
+    // thigh), not the glute medius — a different muscle, so it needs its own id
+    // rather than sharing history with abduction.
+    description: 'Sit with the pads on the inside of the knees, legs apart. Squeeze the knees together and control the way back out.',
+    category: 'legs',
+    muscleGroup: 'glutes',
+    equipment: 'machine',
+    isCompound: false,
+    order: 3,
+    targetSets: 3,
+    targetRepsMin: 15,
+    targetRepsMax: 20,
+    weightIncrementKg: 2.5,
+    hasWarmupSets: false,
+    targetRirMin: 2,
+    targetRirMax: 2,
+    choiceGroup: 'legs-glute',
+  },
+  {
     id: 'machine-hip-abduction',
     name: 'Machine Hip Abduction',
     nameEs: 'Abductores en máquina',
-    description: 'Sit with the pads outside the knees and lean slightly forward. Push the knees apart and hold the peak contraction briefly.',
+    description: 'Sit with the pads OUTSIDE the knees and lean slightly forward. Push the knees apart and hold the peak contraction briefly.',
     category: 'legs',
     muscleGroup: 'glutes',
     equipment: 'machine',

@@ -18,8 +18,9 @@ export interface ExerciseProgressionSuggestion {
   exerciseName: string;
   restSeconds?: number; // carried forward from the last logged instance (manual field, no algorithm)
   setTargets: SetTarget[];
-  basis: 'computed' | 'no-history';
-  action?: ProgressionAction; // absent when basis === 'no-history'
+  /** 'last-session' = suggestions disabled: verbatim copy of the previous session */
+  basis: 'computed' | 'no-history' | 'last-session';
+  action?: ProgressionAction; // absent unless basis === 'computed'
   /** Short human-readable explanation of why these targets were suggested */
   rationale: string;
 }

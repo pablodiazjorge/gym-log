@@ -51,6 +51,12 @@ export interface UserProfile {
   /** Progression style; absent = 'hypertrophy' */
   trainingFocus?: TrainingFocus;
   /**
+   * Progression-suggestion engine toggle; absent = true (suggestions on).
+   * When false, new sessions pre-fill each exercise verbatim from the last
+   * session's performed sets instead of computed targets.
+   */
+  progressionSuggestionsEnabled?: boolean;
+  /**
    * Manual weekly-frequency override per category (sessions/week). Absent or
    * empty per-category = auto-detected from the last 3 weeks of history.
    */

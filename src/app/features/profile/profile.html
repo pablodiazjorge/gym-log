@@ -92,6 +92,29 @@
     </div>
   </section>
 
+  <!-- ─── Progression suggestions ─── -->
+  <section class="bg-gray-900 border border-gray-800 rounded-xl p-4 mb-4">
+    <button (click)="progressionSuggestionsEnabled.set(!progressionSuggestionsEnabled())"
+      class="w-full flex items-center justify-between p-3 rounded-xl border transition-all"
+      [class.border-violet-500]="progressionSuggestionsEnabled()"
+      [class.bg-violet-500/10]="progressionSuggestionsEnabled()"
+      [class.border-gray-700]="!progressionSuggestionsEnabled()">
+      <div class="text-left">
+        <p class="text-sm font-medium text-white">Progression suggestions</p>
+        <p class="text-xs text-gray-500">
+          Off: new sessions pre-fill each exercise with your last session's logged sets instead of computed targets
+        </p>
+      </div>
+      <span class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ml-3"
+        [class.bg-violet-600]="progressionSuggestionsEnabled()"
+        [class.bg-gray-700]="!progressionSuggestionsEnabled()">
+        <span class="inline-block h-5 w-5 rounded-full bg-white shadow transition-transform"
+          [class.translate-x-5]="progressionSuggestionsEnabled()"
+          [class.translate-x-0.5]="!progressionSuggestionsEnabled()"></span>
+      </span>
+    </button>
+  </section>
+
   <!-- ─── Advanced (optional) ─── -->
   <section class="bg-gray-900 border border-gray-800 rounded-xl p-4 mb-4">
     <button (click)="advancedOpen.set(!advancedOpen())" class="w-full flex items-center justify-between">

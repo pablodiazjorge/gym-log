@@ -13,6 +13,7 @@ import {
   rirToPercent1Rm,
   roundToPlate,
   suggestNextSessionSets,
+  targetsFromLastSession,
 } from './progression.util';
 import { ExerciseTemplate, WorkoutSession, WorkoutSet } from '../models/workout.model';
 import { ComputedLevelResult, UserProfile } from '../models/profile.model';
@@ -772,5 +773,88 @@ describe('suggestNextSessionSets — bodyweight at the rep ceiling', () => {
     });
 
     expect(result.targets.every((t) => t.reps <= 12)).toBe(true);
+  });
+});
+
+// ─── targetsFromLastSession (suggestions disabled) ───
+
+describe('targetsFromLastSession', () => {
+  it('copies performed sets verbatim, renumbered, with no action', () => {
+    const result = targetsFromLastSession(lastSessionSets(), template());
+
+    expect(result.basis).toBe('last-session');
+    expect(result.action).toBeUndefined();
+    expect(result.targets).toEqual([
+      { setNumber: 1, isWarmup: false, weightKg: 50, reps: 8, rir: 2 },
+      { setNumber: 2, isWarmup: false, weightKg: 47.5, reps: 8, rir: 2 },
+      { setNumber: 3, isWarmup: false, weightKg: 45, reps: 7, rir: 1 },
+    ]);
+  });
+
+  it('drops skipped sets and renumbers the survivors', () => {
+    const sets = lastSessionSets();
+    sets[1].skipped = true;
+
+    const targets = targetsFromLastSession(sets, template()).targets;
+    expect(targets).toHaveLength(2);
+    expect(targets[1]).toEqual({ setNumber: 2, isWarmup: false, weightKg: 45, reps: 7, rir: 1 });
+  });
+
+  it('drops not-completed sets (session finished with pending sets)', () => {
+    const sets = lastSessionSets();
+    sets[2].completed = false;
+
+    const targets = targetsFromLastSession(sets, template()).targets;
+    expect(targets).toHaveLength(2);
+    expect(targets.map((t) => t.weightKg)).toEqual([50, 47.5]);
+  });
+
+  it('falls back to template defaults when every set was skipped', () => {
+    const sets = lastSessionSets().map((s) => ({ ...s, skipped: true }));
+
+    const result = targetsFromLastSession(sets, template());
+    expect(result.basis).toBe('no-history');
+    expect(result.targets).toHaveLength(3);
+    expect(result.targets.every((t) => t.weightKg === 0 && t.reps === 8 && t.rir === 1.5)).toBe(
+      true,
+    );
+  });
+
+  it('falls back to template defaults on empty history, warm-up slots included', () => {
+    const result = targetsFromLastSession([], template({ hasWarmupSets: true, warmupSets: 1 }));
+
+    expect(result.basis).toBe('no-history');
+    expect(result.targets).toHaveLength(4);
+    expect(result.targets[0].isWarmup).toBe(true);
+    expect(result.targets.slice(1).every((t) => !t.isWarmup)).toBe(true);
+  });
+
+  it('preserves warm-up sets verbatim, in their original position', () => {
+    const sets = [
+      workSet({ setNumber: 1, isWarmup: true, weightKg: 25, reps: 12, rir: 5 }),
+      ...lastSessionSets().map((s, i) => ({ ...s, setNumber: i + 2 })),
+    ];
+
+    const targets = targetsFromLastSession(sets, template()).targets;
+    expect(targets[0]).toEqual({ setNumber: 1, isWarmup: true, weightKg: 25, reps: 12, rir: 5 });
+    expect(targets).toHaveLength(4);
+  });
+
+  it('keeps 0 kg (bodyweight) sets — verbatim means verbatim', () => {
+    const sets = [
+      workSet({ setNumber: 1, weightKg: 0, reps: 10, rir: 2 }),
+      workSet({ setNumber: 2, weightKg: 0, reps: 8, rir: 1 }),
+    ];
+
+    const targets = targetsFromLastSession(sets, template()).targets;
+    expect(targets).toHaveLength(2);
+    expect(targets.map((t) => t.reps)).toEqual([10, 8]);
+  });
+
+  it('never mutates the input sets', () => {
+    const sets = lastSessionSets();
+    const snapshot = JSON.parse(JSON.stringify(sets));
+    targetsFromLastSession(sets, template());
+    expect(sets).toEqual(snapshot);
   });
 });

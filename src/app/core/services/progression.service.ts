@@ -4,7 +4,11 @@ import { ExerciseTemplate } from '../models/workout.model';
 import { AnalyticsService } from './analytics.service';
 import { ProfileService } from './profile.service';
 import { StorageService } from './storage.service';
-import { estimateExerciseFrequency, suggestNextSessionSets } from './progression.util';
+import {
+  estimateExerciseFrequency,
+  suggestNextSessionSets,
+  targetsFromLastSession,
+} from './progression.util';
 
 /**
  * Thin orchestration layer for next-session progression suggestions.
@@ -24,7 +28,7 @@ export class ProgressionService {
   ): Map<string, ExerciseProgressionSuggestion> {
     const sessions = this.storage.sessions();
     const profile = this.profileService.profile();
-    const focus = profile?.trainingFocus ?? 'hypertrophy';
+    const suggestionsEnabled = profile?.progressionSuggestionsEnabled ?? true;
     const now = Date.now();
     const result = new Map<string, ExerciseProgressionSuggestion>();
 
@@ -32,30 +36,37 @@ export class ProgressionService {
       const history = this.storage.getLastExerciseHistory(template.id);
       const lastSets = history?.exercise.sets ?? [];
 
-      const metrics = this.analytics.getExerciseMetrics(template.id, sessions);
-      const completedWork = lastSets.filter((s) => !s.isWarmup && s.completed && !s.skipped);
-      const avgRecentRir =
-        completedWork.length > 0
-          ? completedWork.reduce((sum, s) => sum + s.rir, 0) / completedWork.length
-          : 0;
+      let suggestion;
+      if (suggestionsEnabled) {
+        const focus = profile?.trainingFocus ?? 'hypertrophy';
+        const metrics = this.analytics.getExerciseMetrics(template.id, sessions);
+        const completedWork = lastSets.filter((s) => !s.isWarmup && s.completed && !s.skipped);
+        const avgRecentRir =
+          completedWork.length > 0
+            ? completedWork.reduce((sum, s) => sum + s.rir, 0) / completedWork.length
+            : 0;
 
-      const level = this.profileService.getResolvedLevel(template.category);
+        const level = this.profileService.getResolvedLevel(template.category);
 
-      // Frequency: manual per-category override wins, else auto-detect from history
-      const overrideCategory = template.category === 'abs' ? 'push' : template.category;
-      const frequency =
-        profile?.weeklyFrequencyOverride?.[overrideCategory] ??
-        estimateExerciseFrequency(template.id, sessions, now);
+        // Frequency: manual per-category override wins, else auto-detect from history
+        const overrideCategory = template.category === 'abs' ? 'push' : template.category;
+        const frequency =
+          profile?.weeklyFrequencyOverride?.[overrideCategory] ??
+          estimateExerciseFrequency(template.id, sessions, now);
 
-      const suggestion = suggestNextSessionSets({
-        template,
-        lastSets,
-        level,
-        rirTrend: metrics.rirTrend,
-        avgRecentRir,
-        focus,
-        frequency,
-      });
+        suggestion = suggestNextSessionSets({
+          template,
+          lastSets,
+          level,
+          rirTrend: metrics.rirTrend,
+          avgRecentRir,
+          focus,
+          frequency,
+        });
+      } else {
+        // Engine off: the previous session verbatim is the whole suggestion.
+        suggestion = targetsFromLastSession(lastSets, template);
+      }
 
       result.set(template.id, {
         templateId: template.id,

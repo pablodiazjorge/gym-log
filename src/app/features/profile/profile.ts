@@ -42,6 +42,7 @@ export class Profile {
   readonly goal = signal<TrainingGoal | ''>('');
   readonly experienceLevelManual = signal<ExperienceLevel>('beginner');
   readonly trainingFocus = signal<TrainingFocus>('hypertrophy');
+  readonly progressionSuggestionsEnabled = signal(true);
 
   /** Manual weekly-frequency overrides per category (null = auto-detected) */
   readonly freqOverride = signal<Record<MovementCategory, number | null>>({
@@ -153,6 +154,7 @@ export class Profile {
       this.goal.set(p.goal ?? '');
       this.experienceLevelManual.set(p.experienceLevelManual);
       this.trainingFocus.set(p.trainingFocus ?? 'hypertrophy');
+      this.progressionSuggestionsEnabled.set(p.progressionSuggestionsEnabled ?? true);
       this.freqOverride.set({
         push: p.weeklyFrequencyOverride?.push ?? null,
         pull: p.weeklyFrequencyOverride?.pull ?? null,
@@ -221,6 +223,7 @@ export class Profile {
       goal: this.goal() || undefined,
       experienceLevelManual: this.experienceLevelManual(),
       trainingFocus: this.trainingFocus(),
+      progressionSuggestionsEnabled: this.progressionSuggestionsEnabled(),
       weeklyFrequencyOverride: this.buildFrequencyOverride(),
       wristCircumferenceCm: this.wristCircumferenceCm() ?? undefined,
       ankleCircumferenceCm: this.ankleCircumferenceCm() ?? undefined,
