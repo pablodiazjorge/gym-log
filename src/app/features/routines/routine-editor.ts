@@ -6,6 +6,8 @@ import { RoutineLibraryService } from '../../core/services/routine-library.servi
 import { ExerciseLibraryService } from '../../core/services/exercise-library.service';
 import { RoutineExerciseConfig } from '../../core/models/routine.model';
 import { ExerciseTemplate } from '../../core/models/workout.model';
+import { ExercisePicker, PickerCategory } from '../../shared/components/exercise-picker';
+import { categoryBadgeClass } from '../../shared/category-badge';
 
 type Category = 'push' | 'pull' | 'legs' | 'abs';
 
@@ -17,7 +19,7 @@ interface EditorRow extends RoutineExerciseConfig {
 
 @Component({
   selector: 'app-routine-editor',
-  imports: [FormsModule],
+  imports: [FormsModule, ExercisePicker],
   templateUrl: './routine-editor.html',
   styleUrl: './routine-editor.css',
 })
@@ -35,23 +37,16 @@ export class RoutineEditor {
   readonly rows = signal<EditorRow[]>([]);
   readonly errors = signal<string[]>([]);
 
-  // ─── Exercise picker (enabled exercises only) ───
+  // ─── Exercise picker (shared component; enabled exercises only) ───
   readonly isPicking = signal(false);
-  readonly categoryFilter = signal<Category | 'all'>('all');
-  readonly categories: { value: Category | 'all'; label: string; emoji: string }[] = [
-    { value: 'all', label: 'All', emoji: '🏋️' },
-    { value: 'push', label: 'Push', emoji: '💪' },
-    { value: 'pull', label: 'Pull', emoji: '🏋️' },
-    { value: 'legs', label: 'Legs', emoji: '🦵' },
-    { value: 'abs', label: 'Abs', emoji: '🪨' },
-  ];
-  readonly filteredExercises = computed(() => {
-    const cat = this.categoryFilter();
-    const inRoutine = new Set(this.rows().map((r) => r.templateId));
-    return this.exerciseLibrary
-      .enabledExercises()
-      .filter((ex) => !inRoutine.has(ex.id) && (cat === 'all' || ex.category === cat));
-  });
+  /** Already in the routine — the picker leaves these out */
+  readonly rowTemplateIds = computed(() => this.rows().map((r) => r.templateId));
+  /**
+   * The tab the user last chose. The picker instance dies with every pick, so
+   * without this a single-category routine needed the tab re-tapped for each
+   * exercise added.
+   */
+  readonly pickerCategory = signal<PickerCategory>('all');
 
   constructor() {
     const routineId = this.route.snapshot.params['routineId'] as string | undefined;
@@ -193,12 +188,6 @@ export class RoutineEditor {
   }
 
   getCategoryBadge(cat: string): string {
-    switch (cat) {
-      case 'push': return 'bg-blue-500/20 text-blue-300';
-      case 'pull': return 'bg-emerald-500/20 text-emerald-300';
-      case 'legs': return 'bg-amber-500/20 text-amber-300';
-      case 'abs': return 'bg-pink-500/20 text-pink-300';
-      default: return 'bg-gray-700 text-gray-400';
-    }
+    return categoryBadgeClass(cat);
   }
 }

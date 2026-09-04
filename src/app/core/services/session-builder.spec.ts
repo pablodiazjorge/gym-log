@@ -23,6 +23,35 @@ const target = (setNumber: number, isWarmup: boolean, weightKg: number, reps = 1
   rir: 2,
 });
 
+describe('buildSetsForExercise — swapped-in exercise (template is a default, like a day workout)', () => {
+  // The in-workout swap calls buildSetsForExercise(template, targets, false):
+  // the routine never planned this exercise, so the catalog template is only a
+  // default and the exercise's own history may reshape it.
+
+  it('never logged before: template shape at template defaults', () => {
+    const sets = buildSetsForExercise(plan({ targetSets: 3, warmupSets: 1 }), [], false);
+
+    expect(sets.map((s) => [s.isWarmup, s.weightKg, s.reps])).toEqual([
+      [true, 0, 8],
+      [false, 0, 8],
+      [false, 0, 8],
+      [false, 0, 8],
+    ]);
+  });
+
+  it('history shorter than the template: extra slots follow the last work target, history roles win', () => {
+    // Two flat work sets logged last time vs a template of 1 warm-up + 3 work.
+    // Documented behaviour: the history's roles fill the first slots and the
+    // remaining ones copy the last work target — no warm-up is re-introduced.
+    const history = [target(1, false, 60), target(2, false, 60)];
+
+    const sets = buildSetsForExercise(plan({ targetSets: 3, warmupSets: 1 }), history, false);
+
+    expect(sets).toHaveLength(4);
+    expect(sets.every((s) => !s.isWarmup && s.weightKg === 60)).toBe(true);
+  });
+});
+
 describe('buildSetsForExercise — routine-driven (plan is authoritative)', () => {
   it('keeps the configured warm-ups even when the history had none', () => {
     // Regression pin for the real t-bar-row case: routine says 2 warm-ups + 4

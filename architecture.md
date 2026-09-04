@@ -54,8 +54,9 @@ src/app/
 │   ├── profile/         # profile form + computed level panel
 │   ├── history/         # session list + detail
 │   ├── analysis/        # Chart.js dashboards + PNG export
+│   ├── measurements/    # body check-ins (weight, waist, notes) outside a session
 │   └── additional/      # ephemeral ad-hoc logging
-└── shared/components/   # cross-feature UI (header)
+└── shared/              # cross-feature UI (header, exercise picker) + small pure helpers
 ```
 
 Convention: **models hold no logic, services own state and persistence, components stay thin**.
@@ -94,7 +95,10 @@ stable English keys ([ADR-0012](docs/adr/0012-v2-format-clean-break.md); pre-v2 
 `/workout/:dayType` (built-in day cards, with live choice-group selection) and
 `/workout/routine/:routineId` (saved custom routines, choices already resolved at authoring time).
 Both build the session through one path that asks `ProgressionService` for per-exercise suggested
-targets ([ADR-0005](docs/adr/0005-builtin-and-custom-routines.md)).
+targets ([ADR-0005](docs/adr/0005-builtin-and-custom-routines.md)). Mid-workout the user can
+swap the current exercise or add/drop a set; these edit the live session only, never the routine,
+and a swap keeps every performed set under the original exercise
+([ADR-0013](docs/adr/0013-in-session-edits-never-touch-the-routine.md)).
 
 **Progression suggestions.** `progression.util.ts` implements double progression autoregulated by
 RIR trend: hold / add reps / add weight / aggressive step, scaled by experience level, preserving
@@ -106,11 +110,13 @@ Rules are exercise-type aware: strength-style weight-priority and the aggressive
 apply to compounds only, each exercise carries its own rep ranges and load increment, and a
 focus-driven range switch reloads from the estimated 1RM (full decision matrix in
 [docs/exercises/README.md](docs/exercises/README.md)). Suggestions only pre-fill editable
-fields — nothing is enforced ([ADR-0007](docs/adr/0007-advisory-progression.md)).
+fields — nothing is enforced ([ADR-0007](docs/adr/0007-advisory-progression.md)). The engine can
+be switched off in the profile (`progressionSuggestionsEnabled: false`): sessions then pre-fill
+each exercise verbatim from its last performed sets.
 
-**Export / import.** Export downloads a single JSON with sessions + profile + custom routines.
-Import merges sessions/routines by id (skipping duplicates) and only adopts the profile when none
-exists locally.
+**Export / import.** Export downloads a single JSON with sessions + profile + custom routines +
+body check-ins. Import merges sessions/routines/check-ins by id (skipping duplicates) and only
+adopts the profile when none exists locally.
 
 ## Decisions (ADR index)
 

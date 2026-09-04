@@ -10,7 +10,15 @@ import { ExerciseLibraryService } from '../../core/services/exercise-library.ser
 import { WorkoutSession, WorkoutExercise, WorkoutSet, ExerciseTemplate } from '../../core/models/workout.model';
 import { buildSetsForExercise } from '../../core/services/progression.util';
 import { elapsedMinutes, minutesSince } from '../../shared/elapsed-minutes';
+import { ExercisePicker } from '../../shared/components/exercise-picker';
 import { SetInput } from './set-input';
+import {
+  appendSet,
+  canRemoveLastSet,
+  hasPerformedWork,
+  removeLastPendingSet,
+  swapExercise,
+} from './session-edit.util';
 
 import { NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -24,7 +32,7 @@ type WorkoutSource =
 
 @Component({
   selector: 'app-workout',
-  imports: [SetInput, NgClass, FormsModule],
+  imports: [SetInput, NgClass, FormsModule, ExercisePicker],
   templateUrl: './workout.html',
   styleUrl: './workout.css',
 })
@@ -424,6 +432,104 @@ export class Workout {
   /** An edit that must persist before the set is completed (e.g. the warm-up flag) */
   onSetChanged(updatedSet: WorkoutSet): void {
     this.replaceSet(updatedSet);
+  }
+
+  // ─── In-session edits: swap the exercise, add or drop a set ───
+  //
+  // A routine fixes the plan, but the gym does not always cooperate: a machine
+  // is taken, time runs out, a set feels like one too many. These edit the
+  // live session only — the routine itself is untouched.
+
+  readonly isSwapping = signal(false);
+
+  /**
+   * Already in the session. The picker leaves these out: the progress dots and
+   * the summary `track` by templateId, so a duplicate would collide.
+   */
+  readonly sessionTemplateIds = computed(() => this.exercises().map((ex) => ex.templateId));
+
+  /** Open the picker on the current exercise's category */
+  readonly currentCategory = computed<'push' | 'pull' | 'legs' | 'abs' | 'all'>(() => {
+    const id = this.currentExercise()?.templateId;
+    return (id && this.routineService.getTemplateById(id)?.category) || 'all';
+  });
+
+  /** Same predicate swapExercise() uses to decide keep-vs-replace */
+  readonly currentHasPerformedWork = computed(() => {
+    const ex = this.currentExercise();
+    return !!ex && hasPerformedWork(ex);
+  });
+
+  readonly canRemoveLastSet = computed(() => {
+    const ex = this.currentExercise();
+    return !!ex && canRemoveLastSet(ex);
+  });
+
+  openSwap(): void {
+    this.cancelAdvance();
+    this.isSwapping.set(true);
+  }
+
+  closeSwap(): void {
+    this.isSwapping.set(false);
+  }
+
+  /**
+   * Replace the current exercise. Its sets are pre-filled the same way a new
+   * session is (progression suggestion or last-session copy, per the profile
+   * toggle). The routine never planned this exercise, so the catalog template
+   * is only a default and the exercise's own history may reshape it — the same
+   * rule a day-based workout uses (planIsAuthoritative = false). Performed
+   * work of the old one is kept — see swapExercise().
+   */
+  swapCurrentExercise(template: ExerciseTemplate): void {
+    const s = this.session();
+    const index = this.currentExerciseIndex();
+    const current = s?.exercises[index];
+    if (!s || !current) return;
+
+    const suggestion = this.progression.getSuggestionsForTemplates([template]).get(template.id);
+    const replacement: WorkoutExercise = {
+      templateId: template.id,
+      exerciseName: template.name,
+      restSeconds: suggestion?.restSeconds ?? current.restSeconds,
+      sets: buildSetsForExercise(template, suggestion?.setTargets ?? [], false),
+    };
+
+    const result = swapExercise(s.exercises, index, replacement);
+    this.commitExercises(result.exercises);
+    this.currentExerciseIndex.set(result.index);
+    this.isSwapping.set(false);
+  }
+
+  addSet(): void {
+    this.cancelAdvance();
+    this.updateCurrentExercise(appendSet);
+  }
+
+  removeLastSet(): void {
+    this.updateCurrentExercise(removeLastPendingSet);
+  }
+
+  private updateCurrentExercise(fn: (exercise: WorkoutExercise) => WorkoutExercise): void {
+    const s = this.session();
+    const index = this.currentExerciseIndex();
+    const current = s?.exercises[index];
+    if (!s || !current) return;
+    const updated = fn(current);
+    if (updated === current) return;
+    const exercises = [...s.exercises];
+    exercises[index] = updated;
+    this.commitExercises(exercises);
+  }
+
+  /** Same immutable-replace rule as replaceSet(): derived signals must see a new object */
+  private commitExercises(exercises: WorkoutExercise[]): void {
+    const s = this.session();
+    if (!s) return;
+    const next: WorkoutSession = { ...s, exercises };
+    this.session.set(next);
+    this.storage.saveCurrentSession(next);
   }
 
   // ─── Bodyweight weekly check-in (summary screen) ───
