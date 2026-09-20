@@ -1,5 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Icon } from '../../shared/components/icon';
 import { ProfileService } from '../../core/services/profile.service';
 import { RoutineService } from '../../core/services/routine.service';
 import { StorageService } from '../../core/services/storage.service';
@@ -24,7 +25,7 @@ interface BenchmarkOption {
 
 @Component({
   selector: 'app-profile',
-  imports: [FormsModule],
+  imports: [FormsModule, Icon],
   templateUrl: './profile.html',
   styleUrl: './profile.css',
 })

@@ -140,52 +140,6 @@ export class AnalyticsService {
     return { labels, data };
   }
 
-  getVolumeChartData(sessions: WorkoutSession[]): {
-    labels: string[];
-    datasets: { label: string; data: number[]; backgroundColor: string }[];
-  } {
-    const sorted = [...sessions]
-      .filter((s) => s.completed)
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-    const labels: string[] = [];
-    const pushData: number[] = [];
-    const pullData: number[] = [];
-    const legsData: number[] = [];
-    const absData: number[] = [];
-
-    for (const session of sorted) {
-      labels.push(session.date);
-      let pushVol = 0;
-      let pullVol = 0;
-      let legsVol = 0;
-      let absVol = 0;
-
-      for (const exercise of session.exercises) {
-        const vol = this.getWorkSets(exercise).reduce((sum, s) => sum + this.getSetVolume(s), 0);
-        if (session.dayType === 'push') pushVol += vol;
-        else if (session.dayType === 'pull') pullVol += vol;
-        else if (session.dayType === 'legs') legsVol += vol;
-        else absVol += vol;
-      }
-
-      pushData.push(pushVol);
-      pullData.push(pullVol);
-      legsData.push(legsVol);
-      absData.push(absVol);
-    }
-
-    return {
-      labels,
-      datasets: [
-        { label: 'Push', data: pushData, backgroundColor: '#10b981' },
-        { label: 'Pull', data: pullData, backgroundColor: '#3b82f6' },
-        { label: 'Legs', data: legsData, backgroundColor: '#f59e0b' },
-        { label: 'Abs', data: absData, backgroundColor: '#ec4899' },
-      ],
-    };
-  }
-
   getWeeklyVolumeChartData(sessions: WorkoutSession[]): {
     labels: string[];
     data: number[];
@@ -453,7 +407,7 @@ export class AnalyticsService {
     // Suggestion based on weeks stagnant
     let suggestion: string;
     if (!isStagnant) {
-      suggestion = 'Still progressing, keep it up 💪';
+      suggestion = 'Still progressing, keep it up';
     } else if (weeksSinceLastPR < 3) {
       suggestion = 'Hold steady — could just be adaptation';
     } else if (weeksSinceLastPR <= 4) {

@@ -1,5 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Icon } from '../../shared/components/icon';
 import { BodyMeasurement } from '../../core/models/measurement.model';
 import {
   MeasurementService,
@@ -12,7 +13,7 @@ import { buildRows, fromDateInput, toDateInput } from './check-in.util';
 
 @Component({
   selector: 'app-measurements',
-  imports: [FormsModule],
+  imports: [FormsModule, Icon],
   templateUrl: './measurements.html',
   styleUrl: './measurements.css',
 })

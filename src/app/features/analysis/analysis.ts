@@ -17,13 +17,15 @@ import { AnalyticsService, ExerciseMetrics, GlobalMetrics } from '../../core/ser
 import { StorageService } from '../../core/services/storage.service';
 import { MeasurementService } from '../../core/services/measurement.service';
 import { WorkoutSession } from '../../core/models/workout.model';
+import { Icon } from '../../shared/components/icon';
+import { themeToken } from '../../shared/theme';
 
 // Register all Chart.js components
 Chart.register(...registerables);
 
 @Component({
   selector: 'app-analysis',
-  imports: [FormsModule, DecimalPipe],
+  imports: [FormsModule, DecimalPipe, Icon],
   templateUrl: './analysis.html',
   styleUrl: './analysis.css',
 })
@@ -174,7 +176,7 @@ export class Analysis implements AfterViewInit, OnDestroy {
             {
               label: 'Weekly volume (kg)',
               data: volData.data,
-              backgroundColor: '#10b981',
+              backgroundColor: themeToken('--color-accent'),
               borderRadius: 6,
             },
           ],
@@ -187,12 +189,12 @@ export class Analysis implements AfterViewInit, OnDestroy {
           },
           scales: {
             x: {
-              ticks: { color: '#9ca3af', maxTicksLimit: 8 },
-              grid: { color: '#1f2937' },
+              ticks: { color: themeToken('--color-chart-tick'), maxTicksLimit: 8 },
+              grid: { color: themeToken('--color-chart-grid') },
             },
             y: {
-              ticks: { color: '#9ca3af' },
-              grid: { color: '#1f2937' },
+              ticks: { color: themeToken('--color-chart-tick') },
+              grid: { color: themeToken('--color-chart-grid') },
             },
           },
         },
@@ -220,10 +222,10 @@ export class Analysis implements AfterViewInit, OnDestroy {
           {
             label: 'Max weight (kg)',
             data: chartData.data,
-            borderColor: '#34d399',
-            backgroundColor: 'rgba(52, 211, 153, 0.15)',
+            borderColor: themeToken('--color-accent'),
+            backgroundColor: themeToken('--color-chart-accent-soft'),
             borderWidth: 2,
-            pointBackgroundColor: '#34d399',
+            pointBackgroundColor: themeToken('--color-accent'),
             pointRadius: 4,
             pointHoverRadius: 6,
             tension: 0.4,
@@ -239,12 +241,12 @@ export class Analysis implements AfterViewInit, OnDestroy {
         },
         scales: {
           x: {
-            ticks: { color: '#9ca3af', maxTicksLimit: 8 },
-            grid: { color: '#1f2937' },
+            ticks: { color: themeToken('--color-chart-tick'), maxTicksLimit: 8 },
+            grid: { color: themeToken('--color-chart-grid') },
           },
           y: {
-            ticks: { color: '#9ca3af' },
-            grid: { color: '#1f2937' },
+            ticks: { color: themeToken('--color-chart-tick') },
+            grid: { color: themeToken('--color-chart-grid') },
             min: Math.max(0, Math.min(...chartData.data) - 10),
           },
         },
@@ -258,7 +260,7 @@ export class Analysis implements AfterViewInit, OnDestroy {
 
     try {
       const dataUrl = await toPng(element, {
-        backgroundColor: '#030712',
+        backgroundColor: themeToken('--color-surface-0'),
         pixelRatio: 2,
         cacheBust: true,
       });
