@@ -1,20 +1,176 @@
 @import "tailwindcss";
 
+/* Self-hosted variable font (public/fonts/). No runtime CDN on purpose: the
+   app must keep working offline on the gym floor. Preloaded in index.html. */
+@font-face {
+  font-family: 'Instrument Sans';
+  src: url('/fonts/instrument-sans-latin-var.woff2') format('woff2');
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/*
+ * ─── "Coach" theme — single source of truth for every color in the app ───
+ *
+ * Bridge strategy: the default Tailwind ramps used by the templates (gray,
+ * emerald, rose, amber, sky, blue, violet, pink, cyan, zinc, white) are
+ * REDEFINED here, shade by shade, so the ~900 existing utility classes retint
+ * globally without touching a single template. Only the shades actually used
+ * in src/ are redefined. The semantic aliases further down are for new code
+ * and the gradual rename; both name the same values.
+ */
+@theme {
+  --font-sans: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  /* Coach radii: cards 14px (rounded-xl), controls 10px (rounded-lg) */
+  --radius-lg: 0.625rem;
+  --radius-xl: 0.875rem;
+
+  /* Neutrals — spruce/stone. Tonal elevation: 950 bg → 900 card → 800 well → 700 control */
+  --color-gray-950: #131614;
+  --color-gray-900: #1b201d;
+  --color-gray-800: #242b27;
+  --color-gray-700: #2f3732;
+  --color-gray-600: #4d5751;
+  --color-gray-500: #75807a;
+  --color-gray-400: #9aa49e;
+  --color-gray-300: #b3bcb6;
+  --color-gray-200: #ccd4cf;
+  --color-white: #edf1ee;
+
+  /* zinc appears only as stray defaults; aligned to the gray ramp */
+  --color-zinc-400: #9aa49e;
+  --color-zinc-500: #75807a;
+  --color-zinc-700: #2f3732;
+  --color-zinc-800: #242b27;
+
+  /* emerald → jade (action / success) */
+  --color-emerald-300: #93dfc0;
+  --color-emerald-400: #6fd3ab;
+  --color-emerald-500: #52c79b;
+  --color-emerald-600: #2f8f6b;
+  --color-emerald-900: #1c3f31;
+
+  /* rose → soft coral (destructive / skipped) */
+  --color-rose-200: #f0c8c4;
+  --color-rose-300: #e7a29d;
+  --color-rose-400: #d97b74;
+  --color-rose-500: #cf6a63;
+  --color-rose-600: #b85850;
+  --color-rose-700: #9c4a43;
+  --color-rose-900: #46231f;
+
+  /* amber → sand (warm-up / warnings) */
+  --color-amber-100: #ede5cd;
+  --color-amber-200: #e0d3ab;
+  --color-amber-300: #d6c391;
+  --color-amber-400: #cbb27c;
+  --color-amber-500: #bda265;
+  --color-amber-600: #9c8450;
+  --color-amber-700: #7d6a40;
+  --color-amber-900: #3a3222;
+
+  /* sky → slate blue (informational: rest, check-in) */
+  --color-sky-300: #b0c5e2;
+  --color-sky-400: #93afd6;
+  --color-sky-500: #7b9cc7;
+  --color-sky-600: #5f80ab;
+  --color-sky-700: #4a648a;
+  --color-sky-800: #374b67;
+  --color-sky-900: #263449;
+
+  /* blue → push category family */
+  --color-blue-300: #b6c9e8;
+  --color-blue-400: #9db6e2;
+  --color-blue-500: #85a8dc;
+  --color-blue-600: #6a8fc7;
+
+  /* violet/fuchsia → lilac (additional / custom routines) */
+  --color-violet-300: #c7bde7;
+  --color-violet-400: #b7a9e0;
+  --color-violet-500: #a795d8;
+  --color-violet-600: #8d7bc2;
+  --color-violet-700: #7a68a8;
+  --color-violet-800: #5b4d80;
+  --color-violet-900: #352c4d;
+  --color-fuchsia-900: #3a2c50;
+
+  /* pink → mauve (abs) */
+  --color-pink-300: #e2b4ca;
+  --color-pink-400: #d8a0bb;
+  --color-pink-500: #cd8cab;
+  --color-pink-600: #b3728f;
+
+  /* cyan → soft teal (eccentric tempo) */
+  --color-cyan-300: #a3d8d3;
+  --color-cyan-400: #7cc7c2;
+  --color-cyan-500: #5fb1ab;
+  --color-cyan-800: #24504c;
+  --color-cyan-900: #1a3b38;
+}
+
+/* Semantic aliases → utilities like bg-surface-1, text-ink-2, border-line-1.
+   `inline` is required by Tailwind v4 when a token references another var. */
+@theme inline {
+  --color-surface-0: var(--color-gray-950);
+  --color-surface-1: var(--color-gray-900);
+  --color-surface-2: var(--color-gray-800);
+  --color-surface-3: var(--color-gray-700);
+  --color-line-1: var(--color-gray-800);
+  --color-line-2: var(--color-gray-700);
+  --color-ink-1: var(--color-white);
+  --color-ink-2: var(--color-gray-300);
+  --color-ink-3: var(--color-gray-500);
+}
+
+/* Tokens also read at RUNTIME via getComputedStyle (charts, PNG export,
+   category map in shared/theme.ts). `static` stops Tailwind from pruning a
+   token while no class uses it yet. Chart alpha is precomputed here — canvas
+   fillStyle must never receive a color-mix() expression. */
+@theme static {
+  --color-accent: #52c79b;
+  --color-accent-ink: #0a231a;
+  --color-danger: #d97b74;
+  --color-warn: #cbb27c;
+  --color-cat-push: #85a8dc;
+  --color-cat-pull: #6cc0a0;
+  --color-cat-legs: #c9a865;
+  --color-cat-abs: #cd8cab;
+  --color-cat-extra: #a795d8;
+  --color-chart-grid: #262d29;
+  --color-chart-tick: #75807a;
+  --color-chart-accent-soft: rgba(82, 199, 155, 0.15);
+}
+
 :root {
   /* Height of the global sticky header (h-12) — sticky children offset by this */
   --app-header-h: 3rem;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
-  /* Fixed bottom nav: h-16 plus the device safe area it pads itself with */
-  --app-nav-h: calc(4rem + env(safe-area-inset-bottom, 0px));
+  /* Floating dock: h-16 bar + 0.875rem bottom inset, plus the device safe area
+     the outer nav pads itself with */
+  --app-nav-h: calc(4.875rem + env(safe-area-inset-bottom, 0px));
   /* What a page must reserve so the nav never covers its last element */
   --nav-clearance: calc(var(--app-nav-h) + 2rem);
+}
+
+/* Active-tab dot of the floating dock. Every link renders the (transparent)
+   dot so the label never shifts when a tab becomes active. */
+.dock-link::after {
+  content: '';
+  width: 4px;
+  height: 4px;
+  border-radius: 9999px;
+  background: transparent;
+}
+.dock-link.dock-active::after {
+  background: var(--color-accent);
 }
 
 @layer base {
   body {
     @apply bg-gray-950 text-white antialiased;
     -webkit-tap-highlight-color: transparent;
-    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -41,14 +197,9 @@
   /* Scrollbar */
   ::-webkit-scrollbar { width: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb { background: var(--color-line-2); border-radius: 4px; }
 }
 
-@layer components {
-  .card {
-    @apply bg-gray-900 border border-gray-800 rounded-xl;
-  }
-}
 .truncate-line {
   white-space: nowrap;
   overflow: hidden;
@@ -88,7 +239,7 @@
  * never appeared. focus-visible keeps it off for touch.
  */
 :where(a, button, input, select, textarea, [tabindex]):focus-visible {
-  outline: 2px solid #10b981;
+  outline: 2px solid var(--color-accent);
   outline-offset: 2px;
   border-radius: 0.25rem;
 }
@@ -97,9 +248,10 @@
  * Every <select> uses appearance-none without replacing the native arrow, so
  * they read as plain text inputs. Unlayered on purpose: the padding-right has
  * to beat the p-2/p-2.5/p-3 utilities on those elements.
+ * Manual sync: the stroke hex is --color-ink-3 (a data-URI cannot use var()).
  */
 select {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2375807a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 0.6rem center;
   background-size: 1rem 1rem;
@@ -111,4 +263,3 @@ select {
   transform: scale(0.97);
   transition: transform 0.1s ease;
 }
-

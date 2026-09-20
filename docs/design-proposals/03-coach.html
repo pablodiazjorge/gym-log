@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<title>Propuesta C · Coach</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  /* ─── Tokens: Coach ───
+     Calma premium: superficies abeto/piedra, elevación por capas tonales (sin
+     bordes), jade sereno para acción y logro, categorías apagadas a igual
+     luminancia. Etiquetas en sentence case, iconos finos, espacio generoso. */
+  :root {
+    --s0: #131614;
+    --s1: #1b201d;
+    --s2: #242b27;
+    --s3: #2f3732;
+    --ink1: #edf1ee;
+    --ink2: #b3bcb6;
+    --ink3: #75807a;
+    --accent: #52c79b;
+    --accent-ink: #0a231a;
+    --sand: #cbb27c;        /* warm-up */
+    --danger: #d97b74;
+    --cat-push: #85a8dc;
+    --cat-pull: #6cc0a0;
+    --cat-legs: #c9a865;
+    --cat-abs:  #cd8cab;
+    --cat-extra:#a795d8;
+    --r-card: 14px;
+    --r-ctl: 10px;
+    --font: 'Instrument Sans', system-ui, sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0d0f0e; color: var(--ink1); font-family: var(--font); font-size: 14px; -webkit-font-smoothing: antialiased; }
+
+  /* ─── Chrome de la propuesta ─── */
+  .proposal-head { max-width: 1320px; margin: 0 auto; padding: 28px 20px 8px; }
+  .proposal-head h1 { font-size: 24px; font-weight: 600; letter-spacing: -.01em; }
+  .proposal-head h1 span { color: var(--accent); }
+  .proposal-head p { color: var(--ink2); margin-top: 6px; max-width: 68ch; line-height: 1.55; }
+  .swatches { display: flex; gap: 8px 30px; margin-top: 14px; margin-bottom: 18px; flex-wrap: wrap; }
+  .sw { width: 40px; height: 40px; border-radius: 10px; border: 1px solid rgba(255,255,255,.06); position: relative; }
+  .sw small { position: absolute; top: 44px; left: 0; font-size: 9px; color: var(--ink3); white-space: nowrap; }
+  .frames { display: flex; gap: 28px; padding: 40px 20px 60px; justify-content: center; flex-wrap: wrap; max-width: 1320px; margin: 0 auto; }
+  .frame-wrap { display: flex; flex-direction: column; gap: 10px; }
+  .frame-cap { color: var(--ink3); font-size: 12px; text-align: center; }
+  .frame { width: 390px; background: var(--s0); border: 1px solid #212623; border-radius: 28px; overflow: hidden; display: flex; flex-direction: column; position: relative; }
+
+  /* ─── Piezas comunes ─── */
+  .screen { padding: 20px 18px 0; flex: 1; }
+  .icon { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+  .icon.sm { width: 16px; height: 16px; }
+  .icon.xs { width: 14px; height: 14px; }
+  h2.h-screen { font-size: 20px; font-weight: 600; letter-spacing: -.01em; }
+  .sub { color: var(--ink3); font-size: 13px; margin-top: 3px; }
+  .sec-label { font-size: 13px; font-weight: 600; color: var(--ink2); margin: 24px 0 10px; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  .card { background: var(--s1); border-radius: var(--r-card); }
+
+  /* Dock flotante */
+  .dockpad { height: 86px; }
+  .dock { position: absolute; left: 14px; right: 14px; bottom: 14px; background: rgba(36,43,39,.92); backdrop-filter: blur(8px); border-radius: 18px; display: flex; justify-content: space-around; padding: 9px 6px 8px; box-shadow: 0 10px 28px rgba(0,0,0,.42); }
+  .dock a { display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--ink3); text-decoration: none; font-size: 10px; font-weight: 500; padding: 2px 8px; }
+  .dock a.active { color: var(--accent); }
+  .dock a.active::after { content: ""; width: 4px; height: 4px; border-radius: 50%; background: var(--accent); margin-top: 1px; }
+  .dock a:not(.active)::after { content: ""; width: 4px; height: 4px; margin-top: 1px; }
+
+  /* ─── Dashboard ─── */
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .stat { padding: 14px 16px; }
+  .stat .lab { font-size: 12px; color: var(--ink3); }
+  .stat .val { font-size: 28px; font-weight: 600; line-height: 1.2; margin-top: 3px; letter-spacing: -.01em; }
+  .stat .val small { font-size: 14px; color: var(--ink3); font-weight: 500; }
+
+  .row-card { display: flex; align-items: center; gap: 14px; padding: 14px 16px; margin-bottom: 12px; }
+  .row-card .slot { width: 40px; height: 40px; border-radius: 12px; background: var(--s2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .row-card .tit { font-weight: 600; font-size: 15px; letter-spacing: -.005em; }
+  .row-card .des { color: var(--ink3); font-size: 12.5px; margin-top: 2px; }
+  .row-card .chev { margin-left: auto; color: var(--ink3); }
+  .row-card .body { flex: 1; min-width: 0; }
+
+  .btn-row { display: flex; gap: 12px; margin-bottom: 12px; }
+  .btn { flex: 1; min-height: 46px; display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--s1); border-radius: var(--r-card); color: var(--ink2); font-size: 13.5px; font-weight: 600; }
+
+  .chip { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 999px; }
+
+  /* ─── Workout ─── */
+  .dots { display: flex; justify-content: center; align-items: center; gap: 6px; padding: 16px 0 10px; }
+  .dot { width: 7px; height: 7px; border-radius: 999px; background: var(--s3); }
+  .dot.done { background: var(--accent); opacity: .55; }
+  .dot.cur { width: 22px; background: var(--accent); opacity: 1; }
+  .w-head { text-align: center; padding: 2px 16px 16px; position: relative; }
+  .w-head .day { font-size: 12.5px; font-weight: 600; color: var(--cat-push); }
+  .w-head .exn { font-size: 19px; font-weight: 600; margin-top: 3px; display: inline-flex; align-items: center; gap: 8px; letter-spacing: -.01em; }
+  .w-head .exn .icon { color: var(--ink3); }
+  .w-head .meta { color: var(--ink3); font-size: 12.5px; margin-top: 3px; }
+  .w-head .side { position: absolute; top: 0; color: var(--ink3); }
+
+  .rest { display: flex; align-items: center; justify-content: space-between; padding: 11px 14px; margin: 2px 0 14px; }
+  .rest .lab { font-size: 12.5px; color: var(--ink2); font-weight: 500; display: flex; gap: 7px; align-items: center; }
+  .rest .opts { display: flex; gap: 4px; align-items: center; background: var(--s2); border-radius: 9px; padding: 3px; }
+  .rest .opt { font-size: 12px; font-weight: 500; padding: 4px 9px; border-radius: 7px; color: var(--ink3); }
+  .rest .opt.on { background: var(--s3); color: var(--ink1); font-weight: 600; }
+  .rest .fine { display: flex; gap: 8px; align-items: center; margin-left: 8px; color: var(--ink3); font-weight: 500; }
+
+  .set-row { display: flex; align-items: center; gap: 12px; padding: 13px 16px; margin-bottom: 10px; }
+  .set-row .n { width: 20px; text-align: center; font-size: 12.5px; font-weight: 600; color: var(--ink3); flex-shrink: 0; }
+  .set-row .load { flex: 1; font-size: 14px; }
+  .set-row .load b { font-weight: 600; font-size: 15px; }
+  .set-row .load span { color: var(--ink3); }
+  .set-row .rir { font-size: 12px; color: var(--ink3); }
+  .set-row .ok { color: var(--accent); }
+  .set-row.warm .ok { color: var(--sand); }
+  .set-row .edit { color: var(--ink3); opacity: .6; }
+
+  .set-active { border-radius: var(--r-card); background: var(--s1); margin-bottom: 10px; }
+  .set-active .sa-head { display: flex; align-items: center; justify-content: space-between; padding: 13px 16px 8px; }
+  .set-active .sa-head .lft { display: flex; align-items: center; gap: 9px; }
+  .set-active .sa-head .n { font-size: 12.5px; font-weight: 600; color: var(--ink1); }
+  .set-active .sa-head .live { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+  .set-active .sa-head .tag { font-size: 12px; color: var(--ink3); }
+  .sa-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; padding: 4px 16px 12px; }
+  .well { background: var(--s2); border-radius: var(--r-ctl); padding: 8px 8px 9px; }
+  .well .lab { font-size: 11px; color: var(--ink3); text-align: center; display: block; margin-bottom: 4px; }
+  .well .ctr { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
+  .well .pm { width: 26px; height: 26px; border-radius: 8px; background: var(--s3); color: var(--ink2); font-weight: 600; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+  .well .v { font-size: 20px; font-weight: 600; text-align: center; flex: 1; letter-spacing: -.01em; }
+  .well .u { display: block; text-align: center; font-size: 10px; color: var(--ink3); margin-top: 2px; }
+  .sa-extra { display: flex; align-items: center; justify-content: space-between; margin: 0 16px 10px; padding: 8px 12px; background: var(--s2); border-radius: var(--r-ctl); }
+  .sa-extra .lab { font-size: 12px; color: var(--ink2); }
+  .sa-extra .ctr { display: flex; align-items: center; gap: 10px; }
+  .sa-extra .v { font-weight: 600; font-size: 15px; width: 26px; text-align: center; }
+  .sa-extra .pm { width: 24px; height: 24px; border-radius: 8px; background: var(--s3); color: var(--ink2); font-weight: 600; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+  .sa-foot { padding: 2px 16px 15px; }
+  .toggle-line { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .tg { width: 38px; height: 21px; border-radius: 999px; background: var(--s3); position: relative; }
+  .tg i { position: absolute; top: 2.5px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: var(--ink3); }
+  .toggle-line span { font-size: 12px; color: var(--ink3); }
+  .cta { width: 100%; min-height: 48px; border-radius: 12px; background: var(--accent); color: var(--accent-ink); font-family: var(--font); font-weight: 700; font-size: 14.5px; display: flex; align-items: center; justify-content: center; gap: 8px; border: 0; }
+  .ghost { width: 100%; min-height: 38px; margin-top: 9px; border-radius: 12px; background: transparent; color: var(--ink3); font-size: 13px; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 6px; border: 0; }
+  .peek { border-radius: var(--r-card) var(--r-card) 0 0; background: var(--s1); padding: 13px 16px 2px; opacity: .5; }
+  .w-foot { background: var(--s1); padding: 12px 18px 14px; margin: 4px 14px 100px; border-radius: var(--r-card); }
+  .w-foot .r1 { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .w-foot .lnk { color: var(--ink2); font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 4px; }
+  .w-foot .mid { color: var(--ink3); font-size: 12px; }
+  .w-foot .lnk.go { color: var(--accent); font-weight: 600; }
+  .w-foot .discard { width: 100%; min-height: 32px; border-radius: 9px; background: transparent; color: var(--danger); font-size: 12.5px; font-weight: 500; border: 0; display: flex; align-items: center; justify-content: center; }
+
+  /* ─── History ─── */
+  .h-card { padding: 14px 16px; margin-bottom: 12px; }
+  .h-card .top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .h-card .date { font-weight: 600; font-size: 14.5px; letter-spacing: -.005em; }
+  .h-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; color: var(--ink2); }
+  .h-badge i { width: 7px; height: 7px; border-radius: 50%; }
+  .h-card .meta { display: flex; gap: 12px; color: var(--ink3); font-size: 12px; margin-top: 6px; }
+  .h-card .meta b { color: var(--ink2); font-weight: 600; }
+  .h-card .exs { color: var(--ink3); font-size: 12px; margin-top: 8px; line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<header class="proposal-head">
+  <h1>Propuesta C · <span>Coach</span></h1>
+  <p>Un entrenador serio no grita. Superficies abeto/piedra en capas tonales — sin bordes —, jade sereno solo para la acción y el logro, categorías apagadas a la misma luminancia, etiquetas en sentence case e iconos finos. La navegación vive en un dock flotante.</p>
+  <div class="swatches">
+    <div class="sw" style="background:#131614"><small>surface-0</small></div>
+    <div class="sw" style="background:#1b201d"><small>surface-1</small></div>
+    <div class="sw" style="background:#242b27"><small>surface-2</small></div>
+    <div class="sw" style="background:#edf1ee"><small>ink-1</small></div>
+    <div class="sw" style="background:#52c79b"><small>jade / accent</small></div>
+    <div class="sw" style="background:#85a8dc"><small>push</small></div>
+    <div class="sw" style="background:#6cc0a0"><small>pull</small></div>
+    <div class="sw" style="background:#c9a865"><small>legs</small></div>
+    <div class="sw" style="background:#cd8cab"><small>abs</small></div>
+    <div class="sw" style="background:#a795d8"><small>extra</small></div>
+  </div>
+</header>
+
+<div class="frames">
+
+  <!-- ══════════ DASHBOARD ══════════ -->
+  <div class="frame-wrap">
+    <div class="frame">
+      <div class="screen">
+        <h2 class="h-screen">Gym Tracker</h2>
+        <p class="sub">5-day PPL · Lean Bulk</p>
+
+        <div class="stats" style="margin-top:18px">
+          <div class="card stat">
+            <span class="lab">Sessions</span>
+            <div class="val num">47</div>
+          </div>
+          <div class="card stat">
+            <span class="lab">Last</span>
+            <div class="val">Push <small>(Tue)</small></div>
+          </div>
+        </div>
+
+        <div class="card row-card" style="margin-top:18px">
+          <div class="slot" style="color:var(--ink2)">
+            <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="6" r="2.6"/><path d="M7.2 9.4h9.6l1.8 10a1 1 0 0 1-1 1.2H6.4a1 1 0 0 1-1-1.2z"/></svg>
+          </div>
+          <div class="body">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span class="tit">Body check-in</span>
+              <span class="chip" style="background:rgba(82,199,155,.14);color:var(--accent)">Due</span>
+            </div>
+            <p class="des num"><b style="color:var(--ink2)">82.4 kg</b> · <b style="color:var(--ink2)">84 cm</b></p>
+          </div>
+        </div>
+
+        <p class="sec-label">Sessions</p>
+
+        <div class="card row-card">
+          <div class="slot" style="color:var(--cat-push)">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M7 12h10M4.5 9.5v5M7 8v8M17 8v8M19.5 9.5v5M2.5 11v2M21.5 11v2"/></svg>
+          </div>
+          <div class="body">
+            <span class="tit">Push</span>
+            <p class="des">Chest, shoulders, triceps</p>
+          </div>
+          <svg class="icon sm chev" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>
+        </div>
+
+        <div class="card row-card">
+          <div class="slot" style="color:var(--cat-pull)">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M4 4h16M8 4c0 4.2 1.6 6.5 4 6.5s4-2.3 4-6.5"/><circle cx="12" cy="14.5" r="2.2"/><path d="M12 16.7v3"/></svg>
+          </div>
+          <div class="body">
+            <span class="tit">Pull</span>
+            <p class="des">Back, biceps</p>
+          </div>
+          <svg class="icon sm chev" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>
+        </div>
+
+        <div class="card row-card">
+          <div class="slot" style="color:var(--cat-legs)">
+            <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="4.2" r="2"/><path d="M4 8.2h16M12 10.2v4.6M12 14.8l-3.4 5M12 14.8l3.4 5"/></svg>
+          </div>
+          <div class="body">
+            <span class="tit">Legs</span>
+            <p class="des">Quads, hamstrings, glutes, calves</p>
+          </div>
+          <svg class="icon sm chev" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>
+        </div>
+
+        <div class="card row-card">
+          <div class="slot" style="color:var(--cat-abs)">
+            <svg class="icon" viewBox="0 0 24 24"><rect x="8.3" y="4.5" width="3.2" height="3.6" rx="1"/><rect x="12.7" y="4.5" width="3.2" height="3.6" rx="1"/><rect x="8.3" y="10.2" width="3.2" height="3.6" rx="1"/><rect x="12.7" y="10.2" width="3.2" height="3.6" rx="1"/><rect x="8.3" y="15.9" width="3.2" height="3.6" rx="1"/><rect x="12.7" y="15.9" width="3.2" height="3.6" rx="1"/></svg>
+          </div>
+          <div class="body">
+            <span class="tit">Abs</span>
+            <p class="des">Abdominals</p>
+          </div>
+          <svg class="icon sm chev" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>
+        </div>
+
+        <div class="card row-card">
+          <div class="slot" style="color:var(--cat-extra)">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M13 2 4.5 14H11l-1 8 8.5-12H12z"/></svg>
+          </div>
+          <div class="body">
+            <span class="tit">Additional exercise</span>
+            <p class="des">Log any exercise freely</p>
+          </div>
+          <svg class="icon sm chev" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+        </div>
+
+        <p class="sec-label">Data</p>
+        <div class="btn-row">
+          <div class="btn"><svg class="icon sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v5l3 2"/></svg>History</div>
+          <div class="btn"><svg class="icon sm" viewBox="0 0 24 24"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M8 16v-4M13 16V8M18 16v-6"/></svg>Analysis</div>
+        </div>
+        <div class="btn-row" style="margin-bottom:0">
+          <div class="btn"><svg class="icon sm" viewBox="0 0 24 24"><path d="M12 15V3m-4 8 4 4 4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Export</div>
+          <div class="btn"><svg class="icon sm" viewBox="0 0 24 24"><path d="M12 3v12m-4-4 4-4 4 4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Import</div>
+        </div>
+        <div class="dockpad"></div>
+      </div>
+
+      <nav class="dock">
+        <a class="active"><svg class="icon" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 20z"/><path d="M9 21.5v-8h6v8"/></svg>Home</a>
+        <a><svg class="icon" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2.5" width="8" height="3.5" rx="1"/><path d="M9 12h6M9 16.5h6"/></svg>Routines</a>
+        <a><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v5l3 2"/></svg>History</a>
+        <a><svg class="icon" viewBox="0 0 24 24"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M8 16v-4M13 16V8M18 16v-6"/></svg>Analysis</a>
+        <a><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M5 20.5c.8-3.6 3.6-5.5 7-5.5s6.2 1.9 7 5.5"/></svg>Profile</a>
+      </nav>
+    </div>
+    <p class="frame-cap">Dashboard</p>
+  </div>
+
+  <!-- ══════════ WORKOUT ══════════ -->
+  <div class="frame-wrap">
+    <div class="frame">
+      <div class="dots">
+        <span class="dot done"></span><span class="dot done"></span><span class="dot cur"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+      </div>
+      <div class="w-head">
+        <span class="side" style="left:18px"><svg class="icon" viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg></span>
+        <div class="day">Push · 3 of 6</div>
+        <div class="exn">Incline Dumbbell Press
+          <svg class="icon sm" viewBox="0 0 24 24"><path d="M8 3 4 7l4 4M4 7h16M16 21l4-4-4-4M20 17H4"/></svg>
+        </div>
+        <p class="meta">2 of 5 sets done · with warm-up</p>
+        <span class="side" style="right:18px"><svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4.5A1.5 1.5 0 0 1 9.5 3h5A1.5 1.5 0 0 1 16 4.5V6m3 0-1 13.5a2 2 0 0 1-2 1.5H8a2 2 0 0 1-2-1.5L5 6M10 10.5v6M14 10.5v6"/></svg></span>
+      </div>
+
+      <div class="screen" style="padding-top:0">
+        <div class="card rest">
+          <span class="lab"><svg class="icon sm" viewBox="0 0 24 24" style="color:var(--ink3)"><circle cx="12" cy="13" r="7.5"/><path d="M12 9.5V13l2.4 1.6M10 2.5h4"/></svg>Rest</span>
+          <div style="display:flex;align-items:center">
+            <div class="opts">
+              <span class="opt">1'</span><span class="opt">1.5'</span><span class="opt on num">2'</span><span class="opt">3'</span>
+            </div>
+            <div class="fine num"><span>−</span><b style="color:var(--ink2);font-weight:600">120</b><span>+</span></div>
+          </div>
+        </div>
+
+        <div class="card set-row warm">
+          <span class="n num">1</span>
+          <span class="chip" style="background:rgba(203,178,124,.13);color:var(--sand)">Warm-up</span>
+          <span class="load num"><b>20</b> <span>kg ×</span> <b>12</b> <span>reps</span></span>
+          <span class="rir num">RIR 4</span>
+          <svg class="icon sm ok" viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></svg>
+          <svg class="icon xs edit" viewBox="0 0 24 24"><path d="M17 3.5a2.6 2.6 0 1 1 3.7 3.7L8 20l-4.6 1L4.5 16.5z"/></svg>
+        </div>
+
+        <div class="card set-row">
+          <span class="n num">2</span>
+          <span class="load num"><b>30</b> <span>kg ×</span> <b>10</b> <span>reps</span></span>
+          <span class="rir num">RIR 2.5</span>
+          <svg class="icon sm ok" viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></svg>
+          <svg class="icon xs edit" viewBox="0 0 24 24"><path d="M17 3.5a2.6 2.6 0 1 1 3.7 3.7L8 20l-4.6 1L4.5 16.5z"/></svg>
+        </div>
+
+        <div class="set-active">
+          <div class="sa-head">
+            <span class="lft"><span class="live"></span><span class="n num">Set 3</span></span>
+            <span class="tag">Work</span>
+          </div>
+          <div class="sa-grid">
+            <div class="well">
+              <span class="lab">Weight</span>
+              <div class="ctr"><span class="pm">−</span><span class="v num">30</span><span class="pm">+</span></div>
+              <span class="u">kg</span>
+            </div>
+            <div class="well">
+              <span class="lab">Reps</span>
+              <div class="ctr"><span class="pm">−</span><span class="v num">9</span><span class="pm">+</span></div>
+              <span class="u">&nbsp;</span>
+            </div>
+            <div class="well">
+              <span class="lab">RIR</span>
+              <div class="ctr"><span class="pm">−</span><span class="v num">2</span><span class="pm">+</span></div>
+              <span class="u">&nbsp;</span>
+            </div>
+          </div>
+          <div class="sa-extra">
+            <span class="lab">Partials</span>
+            <div class="ctr"><span class="pm">−</span><span class="v num">0</span><span class="pm">+</span></div>
+          </div>
+          <div class="sa-extra">
+            <span class="lab">Eccentric (s)</span>
+            <div class="ctr"><span class="pm">−</span><span class="v num">0</span><span class="pm">+</span></div>
+          </div>
+          <div class="sa-foot">
+            <div class="toggle-line">
+              <span class="tg"><i></i></span><span>Warm-up</span>
+            </div>
+            <button class="cta"><svg class="icon sm" viewBox="0 0 24 24" style="stroke-width:2.2"><path d="m5 13 4 4L19 7"/></svg>Set completed</button>
+            <button class="ghost"><svg class="icon xs" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>Skipped</button>
+          </div>
+        </div>
+
+        <div class="peek">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <span class="n num" style="font-size:12.5px;font-weight:600;color:var(--ink3)">Set 4</span>
+            <span style="font-size:12px;color:var(--ink3)">Work</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="w-foot">
+        <div class="r1">
+          <span class="lnk"><svg class="icon xs" viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg>Previous</span>
+          <span class="mid num">23 min · Finish</span>
+          <span class="lnk go">Next<svg class="icon xs" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></span>
+        </div>
+        <button class="discard">Discard session</button>
+      </div>
+
+      <nav class="dock">
+        <a class="active"><svg class="icon" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 20z"/><path d="M9 21.5v-8h6v8"/></svg>Home</a>
+        <a><svg class="icon" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2.5" width="8" height="3.5" rx="1"/><path d="M9 12h6M9 16.5h6"/></svg>Routines</a>
+        <a><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v5l3 2"/></svg>History</a>
+        <a><svg class="icon" viewBox="0 0 24 24"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M8 16v-4M13 16V8M18 16v-6"/></svg>Analysis</a>
+        <a><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M5 20.5c.8-3.6 3.6-5.5 7-5.5s6.2 1.9 7 5.5"/></svg>Profile</a>
+      </nav>
+    </div>
+    <p class="frame-cap">Workout — sesión activa</p>
+  </div>
+
+  <!-- ══════════ HISTORY ══════════ -->
+  <div class="frame-wrap">
+    <div class="frame">
+      <div class="screen">
+        <h2 class="h-screen">History</h2>
+        <p class="sub num">47 sessions logged</p>
+
+        <div style="margin-top:18px">
+          <div class="card h-card">
+            <div class="top">
+              <span class="date">Tue, Sep 16</span>
+              <span class="h-badge"><i style="background:var(--cat-push)"></i>Push</span>
+            </div>
+            <div class="meta num"><span>7 exercises</span><span>62 min</span><span><b>Max 62.5 kg</b></span></div>
+            <p class="exs">Bench Press · Incline DB Press · Lateral Raise · Triceps Pushdown +3</p>
+          </div>
+
+          <div class="card h-card">
+            <div class="top">
+              <span class="date">Sun, Sep 14</span>
+              <span class="h-badge"><i style="background:var(--cat-legs)"></i>Legs</span>
+            </div>
+            <div class="meta num"><span>6 exercises</span><span>71 min</span><span><b>Max 110 kg</b></span></div>
+            <p class="exs">Squat · Romanian Deadlift · Leg Press · Seated Calf Raise +2</p>
+          </div>
+
+          <div class="card h-card">
+            <div class="top">
+              <span class="date">Fri, Sep 12</span>
+              <span class="h-badge"><i style="background:var(--cat-pull)"></i>Pull</span>
+            </div>
+            <div class="meta num"><span>7 exercises</span><span>65 min</span><span><b>Max 78 kg</b></span></div>
+            <p class="exs">Weighted Pull-up · Barbell Row · Lat Pulldown +4</p>
+          </div>
+
+          <div class="card h-card">
+            <div class="top">
+              <span class="date">Thu, Sep 11</span>
+              <span class="h-badge"><i style="background:var(--cat-abs)"></i>Abs</span>
+            </div>
+            <div class="meta num"><span>4 exercises</span><span>25 min</span></div>
+            <p class="exs">Cable Crunch · Hanging Leg Raise · Ab Wheel +1</p>
+          </div>
+
+          <div class="card h-card">
+            <div class="top">
+              <span class="date">Tue, Sep 9</span>
+              <span class="h-badge"><i style="background:var(--cat-push)"></i>Push</span>
+            </div>
+            <div class="meta num"><span>7 exercises</span><span>60 min</span><span><b>Max 60 kg</b></span></div>
+            <p class="exs">Bench Press · Seated DB Press · Cable Fly +4</p>
+          </div>
+
+          <div class="btn-row" style="margin-top:14px;margin-bottom:0">
+            <div class="btn"><svg class="icon sm" viewBox="0 0 24 24"><path d="M12 15V3m-4 8 4 4 4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Export all</div>
+          </div>
+        </div>
+        <div class="dockpad"></div>
+      </div>
+
+      <nav class="dock">
+        <a><svg class="icon" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 20z"/><path d="M9 21.5v-8h6v8"/></svg>Home</a>
+        <a><svg class="icon" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2.5" width="8" height="3.5" rx="1"/><path d="M9 12h6M9 16.5h6"/></svg>Routines</a>
+        <a class="active"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v5l3 2"/></svg>History</a>
+        <a><svg class="icon" viewBox="0 0 24 24"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M8 16v-4M13 16V8M18 16v-6"/></svg>Analysis</a>
+        <a><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M5 20.5c.8-3.6 3.6-5.5 7-5.5s6.2 1.9 7 5.5"/></svg>Profile</a>
+      </nav>
+    </div>
+    <p class="frame-cap">History</p>
+  </div>
+
+</div>
+</body>
+</html>

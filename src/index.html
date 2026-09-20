@@ -9,8 +9,12 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
     />
-    <meta name="theme-color" content="#030712" />
+    <!-- Manual sync: = --color-surface-0 in styles.css (meta cannot use var()) -->
+    <meta name="theme-color" content="#131614" />
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <!-- crossorigin is required even same-origin, or the font downloads twice -->
+    <link rel="preload" href="/fonts/instrument-sans-latin-var.woff2" as="font" type="font/woff2" crossorigin />
   </head>
   <!-- No bg/text utilities here: they sit in Tailwind's utilities layer and
        overrode the bg-gray-950 that styles.css sets in the base layer. -->
