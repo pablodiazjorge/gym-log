@@ -111,7 +111,6 @@ export interface DayInfo {
   label: string; // "Push"
   dayType: 'push' | 'pull' | 'legs' | 'abs';
   muscleLabel?: string; // "Chest, shoulders, triceps"
-  emoji?: string; // "💪"
 }
 
 /** Shape of the exported JSON file */

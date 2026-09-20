@@ -3,31 +3,29 @@
     <h1 class="text-2xl font-bold">Exercise Library</h1>
     <p class="text-gray-400 text-sm">
       Enabled exercises appear in your pickers ·
-      <span class="text-violet-400 font-medium">{{ enabledCount() }}/{{ totalCount }} enabled</span>
+      <span class="text-emerald-400 font-medium tabular-nums">{{ enabledCount() }}/{{ totalCount }} enabled</span>
     </p>
   </header>
 
   <!-- Muscle group filter chips -->
   <div class="flex gap-2 overflow-x-auto pb-3 mb-4 scrollbar-hide">
     <button (click)="groupFilter.set('all')"
-      class="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all"
-      [class.bg-gray-800]="groupFilter() === 'all'"
+      class="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors"
+      [class.bg-gray-700]="groupFilter() === 'all'"
       [class.text-white]="groupFilter() === 'all'"
       [class.bg-gray-900]="groupFilter() !== 'all'"
       [class.text-gray-400]="groupFilter() !== 'all'"
-      [class.border]="groupFilter() !== 'all'"
-      [class.border-gray-800]="groupFilter() !== 'all'">
+      [class.hover:bg-gray-800]="groupFilter() !== 'all'">
       All
     </button>
     @for (group of groups; track group.value) {
       <button (click)="groupFilter.set(group.value)"
-        class="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all"
-        [class.bg-gray-800]="groupFilter() === group.value"
+        class="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors"
+        [class.bg-gray-700]="groupFilter() === group.value"
         [class.text-white]="groupFilter() === group.value"
         [class.bg-gray-900]="groupFilter() !== group.value"
         [class.text-gray-400]="groupFilter() !== group.value"
-        [class.border]="groupFilter() !== group.value"
-        [class.border-gray-800]="groupFilter() !== group.value">
+        [class.hover:bg-gray-800]="groupFilter() !== group.value">
         {{ group.label }}
       </button>
     }
@@ -36,14 +34,13 @@
   <!-- Sections per muscle group -->
   @for (section of sections(); track section.group) {
     <section class="mb-6">
-      <h2 class="sticky top-12 z-10 bg-gray-950/95 backdrop-blur py-2 text-sm font-semibold text-gray-400 uppercase tracking-wider">
-        {{ section.emoji }} {{ section.label }}
+      <h2 class="sticky top-12 z-10 bg-gray-950/95 backdrop-blur py-2 text-sm font-semibold text-gray-300">
+        {{ section.label }}
       </h2>
       <div class="space-y-2">
         @for (exercise of section.exercises; track exercise.id) {
-          <div class="bg-gray-900 border rounded-xl p-3.5 transition-colors"
-            [class.border-gray-800]="!library.isEnabled(exercise.id)"
-            [class.border-violet-700/40]="library.isEnabled(exercise.id)">
+          <div class="bg-gray-900 rounded-xl p-3.5 transition-opacity"
+            [class.opacity-60]="!library.isEnabled(exercise.id)">
             <div class="flex items-start gap-3">
               <div class="flex-1 min-w-0">
                 <p class="font-medium text-white leading-snug">{{ exercise.name }}</p>
@@ -76,7 +73,7 @@
                 class="flex-shrink-0 mt-1"
                 [attr.aria-label]="(library.isEnabled(exercise.id) ? 'Disable ' : 'Enable ') + exercise.name">
                 <span class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors"
-                  [class.bg-violet-600]="library.isEnabled(exercise.id)"
+                  [class.bg-accent]="library.isEnabled(exercise.id)"
                   [class.bg-gray-700]="!library.isEnabled(exercise.id)">
                   <span class="inline-block h-5 w-5 rounded-full bg-white shadow transition-transform"
                     [class.translate-x-5]="library.isEnabled(exercise.id)"
@@ -91,7 +88,7 @@
   }
 
   <button (click)="resetToDefaults()"
-    class="w-full py-3 bg-gray-900 border border-gray-800 hover:border-gray-600 text-gray-400 text-sm font-medium rounded-xl transition-colors">
+    class="w-full py-3 bg-gray-900 hover:bg-gray-800 text-gray-400 text-sm font-medium rounded-xl transition-colors">
     Restore default selection
   </button>
 </div>

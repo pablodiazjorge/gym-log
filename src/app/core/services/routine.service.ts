@@ -19,11 +19,11 @@ import { EXERCISE_CATALOG } from '../data/exercises';
 @Injectable({ providedIn: 'root' })
 export class RoutineService {
   // ─── Available session types ───
-  private readonly sessionTypes: { dayType: 'push' | 'pull' | 'legs' | 'abs'; label: string; muscleLabel: string; emoji: string }[] = [
-    { dayType: 'push', label: 'Push', muscleLabel: 'Chest, shoulders, triceps', emoji: '💪' },
-    { dayType: 'pull', label: 'Pull', muscleLabel: 'Back, biceps', emoji: '🏋️' },
-    { dayType: 'legs', label: 'Legs', muscleLabel: 'Quads, hamstrings, glutes, calves', emoji: '🦵' },
-    { dayType: 'abs', label: 'Abs', muscleLabel: 'Abdominals', emoji: '🪨' },
+  private readonly sessionTypes: { dayType: 'push' | 'pull' | 'legs' | 'abs'; label: string; muscleLabel: string }[] = [
+    { dayType: 'push', label: 'Push', muscleLabel: 'Chest, shoulders, triceps' },
+    { dayType: 'pull', label: 'Pull', muscleLabel: 'Back, biceps' },
+    { dayType: 'legs', label: 'Legs', muscleLabel: 'Quads, hamstrings, glutes, calves' },
+    { dayType: 'abs', label: 'Abs', muscleLabel: 'Abdominals' },
   ];
 
   private readonly allExercises: ExerciseTemplate[] = EXERCISE_CATALOG;
@@ -88,7 +88,6 @@ export class RoutineService {
       dayType: st.dayType,
       label: st.label,
       muscleLabel: st.muscleLabel,
-      emoji: st.emoji,
     }));
   }
 
@@ -101,7 +100,6 @@ export class RoutineService {
       dayType: st.dayType,
       label: st.label,
       muscleLabel: st.muscleLabel,
-      emoji: st.emoji,
     };
   }
 

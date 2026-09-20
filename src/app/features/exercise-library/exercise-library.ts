@@ -6,7 +6,6 @@ import { ExerciseTemplate, MuscleGroup } from '../../core/models/workout.model';
 interface GroupSection {
   group: MuscleGroup;
   label: string;
-  emoji: string;
   exercises: ExerciseTemplate[];
 }
 
@@ -22,17 +21,17 @@ export class ExerciseLibrary {
 
   readonly groupFilter = signal<MuscleGroup | 'all'>('all');
 
-  readonly groups: { value: MuscleGroup; label: string; emoji: string }[] = [
-    { value: 'chest', label: 'Chest', emoji: '💪' },
-    { value: 'back', label: 'Back', emoji: '🏋️' },
-    { value: 'shoulders', label: 'Shoulders', emoji: '🎯' },
-    { value: 'biceps', label: 'Biceps', emoji: '💪' },
-    { value: 'triceps', label: 'Triceps', emoji: '💪' },
-    { value: 'quads', label: 'Quads', emoji: '🦵' },
-    { value: 'hamstrings', label: 'Hamstrings', emoji: '🦵' },
-    { value: 'glutes', label: 'Glutes', emoji: '🍑' },
-    { value: 'calves', label: 'Calves', emoji: '🦵' },
-    { value: 'abs', label: 'Abs', emoji: '🪨' },
+  readonly groups: { value: MuscleGroup; label: string }[] = [
+    { value: 'chest', label: 'Chest' },
+    { value: 'back', label: 'Back' },
+    { value: 'shoulders', label: 'Shoulders' },
+    { value: 'biceps', label: 'Biceps' },
+    { value: 'triceps', label: 'Triceps' },
+    { value: 'quads', label: 'Quads' },
+    { value: 'hamstrings', label: 'Hamstrings' },
+    { value: 'glutes', label: 'Glutes' },
+    { value: 'calves', label: 'Calves' },
+    { value: 'abs', label: 'Abs' },
   ];
 
   readonly sections = computed<GroupSection[]>(() => {
@@ -43,7 +42,6 @@ export class ExerciseLibrary {
       .map((g) => ({
         group: g.value,
         label: g.label,
-        emoji: g.emoji,
         exercises: all.filter((ex) => ex.muscleGroup === g.value),
       }))
       .filter((section) => section.exercises.length > 0);
