@@ -1,23 +1,21 @@
 <div class="min-h-dvh bg-gray-950 text-white p-4 pb-nav">
   <!-- Header -->
   <header class="mb-6">
-    <h1 class="text-2xl font-bold">Gym Tracker</h1>
+    <h1 class="text-2xl font-bold tracking-tight">Gym Tracker</h1>
     <p class="text-gray-400 text-sm">5-day PPL · Lean Bulk</p>
   </header>
 
   <!-- Resume banner -->
   @if (hasSessionInProgress()) {
-    <div class="bg-amber-900/30 border border-amber-700/50 rounded-xl p-4 mb-6">
+    <div class="bg-amber-900/40 rounded-xl p-4 mb-6">
       <div class="flex items-start gap-3">
-        <svg class="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
-        </svg>
+        <app-icon name="alert-triangle" class="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
         <div class="flex-1">
           <p class="font-semibold text-amber-100">Unfinished session</p>
           <p class="text-sm text-amber-200/70 mb-3">Pick up where you left off?</p>
           <div class="flex gap-2">
             <button (click)="resumeWorkout()"
-              class="flex-1 bg-amber-600 hover:bg-amber-500 text-white font-medium py-2.5 px-4 rounded-lg min-h-[48px] transition-colors">
+              class="flex-1 bg-amber-400 hover:bg-amber-300 text-gray-950 font-semibold py-2.5 px-4 rounded-lg min-h-[48px] transition-colors">
               Resume
             </button>
             <button (click)="discardSession()"
@@ -32,12 +30,12 @@
 
   <!-- Stats -->
   <div class="grid grid-cols-2 gap-3 mb-6">
-    <div class="bg-gray-900 border border-gray-800 rounded-xl p-4">
-      <p class="text-xs uppercase tracking-wide text-gray-500 font-medium">Sessions</p>
-      <p class="text-2xl font-bold text-white mt-0.5">{{ totalSessions() }}</p>
+    <div class="bg-gray-900 rounded-xl p-4">
+      <p class="text-xs text-gray-500 font-medium">Sessions</p>
+      <p class="text-2xl font-bold text-white mt-0.5 tabular-nums">{{ totalSessions() }}</p>
     </div>
-    <div class="bg-gray-900 border border-gray-800 rounded-xl p-4">
-      <p class="text-xs uppercase tracking-wide text-gray-500 font-medium">Last</p>
+    <div class="bg-gray-900 rounded-xl p-4">
+      <p class="text-xs text-gray-500 font-medium">Last</p>
       @if (lastSession(); as s) {
         <p class="text-lg font-semibold text-white mt-0.5">
           {{ getDayTypeLabel(s.dayType) }}
@@ -51,26 +49,22 @@
 
   <!-- Body check-in -->
   <a routerLink="/measurements"
-    class="block mb-6 rounded-xl p-4 border transition-all"
-    [class.bg-gray-900]="!checkInDue()"
-    [class.border-gray-800]="!checkInDue()"
-    [class.hover:border-gray-700]="!checkInDue()"
-    [class.bg-sky-900/20]="checkInDue()"
-    [class.border-sky-700/40]="checkInDue()"
-    [class.hover:border-sky-600/60]="checkInDue()">
+    class="block mb-6 rounded-xl p-4 bg-gray-900 hover:bg-gray-800/70 transition-colors">
     <div class="flex items-center gap-4">
-      <div class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 bg-sky-500/10">
-        ⚖️
+      <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+        [class.bg-gray-800]="!checkInDue()"
+        [class.text-gray-300]="!checkInDue()"
+        [class.bg-emerald-500/10]="checkInDue()"
+        [class.text-emerald-400]="checkInDue()">
+        <app-icon name="scale" class="w-6 h-6" />
       </div>
       <div class="flex-1 min-w-0">
         <div class="flex justify-between items-center gap-2 mb-1">
           <h3 class="font-semibold text-white">Body check-in</h3>
           @if (checkInDue()) {
-            <span class="text-[10px] px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 font-medium flex-shrink-0">Due</span>
+            <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-medium flex-shrink-0">Due</span>
           } @else {
-            <svg class="w-5 h-5 text-gray-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-            </svg>
+            <app-icon name="chevron-right" class="w-5 h-5 text-gray-600 flex-shrink-0" />
           }
         </div>
         <p class="text-sm text-gray-400 truncate tabular-nums">
@@ -87,22 +81,20 @@
 
   <!-- Training days -->
   <div class="mb-6">
-    <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Sessions</h2>
+    <h2 class="text-sm font-semibold text-gray-300 mb-3">Sessions</h2>
     <div class="grid grid-cols-1 gap-3">
       @for (day of trainingDays; track day.label) {
         <button (click)="startWorkout(day)"
-          class="w-full bg-gray-900 border border-gray-800 hover:border-gray-700 rounded-xl p-4 text-left transition-colors">
+          class="w-full bg-gray-900 hover:bg-gray-800/70 rounded-xl p-4 text-left transition-colors">
           <div class="flex items-center gap-4">
-            <div class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
-              [style.background]="getAccentColor(day.dayType) + '20'">
-              {{ getDayEmoji(day.dayType) }}
+            <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+              [class]="getDayTile(day.dayType)">
+              <app-icon [name]="getDayIcon(day.dayType)" class="w-6 h-6" />
             </div>
             <div class="flex-1 min-w-0">
               <div class="flex justify-between items-center mb-1">
                 <h3 class="font-semibold text-white">{{ day.label }}</h3>
-                <svg class="w-5 h-5 text-gray-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-                </svg>
+                <app-icon name="chevron-right" class="w-5 h-5 text-gray-600 flex-shrink-0" />
               </div>
               <p class="text-sm text-gray-400 truncate">{{ day.muscleLabel }}</p>
             </div>
@@ -115,19 +107,17 @@
   <!-- Additional Exercise card -->
   <div class="mb-6">
     <button (click)="startAdditional()"
-      class="w-full bg-gradient-to-r from-violet-900/20 to-fuchsia-900/20 border border-violet-700/30 hover:border-violet-500/50 rounded-xl p-4 text-left transition-all">
+      class="w-full bg-gray-900 hover:bg-gray-800/70 rounded-xl p-4 text-left transition-colors">
       <div class="flex items-center gap-4">
-        <div class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 bg-violet-500/10">
-          🏃
+        <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 bg-violet-500/10 text-violet-400">
+          <app-icon name="zap" class="w-6 h-6" />
         </div>
         <div class="flex-1 min-w-0">
           <div class="flex justify-between items-center mb-1">
             <h3 class="font-semibold text-white">Additional exercise</h3>
-            <svg class="w-5 h-5 text-violet-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
-            </svg>
+            <app-icon name="plus" class="w-5 h-5 text-violet-400 flex-shrink-0" />
           </div>
-          <p class="text-sm text-violet-300/60 truncate">Log any exercise freely</p>
+          <p class="text-sm text-gray-500 truncate">Log any exercise freely</p>
         </div>
       </div>
     </button>
@@ -137,33 +127,25 @@
   <div class="space-y-3">
     <div class="flex gap-3">
       <a routerLink="/history"
-        class="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-medium py-3 px-4 rounded-xl min-h-[48px] flex items-center justify-center gap-2 transition-colors">
-        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-        </svg>
+        class="flex-1 bg-gray-900 hover:bg-gray-800 text-white font-medium py-3 px-4 rounded-xl min-h-[48px] flex items-center justify-center gap-2 transition-colors">
+        <app-icon name="clock" class="w-5 h-5" />
         History
       </a>
       <a routerLink="/analysis"
-        class="flex-1 bg-gray-800 hover:bg-gray-700 text-emerald-400 font-medium py-3 px-4 rounded-xl min-h-[48px] flex items-center justify-center gap-2 transition-colors">
-        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-        </svg>
+        class="flex-1 bg-gray-900 hover:bg-gray-800 text-emerald-400 font-medium py-3 px-4 rounded-xl min-h-[48px] flex items-center justify-center gap-2 transition-colors">
+        <app-icon name="chart-column" class="w-5 h-5" />
         Analysis
       </a>
     </div>
     <div class="flex gap-3">
       <button (click)="exportAll()"
-        class="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-medium py-3 px-4 rounded-xl min-h-[48px] flex items-center justify-center gap-2 transition-colors">
-        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-        </svg>
+        class="flex-1 bg-gray-900 hover:bg-gray-800 text-white font-medium py-3 px-4 rounded-xl min-h-[48px] flex items-center justify-center gap-2 transition-colors">
+        <app-icon name="download" class="w-5 h-5" />
         Export
       </button>
       <button (click)="triggerImport()"
-        class="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-medium py-3 px-4 rounded-xl min-h-[48px] flex items-center justify-center gap-2 transition-colors">
-        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
-        </svg>
+        class="flex-1 bg-gray-900 hover:bg-gray-800 text-white font-medium py-3 px-4 rounded-xl min-h-[48px] flex items-center justify-center gap-2 transition-colors">
+        <app-icon name="upload" class="w-5 h-5" />
         Import
       </button>
     </div>

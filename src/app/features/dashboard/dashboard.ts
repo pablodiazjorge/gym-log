@@ -8,10 +8,13 @@ import { ProfileService } from '../../core/services/profile.service';
 import { ExerciseLibraryService } from '../../core/services/exercise-library.service';
 import { MeasurementService } from '../../core/services/measurement.service';
 import { DayInfo } from '../../core/models/workout.model';
+import { Icon } from '../../shared/components/icon';
+import { IconName } from '../../shared/components/icon-paths';
+import { categoryIcon, categoryTileClass } from '../../shared/theme';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [RouterLink],
+  imports: [RouterLink, Icon],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })
@@ -55,24 +58,12 @@ export class Dashboard {
     return (Date.now() - new Date(latest.date).getTime()) / 86400000 >= 7;
   });
 
-  getAccentColor(dayType: string): string {
-    switch (dayType) {
-      case 'push': return '#3b82f6';
-      case 'pull': return '#10b981';
-      case 'legs': return '#f59e0b';
-      case 'abs': return '#ec4899';
-      default: return '#71717a';
-    }
+  getDayTile(dayType: string): string {
+    return categoryTileClass(dayType);
   }
 
-  getDayEmoji(dayType: string): string {
-    switch (dayType) {
-      case 'push': return '💪';
-      case 'pull': return '🏋️';
-      case 'legs': return '🦵';
-      case 'abs': return '🪨';
-      default: return '🏃';
-    }
+  getDayIcon(dayType: string): IconName {
+    return categoryIcon(dayType);
   }
 
   getDayTypeLabel(dayType: string): string {
