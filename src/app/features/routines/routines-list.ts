@@ -3,10 +3,13 @@ import { Router, RouterLink } from '@angular/router';
 import { RoutineService } from '../../core/services/routine.service';
 import { RoutineLibraryService } from '../../core/services/routine-library.service';
 import { Routine } from '../../core/models/routine.model';
+import { Icon } from '../../shared/components/icon';
+import { IconName } from '../../shared/components/icon-paths';
+import { categoryIcon, categoryTileClass } from '../../shared/theme';
 
 @Component({
   selector: 'app-routines-list',
-  imports: [RouterLink],
+  imports: [RouterLink, Icon],
   templateUrl: './routines-list.html',
   styleUrl: './routines-list.css',
 })
@@ -61,24 +64,12 @@ export class RoutinesList {
     }
   }
 
-  getDayEmoji(routine: Routine): string {
-    switch (routine.builtInDayType) {
-      case 'push': return '💪';
-      case 'pull': return '🏋️';
-      case 'legs': return '🦵';
-      case 'abs': return '🪨';
-      default: return '📋';
-    }
+  getTile(routine: Routine): string {
+    return categoryTileClass(routine.builtInDayType ?? 'routine');
   }
 
-  getAccentColor(routine: Routine): string {
-    switch (routine.builtInDayType) {
-      case 'push': return '#3b82f6';
-      case 'pull': return '#10b981';
-      case 'legs': return '#f59e0b';
-      case 'abs': return '#ec4899';
-      default: return '#8b5cf6';
-    }
+  getIcon(routine: Routine): IconName {
+    return categoryIcon(routine.builtInDayType ?? 'routine');
   }
 
   getSubtitle(routine: Routine): string {

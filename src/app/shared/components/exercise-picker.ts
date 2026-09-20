@@ -1,7 +1,8 @@
 import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { ExerciseLibraryService } from '../../core/services/exercise-library.service';
 import { ExerciseTemplate } from '../../core/models/workout.model';
-import { categoryBadgeClass } from '../category-badge';
+import { categoryBadgeClass } from '../theme';
+import { Icon } from './icon';
 
 export type PickerCategory = 'push' | 'pull' | 'legs' | 'abs' | 'all';
 type Category = Exclude<PickerCategory, 'all'>;
@@ -17,7 +18,7 @@ type Category = Exclude<PickerCategory, 'all'>;
  */
 @Component({
   selector: 'app-exercise-picker',
-  imports: [],
+  imports: [Icon],
   templateUrl: './exercise-picker.html',
 })
 export class ExercisePicker {
@@ -34,12 +35,12 @@ export class ExercisePicker {
   readonly closed = output<void>();
   readonly categoryChanged = output<PickerCategory>();
 
-  readonly categories: { value: Category | 'all'; label: string; emoji: string }[] = [
-    { value: 'all', label: 'All', emoji: '🏋️' },
-    { value: 'push', label: 'Push', emoji: '💪' },
-    { value: 'pull', label: 'Pull', emoji: '🏋️' },
-    { value: 'legs', label: 'Legs', emoji: '🦵' },
-    { value: 'abs', label: 'Abs', emoji: '🪨' },
+  readonly categories: { value: Category | 'all'; label: string }[] = [
+    { value: 'all', label: 'All' },
+    { value: 'push', label: 'Push' },
+    { value: 'pull', label: 'Pull' },
+    { value: 'legs', label: 'Legs' },
+    { value: 'abs', label: 'Abs' },
   ];
 
   /** null until the user taps a tab, so the host's initial category applies */

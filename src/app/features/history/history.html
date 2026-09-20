@@ -1,14 +1,12 @@
 <div class="min-h-dvh bg-gray-950 text-white p-4 pb-nav">
   <header class="mb-6">
-    <h1 class="text-2xl font-bold">History</h1>
-    <p class="text-gray-400 text-sm">{{ sessions().length }} sessions logged</p>
+    <h1 class="text-2xl font-bold tracking-tight">History</h1>
+    <p class="text-gray-400 text-sm tabular-nums">{{ sessions().length }} sessions logged</p>
   </header>
 
   @if (sortedSessions.length === 0) {
     <div class="text-center py-16">
-      <svg class="w-12 h-12 text-gray-700 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-      </svg>
+      <app-icon name="clock" class="w-12 h-12 text-gray-700 mb-3" [strokeWidth]="1.25" />
       <p class="text-gray-400 text-sm">No sessions yet</p>
       <p class="text-gray-600 text-xs mt-1">Complete a workout and it will show up here</p>
     </div>
@@ -17,22 +15,21 @@
   <div class="space-y-3">
     @for (session of sortedSessions; track session.id) {
       <a [routerLink]="['/history', session.id]"
-        class="block bg-gray-900 border border-gray-800 hover:border-gray-700 rounded-xl overflow-hidden transition-colors">
+        class="block bg-gray-900 hover:bg-gray-800/70 rounded-xl overflow-hidden transition-colors">
         <div class="flex items-stretch">
           <!-- Color bar -->
-          <div class="w-1 flex-shrink-0" [style.background]="getAccentColor(session.dayType)"></div>
+          <div class="w-1 flex-shrink-0" [class]="getBarClass(session.dayType)"></div>
 
           <div class="flex-1 p-4 min-w-0">
             <div class="flex items-center justify-between gap-2">
               <p class="text-sm font-semibold text-gray-200">{{ formatDate(session.date) }}</p>
               <span class="text-[10px] px-1.5 py-0.5 rounded font-medium flex-shrink-0"
-                [style.background]="getAccentColor(session.dayType) + '20'"
-                [style.color]="getAccentColor(session.dayType)">
+                [class]="getBadgeClass(session.dayType)">
                 {{ getDayLabel(session.dayType, session.date) }}
               </span>
             </div>
 
-            <div class="flex items-center gap-3 mt-1.5 text-xs text-gray-500">
+            <div class="flex items-center gap-3 mt-1.5 text-xs text-gray-500 tabular-nums">
               <span>{{ session.exercises.length }} exercises</span>
               @if (session.durationMinutes) {
                 <span>{{ session.durationMinutes }} min</span>
@@ -45,7 +42,7 @@
             <!-- Exercise pills -->
             <div class="flex flex-wrap gap-1 mt-2">
               @for (ex of session.exercises | slice:0:4; track ex.templateId) {
-                <span class="text-[10px] px-1.5 py-0.5 bg-gray-800 text-gray-500 rounded truncate max-w-[120px]">
+                <span class="text-[10px] px-1.5 py-0.5 bg-gray-800 text-gray-400 rounded truncate max-w-[120px]">
                   {{ ex.exerciseName }}
                 </span>
               }
@@ -57,10 +54,8 @@
 
           <!-- Delete -->
           <button (click)="deleteSession(session.id, $event)"
-            class="w-10 flex items-center justify-center text-gray-700 hover:text-rose-400 hover:bg-rose-400/5 transition-colors flex-shrink-0">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-            </svg>
+            class="w-10 flex items-center justify-center text-gray-600 hover:text-rose-400 hover:bg-rose-400/5 transition-colors flex-shrink-0">
+            <app-icon name="trash" class="w-4 h-4" />
           </button>
         </div>
       </a>
@@ -70,10 +65,8 @@
   @if (sessions().length > 0) {
     <div class="mt-4">
       <button (click)="exportAll()"
-        class="w-full bg-gray-800 hover:bg-gray-700 text-white font-medium py-3 px-4 rounded-xl min-h-[48px] flex items-center justify-center gap-2 transition-colors">
-        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-        </svg>
+        class="w-full bg-gray-900 hover:bg-gray-800 text-white font-medium py-3 px-4 rounded-xl min-h-[48px] flex items-center justify-center gap-2 transition-colors">
+        <app-icon name="download" class="w-5 h-5" />
         Export all
       </button>
     </div>

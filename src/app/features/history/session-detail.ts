@@ -3,10 +3,12 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { StorageService } from '../../core/services/storage.service';
 import { ExportService } from '../../core/services/export.service';
 import { WorkoutSession, WorkoutExercise } from '../../core/models/workout.model';
+import { Icon } from '../../shared/components/icon';
+import { categoryBadgeClass } from '../../shared/theme';
 
 @Component({
   selector: 'app-session-detail',
-  imports: [RouterLink],
+  imports: [RouterLink, Icon],
   templateUrl: './session-detail.html',
   styleUrl: './session-detail.css',
 })
@@ -26,16 +28,8 @@ export class SessionDetail {
     return d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   }
 
-  getAccentColor(dayType: string): string {
-    switch (dayType) {
-      case 'push': return '#3b82f6';
-      case 'pull': return '#10b981';
-      case 'legs': return '#f59e0b';
-      case 'abs': return '#ec4899';
-      case 'additional': return '#a855f7';
-      case 'routine': return '#8b5cf6';
-      default: return '#71717a';
-    }
+  getBadgeClass(dayType: string): string {
+    return categoryBadgeClass(dayType);
   }
 
   getDayLabel(dayType: string, date?: string): string {

@@ -4,10 +4,12 @@ import { SlicePipe } from '@angular/common';
 import { StorageService } from '../../core/services/storage.service';
 import { ExportService } from '../../core/services/export.service';
 import { WorkoutSession } from '../../core/models/workout.model';
+import { Icon } from '../../shared/components/icon';
+import { categoryBadgeClass, categorySolidClass } from '../../shared/theme';
 
 @Component({
   selector: 'app-history',
-  imports: [RouterLink, SlicePipe],
+  imports: [RouterLink, SlicePipe, Icon],
   templateUrl: './history.html',
   styleUrl: './history.css',
 })
@@ -43,16 +45,12 @@ export class History {
     return days[new Date(iso).getDay()];
   }
 
-  getAccentColor(dayType: string): string {
-    switch (dayType) {
-      case 'push': return '#3b82f6';
-      case 'pull': return '#10b981';
-      case 'legs': return '#f59e0b';
-      case 'abs': return '#ec4899';
-      case 'additional': return '#a855f7';
-      case 'routine': return '#8b5cf6';
-      default: return '#71717a';
-    }
+  getBarClass(dayType: string): string {
+    return categorySolidClass(dayType);
+  }
+
+  getBadgeClass(dayType: string): string {
+    return categoryBadgeClass(dayType);
   }
 
   formatDate(iso: string): string {

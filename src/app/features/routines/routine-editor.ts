@@ -7,7 +7,8 @@ import { ExerciseLibraryService } from '../../core/services/exercise-library.ser
 import { RoutineExerciseConfig } from '../../core/models/routine.model';
 import { ExerciseTemplate } from '../../core/models/workout.model';
 import { ExercisePicker, PickerCategory } from '../../shared/components/exercise-picker';
-import { categoryBadgeClass } from '../../shared/category-badge';
+import { Icon } from '../../shared/components/icon';
+import { categoryBadgeClass } from '../../shared/theme';
 
 type Category = 'push' | 'pull' | 'legs' | 'abs';
 
@@ -19,7 +20,7 @@ interface EditorRow extends RoutineExerciseConfig {
 
 @Component({
   selector: 'app-routine-editor',
-  imports: [FormsModule, ExercisePicker],
+  imports: [FormsModule, ExercisePicker, Icon],
   templateUrl: './routine-editor.html',
   styleUrl: './routine-editor.css',
 })
