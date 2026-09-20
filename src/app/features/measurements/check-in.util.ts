@@ -1,22 +1,25 @@
-import { BodyMeasurement } from '../../core/models/measurement.model';
+import {
+  BodyMeasurement,
+  MEASUREMENT_FIELDS,
+  MeasurementField,
+} from '../../core/models/measurement.model';
 
-/** A history row plus the change since the previous reading of the same kind */
+/** A history row plus, per reading, the change since the previous one of the same kind */
 export interface MeasurementRow {
   entry: BodyMeasurement;
-  weightDelta: number | null;
-  waistDelta: number | null;
+  deltas: Record<MeasurementField, number | null>;
 }
 
 /**
  * Deltas compare against the previous entry carrying the *same* reading, not
- * the previous entry outright: a check-in may be weight-only or waist-only, so
- * comparing with the immediate neighbour would show a swing of the entire value
- * every time a field was left blank.
+ * the previous entry outright: a check-in may be weight-only, waist-only or
+ * girths-only, so comparing with the immediate neighbour would show a swing of
+ * the entire value every time a field was left blank.
  *
  * `entries` must be newest first — the order the service stores them in.
  */
 export function buildRows(entries: BodyMeasurement[]): MeasurementRow[] {
-  const deltaFor = (index: number, field: 'weightKg' | 'waistCm'): number | null => {
+  const deltaFor = (index: number, field: MeasurementField): number | null => {
     const current = entries[index][field];
     if (current == null) return null;
     for (let i = index + 1; i < entries.length; i++) {
@@ -26,11 +29,13 @@ export function buildRows(entries: BodyMeasurement[]): MeasurementRow[] {
     return null; // first ever reading of this kind
   };
 
-  return entries.map((entry, index) => ({
-    entry,
-    weightDelta: deltaFor(index, 'weightKg'),
-    waistDelta: deltaFor(index, 'waistCm'),
-  }));
+  return entries.map((entry, index) => {
+    const deltas = {} as Record<MeasurementField, number | null>;
+    for (const field of MEASUREMENT_FIELDS) {
+      deltas[field] = deltaFor(index, field);
+    }
+    return { entry, deltas };
+  });
 }
 
 /** ISO instant → the `yyyy-mm-dd` an `<input type="date">` expects, in local time */

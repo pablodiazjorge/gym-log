@@ -1,5 +1,5 @@
 import { Injectable, computed, signal } from '@angular/core';
-import { BodyMeasurement } from '../models/measurement.model';
+import { BodyMeasurement, MEASUREMENT_FIELDS, MeasurementField } from '../models/measurement.model';
 import { WorkoutSession } from '../models/workout.model';
 
 const MEASUREMENTS_KEY = 'gym_body_measurements';
@@ -26,11 +26,12 @@ export function isValidMeasurement(value: unknown): value is BodyMeasurement {
   const m = value as Partial<BodyMeasurement>;
   if (typeof m.id !== 'string' || !m.id) return false;
   if (typeof m.date !== 'string' || Number.isNaN(new Date(m.date).getTime())) return false;
-  if (!isOptionalPositive(m.weightKg)) return false;
-  if (!isOptionalPositive(m.waistCm)) return false;
+  for (const field of MEASUREMENT_FIELDS) {
+    if (!isOptionalPositive(m[field])) return false;
+  }
   if (m.notes !== undefined && typeof m.notes !== 'string') return false;
-  // An entry with all three fields empty is a dated row with nothing in it.
-  return m.weightKg != null || m.waistCm != null || !!m.notes?.trim();
+  // An entry with every field empty is a dated row with nothing in it.
+  return MEASUREMENT_FIELDS.some((field) => m[field] != null) || !!m.notes?.trim();
 }
 
 /** The more recent of two dated readings (null-safe); ties keep `a` */
@@ -43,7 +44,7 @@ export function moreRecent<T extends { date: string }>(a: T | null, b: T | null)
 /** Newest entry that actually carries the given reading, or null */
 export function latestReading(
   entries: BodyMeasurement[],
-  field: 'weightKg' | 'waistCm',
+  field: MeasurementField,
 ): DatedReading | null {
   let best: DatedReading | null = null;
   for (const entry of entries) {

@@ -100,6 +100,87 @@
       </div>
     </div>
 
+    <!-- Girths — the photo-check protocol readings (hip, thigh, flexed arms).
+         Folded by default: they are logged monthly, not weekly. -->
+    <div class="mb-4">
+      <button type="button" (click)="girthsOpen.set(!girthsOpen())"
+        class="w-full flex items-center justify-between py-1.5 text-left min-h-[44px]">
+        <span>
+          <span class="block text-xs font-medium text-gray-400">Girths</span>
+          <span class="block text-[11px] text-gray-600 mt-0.5">Hip, thigh, flexed arms — photo-check day</span>
+        </span>
+        <app-icon name="chevron-down" class="w-4 h-4 text-gray-500 transition-transform"
+          [class.rotate-180]="girthsOpen()" [strokeWidth]="2" />
+      </button>
+
+      @if (girthsOpen()) {
+        <div class="mt-2 space-y-4">
+          <!-- Hip -->
+          <div class="flex items-center justify-between gap-3">
+            <label class="text-xs font-medium text-gray-400" for="mHip">Hip (cm)</label>
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <button (click)="adjustHip(-0.5)" aria-label="Decrease hip"
+                class="w-8 h-8 bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center justify-center text-sm font-bold text-white transition-colors">−</button>
+              <input id="mHip" type="number" step="0.5" min="0" inputmode="decimal"
+                [ngModel]="hipCm()" (ngModelChange)="setHip($event)"
+                [placeholder]="lastHip()?.value ?? ''"
+                class="w-24 bg-gray-800 rounded-lg p-2 text-center text-base font-bold text-white placeholder-gray-600 focus:outline-none tabular-nums" />
+              <button (click)="adjustHip(0.5)" aria-label="Increase hip"
+                class="w-8 h-8 bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center justify-center text-sm font-bold text-white transition-colors">+</button>
+            </div>
+          </div>
+
+          <!-- Thigh -->
+          <div class="flex items-center justify-between gap-3">
+            <label class="text-xs font-medium text-gray-400" for="mThigh">Thigh (cm)</label>
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <button (click)="adjustThigh(-0.5)" aria-label="Decrease thigh"
+                class="w-8 h-8 bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center justify-center text-sm font-bold text-white transition-colors">−</button>
+              <input id="mThigh" type="number" step="0.5" min="0" inputmode="decimal"
+                [ngModel]="thighCm()" (ngModelChange)="setThigh($event)"
+                [placeholder]="lastThigh()?.value ?? ''"
+                class="w-24 bg-gray-800 rounded-lg p-2 text-center text-base font-bold text-white placeholder-gray-600 focus:outline-none tabular-nums" />
+              <button (click)="adjustThigh(0.5)" aria-label="Increase thigh"
+                class="w-8 h-8 bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center justify-center text-sm font-bold text-white transition-colors">+</button>
+            </div>
+          </div>
+
+          <!-- Arm left -->
+          <div class="flex items-center justify-between gap-3">
+            <div class="min-w-0">
+              <label class="text-xs font-medium text-gray-400" for="mArmL">Arm left (cm)</label>
+              <p class="text-[11px] text-gray-600 mt-0.5">Flexed, at the peak</p>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <button (click)="adjustArmLeft(-0.5)" aria-label="Decrease left arm"
+                class="w-8 h-8 bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center justify-center text-sm font-bold text-white transition-colors">−</button>
+              <input id="mArmL" type="number" step="0.5" min="0" inputmode="decimal"
+                [ngModel]="armLeftCm()" (ngModelChange)="setArmLeft($event)"
+                [placeholder]="lastArmLeft()?.value ?? ''"
+                class="w-24 bg-gray-800 rounded-lg p-2 text-center text-base font-bold text-white placeholder-gray-600 focus:outline-none tabular-nums" />
+              <button (click)="adjustArmLeft(0.5)" aria-label="Increase left arm"
+                class="w-8 h-8 bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center justify-center text-sm font-bold text-white transition-colors">+</button>
+            </div>
+          </div>
+
+          <!-- Arm right -->
+          <div class="flex items-center justify-between gap-3">
+            <label class="text-xs font-medium text-gray-400" for="mArmR">Arm right (cm)</label>
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <button (click)="adjustArmRight(-0.5)" aria-label="Decrease right arm"
+                class="w-8 h-8 bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center justify-center text-sm font-bold text-white transition-colors">−</button>
+              <input id="mArmR" type="number" step="0.5" min="0" inputmode="decimal"
+                [ngModel]="armRightCm()" (ngModelChange)="setArmRight($event)"
+                [placeholder]="lastArmRight()?.value ?? ''"
+                class="w-24 bg-gray-800 rounded-lg p-2 text-center text-base font-bold text-white placeholder-gray-600 focus:outline-none tabular-nums" />
+              <button (click)="adjustArmRight(0.5)" aria-label="Increase right arm"
+                class="w-8 h-8 bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center justify-center text-sm font-bold text-white transition-colors">+</button>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+
     <!-- Notes -->
     <div class="mb-4">
       <label class="block text-xs font-medium text-gray-400 mb-1.5" for="mNotes">Notes</label>
@@ -137,26 +218,50 @@
               @if (row.entry.weightKg !== undefined) {
                 <span class="text-base font-bold text-white tabular-nums">
                   {{ row.entry.weightKg }}<span class="text-xs font-medium text-gray-500"> kg</span>
-                  @if (row.weightDelta !== null) {
+                  @if (row.deltas.weightKg !== null) {
                     <span class="text-xs font-medium ml-1"
-                      [class.text-emerald-400]="row.weightDelta > 0"
-                      [class.text-amber-400]="row.weightDelta < 0"
-                      [class.text-gray-500]="row.weightDelta === 0">{{ formatDelta(row.weightDelta) }}</span>
+                      [class.text-emerald-400]="row.deltas.weightKg > 0"
+                      [class.text-amber-400]="row.deltas.weightKg < 0"
+                      [class.text-gray-500]="row.deltas.weightKg === 0">{{ formatDelta(row.deltas.weightKg) }}</span>
                   }
                 </span>
               }
               @if (row.entry.waistCm !== undefined) {
                 <span class="text-base font-bold text-white tabular-nums">
                   {{ row.entry.waistCm }}<span class="text-xs font-medium text-gray-500"> cm</span>
-                  @if (row.waistDelta !== null) {
+                  @if (row.deltas.waistCm !== null) {
                     <span class="text-xs font-medium ml-1"
-                      [class.text-amber-400]="row.waistDelta > 0"
-                      [class.text-emerald-400]="row.waistDelta < 0"
-                      [class.text-gray-500]="row.waistDelta === 0">{{ formatDelta(row.waistDelta) }}</span>
+                      [class.text-amber-400]="row.deltas.waistCm > 0"
+                      [class.text-emerald-400]="row.deltas.waistCm < 0"
+                      [class.text-gray-500]="row.deltas.waistCm === 0">{{ formatDelta(row.deltas.waistCm) }}</span>
                   }
                 </span>
               }
             </div>
+            @if (row.entry.hipCm !== undefined || row.entry.thighCm !== undefined || row.entry.armLeftCm !== undefined || row.entry.armRightCm !== undefined) {
+              <div class="flex flex-wrap gap-x-3 gap-y-1 mt-1.5 text-xs text-gray-400 tabular-nums">
+                @if (row.entry.hipCm !== undefined) {
+                  <span>Hip <b class="text-gray-200 font-semibold">{{ row.entry.hipCm }}</b>
+                    @if (row.deltas.hipCm !== null) { <span class="text-gray-500">{{ formatDelta(row.deltas.hipCm) }}</span> }
+                  </span>
+                }
+                @if (row.entry.thighCm !== undefined) {
+                  <span>Thigh <b class="text-gray-200 font-semibold">{{ row.entry.thighCm }}</b>
+                    @if (row.deltas.thighCm !== null) { <span class="text-gray-500">{{ formatDelta(row.deltas.thighCm) }}</span> }
+                  </span>
+                }
+                @if (row.entry.armLeftCm !== undefined) {
+                  <span>Arm L <b class="text-gray-200 font-semibold">{{ row.entry.armLeftCm }}</b>
+                    @if (row.deltas.armLeftCm !== null) { <span class="text-gray-500">{{ formatDelta(row.deltas.armLeftCm) }}</span> }
+                  </span>
+                }
+                @if (row.entry.armRightCm !== undefined) {
+                  <span>Arm R <b class="text-gray-200 font-semibold">{{ row.entry.armRightCm }}</b>
+                    @if (row.deltas.armRightCm !== null) { <span class="text-gray-500">{{ formatDelta(row.deltas.armRightCm) }}</span> }
+                  </span>
+                }
+              </div>
+            }
             @if (row.entry.notes) {
               <p class="text-xs text-gray-500 italic mt-2 whitespace-pre-line">{{ row.entry.notes }}</p>
             }

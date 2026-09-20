@@ -9,8 +9,8 @@ function entry(partial: Partial<BodyMeasurement> & { id: string }): BodyMeasurem
 describe('buildRows', () => {
   it('reports no delta for the first ever reading of each kind', () => {
     const rows = buildRows([entry({ id: 'a', weightKg: 77, waistCm: 82 })]);
-    expect(rows[0].weightDelta).toBeNull();
-    expect(rows[0].waistDelta).toBeNull();
+    expect(rows[0].deltas.weightKg).toBeNull();
+    expect(rows[0].deltas.waistCm).toBeNull();
   });
 
   it('compares against the previous entry that carried the same reading', () => {
@@ -22,20 +22,38 @@ describe('buildRows', () => {
       entry({ id: 'a', date: '2026-08-05T12:00:00.000Z', weightKg: 76, waistCm: 82 }),
     ]);
 
-    expect(rows[0].weightDelta).toBeCloseTo(0.4, 5);
-    expect(rows[0].waistDelta).toBeCloseTo(-0.5, 5);
-    expect(rows[1].weightDelta).toBeCloseTo(1, 5);
-    expect(rows[1].waistDelta).toBeNull();
-    expect(rows[2].weightDelta).toBeNull();
-    expect(rows[2].waistDelta).toBeNull();
+    expect(rows[0].deltas.weightKg).toBeCloseTo(0.4, 5);
+    expect(rows[0].deltas.waistCm).toBeCloseTo(-0.5, 5);
+    expect(rows[1].deltas.weightKg).toBeCloseTo(1, 5);
+    expect(rows[1].deltas.waistCm).toBeNull();
+    expect(rows[2].deltas.weightKg).toBeNull();
+    expect(rows[2].deltas.waistCm).toBeNull();
   });
 
-  it('leaves both deltas null on a notes-only check-in', () => {
+  it('tracks each girth series independently of weight and waist', () => {
+    // Girths land on photo-check days only, weeks apart from the weekly
+    // weigh-ins — the sparse series must still pair with its own previous
+    // reading, skipping every check-in that lacks it.
+    const rows = buildRows([
+      entry({ id: 'd', date: '2026-09-25T12:00:00.000Z', hipCm: 76, armLeftCm: 33.5 }),
+      entry({ id: 'c', date: '2026-09-12T12:00:00.000Z', weightKg: 67.2 }),
+      entry({ id: 'b', date: '2026-08-25T12:00:00.000Z', hipCm: 75, thighCm: 52 }),
+      entry({ id: 'a', date: '2026-07-25T12:00:00.000Z', hipCm: 75 }),
+    ]);
+
+    expect(rows[0].deltas.hipCm).toBeCloseTo(1, 5);
+    expect(rows[0].deltas.armLeftCm).toBeNull(); // first arm reading ever
+    expect(rows[0].deltas.weightKg).toBeNull(); // entry carries no weight
+    expect(rows[2].deltas.hipCm).toBeCloseTo(0, 5);
+    expect(rows[2].deltas.thighCm).toBeNull();
+  });
+
+  it('leaves every delta null on a notes-only check-in', () => {
     const rows = buildRows([
       entry({ id: 'b', date: '2026-08-14T12:00:00.000Z', notes: 'slept 5h' }),
       entry({ id: 'a', weightKg: 76 }),
     ]);
-    expect(rows[0]).toEqual({ entry: rows[0].entry, weightDelta: null, waistDelta: null });
+    expect(Object.values(rows[0].deltas).every((d) => d === null)).toBe(true);
   });
 
   it('handles an empty history', () => {
