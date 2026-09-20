@@ -3,10 +3,11 @@ import { NavigationEnd, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs';
+import { Icon } from './icon';
 
 @Component({
   selector: 'app-header',
-  imports: [],
+  imports: [Icon],
   templateUrl: './header.html',
   styleUrl: './header.css',
 })

@@ -4,10 +4,11 @@ import { filter } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { Header } from './shared/components/header';
+import { Icon } from './shared/components/icon';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, Header],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, Header, Icon],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
