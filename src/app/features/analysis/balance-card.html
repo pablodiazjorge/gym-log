@@ -1,0 +1,53 @@
+<section class="mb-6 bg-gray-900 rounded-xl p-4">
+  <!-- Week pager -->
+  <div class="flex items-center justify-between mb-4">
+    <button
+      (click)="prevWeek.emit()"
+      [disabled]="!canGoBack()"
+      aria-label="Previous week"
+      class="w-9 h-9 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 flex items-center justify-center transition-colors disabled:opacity-30 disabled:hover:bg-gray-800"
+    >
+      <app-icon name="chevron-left" class="w-5 h-5" />
+    </button>
+    <div class="text-center">
+      <h2 class="text-lg font-semibold">{{ weekLabel() }}</h2>
+      <p class="text-xs text-gray-500 tabular-nums">{{ sessionsLabel() }}</p>
+    </div>
+    <button
+      (click)="nextWeek.emit()"
+      [disabled]="isCurrentWeek()"
+      aria-label="Next week"
+      class="w-9 h-9 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 flex items-center justify-center transition-colors disabled:opacity-30 disabled:hover:bg-gray-800"
+    >
+      <app-icon name="chevron-right" class="w-5 h-5" />
+    </button>
+  </div>
+
+  <!-- One bar per muscle group; the lighter segment is the advisory band -->
+  <div class="space-y-2.5">
+    @for (row of rows(); track row.group) {
+      <div class="flex items-center gap-3">
+        <p class="w-24 flex-shrink-0 text-sm text-gray-400 truncate">{{ row.label }}</p>
+        <div class="relative flex-1 h-2.5 bg-gray-800 rounded-full overflow-hidden">
+          @if (row.band) {
+            <div
+              class="absolute inset-y-0 bg-gray-700/70"
+              [style.left.%]="bandLeftPct(row)"
+              [style.width.%]="bandWidthPct(row)"
+            ></div>
+          }
+          @if (row.count > 0) {
+            <div
+              class="absolute inset-y-0 left-0 rounded-full transition-all"
+              [class]="barClass(row)"
+              [style.width.%]="fillPct(row)"
+            ></div>
+          }
+        </div>
+        <p class="w-16 flex-shrink-0 text-right text-xs text-gray-500 tabular-nums">
+          {{ countLabel(row) }}
+        </p>
+      </div>
+    }
+  </div>
+</section>

@@ -1,8 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { buildSetsForExercise, SetPlan } from './progression.util';
 import { SetTarget } from '../models/progression.model';
-import { AnalyticsService } from './analytics.service';
-import { WorkoutExercise, WorkoutSet } from '../models/workout.model';
 
 // ─── Set construction: the plan must win over the recorded history ───
 
@@ -161,73 +159,6 @@ describe('buildSetsForExercise — day-driven (template is only a default)', () 
   });
 });
 
-// ─── Skipped sets must never reach a metric ───
-
-const set = (over: Partial<WorkoutSet> = {}): WorkoutSet => ({
-  setNumber: 1,
-  isWarmup: false,
-  weightKg: 40,
-  reps: 10,
-  rir: 2,
-  completed: true,
-  skipped: false,
-  ...over,
-});
-
-describe('AnalyticsService — skipped sets', () => {
-  it('excludes them from volume, max weight and averages', () => {
-    const analytics = new AnalyticsService();
-    const exercise: WorkoutExercise = {
-      templateId: 'pec-deck',
-      exerciseName: 'Pec Deck',
-      sets: [
-        set({ setNumber: 1, weightKg: 40, reps: 10 }),
-        set({ setNumber: 2, weightKg: 40, reps: 8 }),
-        // Skipping keeps completed: true by design, so without the !skipped
-        // guard this entered every metric as a real set.
-        set({ setNumber: 3, skipped: true, weightKg: 0, reps: 0, rir: 0 }),
-      ],
-    };
-
-    const metrics = analytics.getExerciseMetrics('pec-deck', [
-      {
-        id: 's1',
-        date: '2026-08-14T06:00:00.000Z',
-        dayType: 'push',
-        exercises: [exercise],
-        completed: true,
-      },
-    ]);
-
-    // 2 real sets, not 3 — and the average is over those two only.
-    expect(metrics.avgRepsPerSet).toBe(9);
-    expect(metrics.maxRepsInSet).toBe(10);
-    expect(metrics.maxWeightEver).toBe(40);
-    expect(metrics.totalVolumeEver).toBe(40 * 10 + 40 * 8);
-  });
-
-  it('reports no data when every set of the exercise was skipped', () => {
-    const analytics = new AnalyticsService();
-    const metrics = analytics.getExerciseMetrics('rear-delt-fly', [
-      {
-        id: 's1',
-        date: '2026-07-23T06:00:00.000Z',
-        dayType: 'push',
-        exercises: [
-          {
-            templateId: 'rear-delt-fly',
-            exerciseName: 'Rear Delt Fly',
-            sets: [1, 2, 3].map((n) => set({ setNumber: n, skipped: true, weightKg: 0, reps: 0 })),
-          },
-        ],
-        completed: true,
-      },
-    ]);
-
-    // Real case: the 23-jul session skipped rear-delt-fly entirely. It used to
-    // draw a phantom drop to 0 kg that the stagnation detector read as a
-    // regression — now the session contributes no data point at all.
-    expect(metrics.weightProgression).toEqual([]);
-    expect(metrics.totalVolumeEver).toBe(0);
-  });
-});
+// The "skipped sets must never reach a metric" regression cases live in
+// analysis.util.spec.ts (workSets / e1rmSeriesForExercise) since the
+// AnalyticsService retirement.

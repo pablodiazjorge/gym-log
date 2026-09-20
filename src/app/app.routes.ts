@@ -43,6 +43,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/analysis/analysis').then((m) => m.Analysis),
   },
   {
+    path: 'analysis/exercise/:templateId',
+    loadComponent: () =>
+      import('./features/analysis/exercise-detail').then((m) => m.ExerciseDetail),
+  },
+  {
     path: 'additional',
     loadComponent: () => import('./features/additional/additional').then((m) => m.Additional),
   },

@@ -1,0 +1,97 @@
+<div class="min-h-dvh bg-gray-950 text-white p-4 pb-nav">
+  @if (!row()) {
+    <!-- Unknown id or no logged data -->
+    <section class="bg-gray-900 rounded-xl p-8 text-center">
+      <p class="font-semibold text-white">No data for this exercise yet</p>
+      <p class="text-sm text-gray-500 mt-1 mb-4">
+        Log a session with it and its progress appears here.
+      </p>
+      <a
+        routerLink="/analysis"
+        class="text-sm font-medium text-emerald-400 hover:text-emerald-300 transition-colors"
+        >Back to analysis</a
+      >
+    </section>
+  } @else {
+    @if (row(); as r) {
+      <!-- Header -->
+      <header class="mb-6">
+        <h1 class="text-2xl font-bold tracking-tight">{{ r.name }}</h1>
+        <p class="text-sm text-gray-400 tabular-nums mt-1">
+          <span
+            class="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium mr-1"
+            [class]="badgeClass(r)"
+            >{{ groupLabel(r) }}</span
+          >
+          {{ headerCaption() }}
+        </p>
+      </header>
+
+      <!-- Trend chip -->
+      <section class="mb-6 bg-gray-900 rounded-xl p-4 flex items-center justify-between gap-3">
+        @if (r.trend.hasEnoughData) {
+          <div class="flex items-center gap-2" [class]="trendClass(r)">
+            <app-icon [name]="trendIcon(r)" class="w-5 h-5" />
+            <span class="text-xl font-bold tabular-nums">{{ trendLabel(r) }}</span>
+          </div>
+          <p class="text-xs text-gray-500 text-right">last 3 vs previous 3 sessions</p>
+        } @else {
+          <p class="text-sm text-gray-400">Need {{ trendMinPoints }} sessions for a trend</p>
+          <p class="text-xs text-gray-500 tabular-nums">{{ r.sessionsCount }} so far</p>
+        }
+      </section>
+
+      <!-- Progress chart -->
+      <section class="mb-6 bg-gray-900 rounded-xl p-4">
+        <h2 class="text-lg font-semibold mb-4">{{ chartTitle() }}</h2>
+        <div class="h-64">
+          <canvas #progressChart></canvas>
+        </div>
+      </section>
+
+      <!-- Stat tiles -->
+      <section class="mb-6 grid grid-cols-2 gap-3">
+        @for (tile of tiles(); track tile.label) {
+          <div class="bg-gray-900 rounded-xl p-4">
+            <p class="text-xs text-gray-500 font-medium">{{ tile.label }}</p>
+            <p class="text-xl font-bold text-white mt-0.5 tabular-nums">{{ tile.value }}</p>
+            @if (tile.sub) {
+              <p class="text-xs text-gray-500 mt-0.5">{{ tile.sub }}</p>
+            }
+          </div>
+        }
+      </section>
+
+      <!-- Advice -->
+      @if (insight(); as tip) {
+        <section class="mb-6 bg-gray-900 rounded-xl p-4 border-l-4" [class]="adviceBorderClass(tip)">
+          <p class="font-medium text-white">{{ tip.title }}</p>
+          <p class="text-sm text-gray-400 mt-0.5 tabular-nums">{{ tip.detail }}</p>
+          @if (tip.advice) {
+            <p class="text-sm text-gray-200 mt-2">{{ tip.advice }}</p>
+          }
+        </section>
+      }
+
+      <!-- Recent sessions -->
+      <section class="bg-gray-900 rounded-xl p-4">
+        <h2 class="text-lg font-semibold mb-3">Recent sessions</h2>
+        <div class="space-y-1">
+          @for (item of recentSessions(); track item.sessionId) {
+            <a
+              [routerLink]="['/history', item.sessionId]"
+              class="flex items-center gap-3 -mx-2 px-2 py-2.5 rounded-lg hover:bg-gray-800/60 transition-colors"
+            >
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-white">{{ item.date }}</p>
+                <p class="text-xs text-gray-500 tabular-nums truncate">{{ item.summary }}</p>
+              </div>
+              <p class="text-sm text-gray-300 tabular-nums flex-shrink-0">{{ item.value }}</p>
+              <app-icon name="chevron-right" class="w-4 h-4 text-gray-600 flex-shrink-0" />
+            </a>
+          }
+        </div>
+      </section>
+    }
+  }
+</div>

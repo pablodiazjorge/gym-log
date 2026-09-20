@@ -1,0 +1,4 @@
+/* Chart.js canvas must track its container's width */
+canvas {
+  width: 100% !important;
+}

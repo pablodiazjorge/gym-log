@@ -40,6 +40,7 @@ export class Header {
     if (url.startsWith('/exercises')) return 'Exercise Library';
     if (url.startsWith('/history') && url.split('/').length > 2) return 'Detail';
     if (url.startsWith('/history')) return 'History';
+    if (url.startsWith('/analysis/exercise')) return 'Exercise detail';
     if (url.startsWith('/analysis')) return 'Analysis';
     if (url.startsWith('/additional')) return 'Additional exercise';
     if (url.startsWith('/measurements')) return 'Body check-in';

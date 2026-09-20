@@ -1,258 +1,210 @@
-import {
-  Component,
-  inject,
-  signal,
-  computed,
-  effect,
-  AfterViewInit,
-  OnDestroy,
-  ElementRef,
-  viewChild,
-} from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { DecimalPipe } from '@angular/common';
-import { Chart, registerables } from 'chart.js';
+import { Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { toPng } from 'html-to-image';
-import { AnalyticsService, ExerciseMetrics, GlobalMetrics } from '../../core/services/analytics.service';
+import {
+  Insight,
+  InsightKind,
+  buildInsights,
+  formatDayMonth,
+} from '../../core/services/analysis-insights.util';
+import {
+  BalanceRow,
+  ExerciseTrendRow,
+  MUSCLE_GROUP_LABELS,
+  TREND_MIN_POINTS,
+  addWeeksToMonday,
+  balanceRows,
+  buildExerciseTrendRows,
+  currentMondayLocal,
+  mondayOfWeekLocal,
+  sessionCountInWeek,
+  weeklyMuscleGroupSets,
+} from '../../core/services/analysis.util';
+import { RoutineService } from '../../core/services/routine.service';
 import { StorageService } from '../../core/services/storage.service';
-import { MeasurementService } from '../../core/services/measurement.service';
-import { WorkoutSession } from '../../core/models/workout.model';
 import { Icon } from '../../shared/components/icon';
-import { themeToken } from '../../shared/theme';
+import { IconName } from '../../shared/components/icon-paths';
+import { categoryBadgeClass, themeToken } from '../../shared/theme';
+import { BalanceCard } from './balance-card';
 
-// Register all Chart.js components
-Chart.register(...registerables);
+/** Insight cards shown before "Show more" */
+const INSIGHTS_VISIBLE_CAP = 6;
 
+const INSIGHT_ICONS: Record<InsightKind, IconName> = {
+  pr: 'flame',
+  stagnation: 'alert-triangle',
+  'rir-rising': 'zap',
+  'volume-drop': 'arrow-down',
+};
+
+/** Complete literals only (Tailwind scanner rule — see shared/theme.ts) */
+const INSIGHT_ICON_CLASSES: Record<InsightKind, string> = {
+  pr: 'bg-emerald-500/10 text-emerald-400',
+  stagnation: 'bg-amber-500/10 text-amber-400',
+  'rir-rising': 'bg-amber-500/10 text-amber-400',
+  'volume-drop': 'bg-rose-500/10 text-rose-400',
+};
+
+/**
+ * The coach view: three questions, top to bottom — is my training balanced
+ * (weekly hard sets per muscle group), what needs attention (PRs, stalls,
+ * drops), and am I progressing (exercises ranked by e1RM trend). All math
+ * lives in analysis.util.ts / analysis-insights.util.ts.
+ */
 @Component({
   selector: 'app-analysis',
-  imports: [FormsModule, DecimalPipe, Icon],
+  imports: [RouterLink, Icon, BalanceCard],
   templateUrl: './analysis.html',
-  styleUrl: './analysis.css',
 })
-export class Analysis implements AfterViewInit, OnDestroy {
-  private readonly analyticsService = inject(AnalyticsService);
+export class Analysis {
   private readonly storage = inject(StorageService);
-  private readonly measurementService = inject(MeasurementService);
+  /** Catalog lookup — static data, built once */
+  private readonly byId = new Map(
+    inject(RoutineService)
+      .getAllExercises()
+      .map((t) => [t.id, t]),
+  );
 
   readonly analysisContainer = viewChild<ElementRef<HTMLDivElement>>('analysisContainer');
 
   readonly sessions = this.storage.sessions;
-  readonly totalSessions = computed(() =>
-    this.sessions().filter((s) => s.completed).length,
-  );
+  readonly totalSessions = computed(() => this.sessions().filter((s) => s.completed).length);
 
-  // Available exercises from data
-  readonly availableExercises = computed(() => {
+  // ─── Weekly balance ───
+
+  /** Captured once — the page is short-lived (same convention as the dashboard) */
+  private readonly currentMonday = currentMondayLocal();
+
+  readonly weekOffset = signal(0);
+  readonly selectedMonday = computed(() =>
+    addWeeksToMonday(this.currentMonday, -this.weekOffset()),
+  );
+  readonly isCurrentWeek = computed(() => this.weekOffset() === 0);
+
+  private readonly earliestMonday = computed(() => {
     const completed = this.sessions().filter((s) => s.completed);
-    const seen = new Map<string, string>();
-    for (const session of completed) {
-      for (const ex of session.exercises) {
-        if (!seen.has(ex.templateId)) {
-          seen.set(ex.templateId, ex.exerciseName);
-        }
-      }
-    }
-    return [...seen.entries()].map(([templateId, exerciseName]) => ({
-      templateId,
-      exerciseName,
-    }));
+    if (completed.length === 0) return null;
+    return completed.map((s) => mondayOfWeekLocal(s.date)).sort()[0];
   });
 
-  readonly selectedExercise = signal<string>('');
+  readonly canGoBack = computed(() => {
+    const earliest = this.earliestMonday();
+    return earliest != null && this.selectedMonday() > earliest;
+  });
 
-  readonly globalMetrics = computed<GlobalMetrics>(() =>
-    this.analyticsService.getGlobalMetrics(
-      this.sessions(),
-      this.measurementService.measurements(),
-    ),
+  readonly weekLabel = computed(() =>
+    this.isCurrentWeek()
+      ? 'This week'
+      : `Week of ${formatDayMonth(`${this.selectedMonday()}T12:00:00`)}`,
   );
 
-  readonly metrics = computed<ExerciseMetrics>(() => {
-    const id = this.selectedExercise();
-    if (!id) {
-      return this.emptyMetrics();
-    }
-    return this.analyticsService.getExerciseMetrics(id, this.sessions());
+  readonly sessionsLabel = computed(() => {
+    const n = sessionCountInWeek(this.sessions(), this.selectedMonday());
+    const base = n === 1 ? '1 session' : `${n} sessions`;
+    return this.isCurrentWeek() ? `${base} · in progress` : base;
   });
 
-  readonly warnings = computed(() => this.globalMetrics().warningFlags);
+  readonly balance = computed<BalanceRow[]>(() =>
+    balanceRows(weeklyMuscleGroupSets(this.sessions(), this.byId, this.selectedMonday())),
+  );
 
-  readonly currentBodyWeight = computed(() => {
-    const bw = this.globalMetrics().bodyWeightProgression;
-    return bw.length > 0 ? bw[bw.length - 1].weight : '—';
-  });
-
-  readonly currentWaist = computed(() => {
-    const waist = this.globalMetrics().waistProgression;
-    return waist.length > 0 ? waist[waist.length - 1].waistCm : '—';
-  });
-
-
-  private readonly viewReady = signal(false);
-  private weightChart: Chart | null = null;
-  private volumeChart: Chart | null = null;
-
-  constructor() {
-    // Set default exercise to first available
-    effect(() => {
-      const exercises = this.availableExercises();
-      const current = this.selectedExercise();
-      if (exercises.length > 0 && !current) {
-        this.selectedExercise.set(exercises[0].templateId);
-      }
-    });
-
-    // Reactively update weight chart when exercise or sessions change (after view is ready)
-    effect(() => {
-      const id = this.selectedExercise();
-      const sessions = this.sessions();
-      const ready = this.viewReady();
-      if (id && ready) {
-        // Use requestAnimationFrame to ensure DOM is stable
-        requestAnimationFrame(() => this.updateWeightChart(id, sessions));
-      }
-    });
+  prevWeek(): void {
+    if (this.canGoBack()) this.weekOffset.update((o) => o + 1);
   }
 
-  ngAfterViewInit(): void {
-    // Mark view as ready so the effect can start reacting
-    this.viewReady.set(true);
-    // Create initial charts
-    requestAnimationFrame(() => this.createCharts());
+  nextWeek(): void {
+    this.weekOffset.update((o) => Math.max(0, o - 1));
   }
 
-  ngOnDestroy(): void {
-    this.weightChart?.destroy();
-    this.volumeChart?.destroy();
+  // ─── Needs attention ───
+
+  readonly insights = computed<Insight[]>(() =>
+    buildInsights(this.sessions(), this.byId, Date.now()),
+  );
+  readonly insightsExpanded = signal(false);
+  readonly visibleInsights = computed(() =>
+    this.insightsExpanded() ? this.insights() : this.insights().slice(0, INSIGHTS_VISIBLE_CAP),
+  );
+  readonly hiddenInsightCount = computed(() =>
+    Math.max(0, this.insights().length - INSIGHTS_VISIBLE_CAP),
+  );
+
+  toggleInsights(): void {
+    this.insightsExpanded.update((v) => !v);
   }
 
-  onExerciseChange(): void {
-    // Handled by effect
+  // ─── Progress by exercise ───
+
+  private readonly trendRows = computed(() => buildExerciseTrendRows(this.sessions(), this.byId));
+
+  /** Exercises with a computable trend, best movers first */
+  readonly rankedRows = computed(() =>
+    this.trendRows()
+      .filter((r) => r.trend.hasEnoughData)
+      .sort((a, b) => (b.trend.pctChange ?? 0) - (a.trend.pctChange ?? 0)),
+  );
+
+  /** Not enough sessions for a trend yet — most recently trained first */
+  readonly buildingRows = computed(() =>
+    this.trendRows()
+      .filter((r) => !r.trend.hasEnoughData)
+      .sort(
+        (a, b) => new Date(b.lastTrainedDate).getTime() - new Date(a.lastTrainedDate).getTime(),
+      ),
+  );
+
+  readonly trendMinPoints = TREND_MIN_POINTS;
+
+  // ─── Presentation helpers ───
+
+  insightIcon(insight: Insight): IconName {
+    return INSIGHT_ICONS[insight.kind];
   }
 
-  private emptyMetrics(): ExerciseMetrics {
-    return {
-      templateId: '',
-      exerciseName: '—',
-      sessionsCount: 0,
-      firstDate: '',
-      lastDate: '',
-      maxWeightEver: 0,
-      maxWeightDate: '',
-      currentMaxWeight: 0,
-      weightProgression: [],
-      totalVolumeEver: 0,
-      avgVolumePerSession: 0,
-      volumeProgression: [],
-      avgRepsPerSet: 0,
-      maxRepsInSet: 0,
-      avgRir: 0,
-      rirTrend: 'stable',
-      weeksSinceLastPR: 0,
-      isStagnant: false,
-      recommendation: '',
-    };
+  insightIconClass(insight: Insight): string {
+    return INSIGHT_ICON_CLASSES[insight.kind];
   }
 
-  private createCharts(): void {
-    const sessions = this.sessions();
-    const id = this.selectedExercise();
-
-    // Weight progression chart
-    if (id) {
-      this.updateWeightChart(id, sessions);
-    }
-
-    // Volume chart
-    const volCtx = document.getElementById('volumeChart') as HTMLCanvasElement | null;
-    if (volCtx) {
-      this.volumeChart?.destroy();
-      const volData = this.analyticsService.getWeeklyVolumeChartData(sessions);
-      this.volumeChart = new Chart(volCtx, {
-        type: 'bar',
-        data: {
-          labels: volData.labels,
-          datasets: [
-            {
-              label: 'Weekly volume (kg)',
-              data: volData.data,
-              backgroundColor: themeToken('--color-accent'),
-              borderRadius: 6,
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false },
-          },
-          scales: {
-            x: {
-              ticks: { color: themeToken('--color-chart-tick'), maxTicksLimit: 8 },
-              grid: { color: themeToken('--color-chart-grid') },
-            },
-            y: {
-              ticks: { color: themeToken('--color-chart-tick') },
-              grid: { color: themeToken('--color-chart-grid') },
-            },
-          },
-        },
-      });
+  trendIcon(row: ExerciseTrendRow): IconName {
+    switch (row.trend.direction) {
+      case 'up':
+        return 'arrow-up';
+      case 'down':
+        return 'arrow-down';
+      default:
+        return 'minus';
     }
   }
 
-  private updateWeightChart(templateId: string, sessions: WorkoutSession[]): void {
-    const ctx = document.getElementById('weightChart') as HTMLCanvasElement | null;
-    if (!ctx) return;
-
-    this.weightChart?.destroy();
-
-    const chartData = this.analyticsService.getWeightChartData(templateId, sessions);
-
-    if (chartData.data.length === 0) {
-      return;
+  trendClass(row: ExerciseTrendRow): string {
+    switch (row.trend.direction) {
+      case 'up':
+        return 'text-emerald-400';
+      case 'down':
+        return 'text-rose-400';
+      default:
+        return 'text-gray-400';
     }
-
-    this.weightChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: chartData.labels,
-        datasets: [
-          {
-            label: 'Max weight (kg)',
-            data: chartData.data,
-            borderColor: themeToken('--color-accent'),
-            backgroundColor: themeToken('--color-chart-accent-soft'),
-            borderWidth: 2,
-            pointBackgroundColor: themeToken('--color-accent'),
-            pointRadius: 4,
-            pointHoverRadius: 6,
-            tension: 0.4,
-            fill: true,
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-        },
-        scales: {
-          x: {
-            ticks: { color: themeToken('--color-chart-tick'), maxTicksLimit: 8 },
-            grid: { color: themeToken('--color-chart-grid') },
-          },
-          y: {
-            ticks: { color: themeToken('--color-chart-tick') },
-            grid: { color: themeToken('--color-chart-grid') },
-            min: Math.max(0, Math.min(...chartData.data) - 10),
-          },
-        },
-      },
-    });
   }
+
+  trendLabel(row: ExerciseTrendRow): string {
+    const pct = row.trend.pctChange ?? 0;
+    return `${pct > 0 ? '+' : ''}${pct}%`;
+  }
+
+  valueLabel(row: ExerciseTrendRow): string {
+    return row.metric === 'e1rm' ? `e1RM ${row.lastValue} kg` : `best ${row.bestValue} reps`;
+  }
+
+  badgeClass(row: ExerciseTrendRow): string {
+    return categoryBadgeClass(row.category ?? '');
+  }
+
+  groupLabel(row: ExerciseTrendRow): string {
+    return MUSCLE_GROUP_LABELS[row.group];
+  }
+
+  // ─── Export ───
 
   async exportReport(): Promise<void> {
     const element = this.analysisContainer()?.nativeElement;

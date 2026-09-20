@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { ExerciseProgressionSuggestion } from '../models/progression.model';
 import { ExerciseTemplate } from '../models/workout.model';
-import { AnalyticsService } from './analytics.service';
+import { rirTrendForExercise } from './analysis.util';
 import { ProfileService } from './profile.service';
 import { StorageService } from './storage.service';
 import {
@@ -20,7 +20,6 @@ import {
 export class ProgressionService {
   private readonly storage = inject(StorageService);
   private readonly profileService = inject(ProfileService);
-  private readonly analytics = inject(AnalyticsService);
 
   /** Build a suggestion for every template, keyed by templateId */
   getSuggestionsForTemplates(
@@ -39,7 +38,6 @@ export class ProgressionService {
       let suggestion;
       if (suggestionsEnabled) {
         const focus = profile?.trainingFocus ?? 'hypertrophy';
-        const metrics = this.analytics.getExerciseMetrics(template.id, sessions);
         const completedWork = lastSets.filter((s) => !s.isWarmup && s.completed && !s.skipped);
         const avgRecentRir =
           completedWork.length > 0
@@ -58,7 +56,7 @@ export class ProgressionService {
           template,
           lastSets,
           level,
-          rirTrend: metrics.rirTrend,
+          rirTrend: rirTrendForExercise(template.id, sessions),
           avgRecentRir,
           focus,
           frequency,
