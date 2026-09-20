@@ -21,8 +21,21 @@ export class RoutinesList {
   readonly builtInRoutines = this.routineService.getBuiltInRoutines();
   readonly customRoutines = computed(() => this.routineLibrary.customRoutines());
 
+  private readonly builtInIds = this.builtInRoutines.map((r) => r.id);
+
   /** id of the routine whose action menu is open (null = none) */
   readonly menuOpenFor = signal<string | null>(null);
+
+  /** Whether this routine is currently shown on the Home screen */
+  isOnHome(id: string): boolean {
+    return this.routineLibrary.homeIdsOrDefault(this.builtInIds).includes(id);
+  }
+
+  toggleHome(routine: Routine, event: Event): void {
+    event.stopPropagation();
+    this.menuOpenFor.set(null);
+    this.routineLibrary.toggleHomeRoutine(routine.id, this.builtInIds);
+  }
 
   startRoutine(routine: Routine): void {
     if (routine.source === 'built-in' && routine.builtInDayType) {

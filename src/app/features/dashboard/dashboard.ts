@@ -7,7 +7,7 @@ import { ExportService } from '../../core/services/export.service';
 import { ProfileService } from '../../core/services/profile.service';
 import { ExerciseLibraryService } from '../../core/services/exercise-library.service';
 import { MeasurementService } from '../../core/services/measurement.service';
-import { DayInfo } from '../../core/models/workout.model';
+import { Routine } from '../../core/models/routine.model';
 import { Icon } from '../../shared/components/icon';
 import { IconName } from '../../shared/components/icon-paths';
 import { categoryIcon, categoryTileClass } from '../../shared/theme';
@@ -30,7 +30,26 @@ export class Dashboard {
 
   readonly fileInput = viewChild<ElementRef<HTMLInputElement>>('fileInput');
 
-  readonly trainingDays = this.routineService.getTrainingDays();
+  private readonly builtInRoutines = this.routineService.getBuiltInRoutines();
+  /** dayType → muscle label, for the built-in cards' subtitle */
+  private readonly muscleLabels = new Map(
+    this.routineService.getTrainingDays().map((d) => [d.dayType, d.muscleLabel]),
+  );
+
+  /**
+   * The routines shown on Home: the user's pinned selection (Routines tab →
+   * card menu), or the four built-in days until it is customized. Ids whose
+   * routine no longer exists are skipped rather than rendered broken.
+   */
+  readonly homeRoutines = computed<Routine[]>(() => {
+    const defaults = this.builtInRoutines.map((r) => r.id);
+    const ids = this.routineLibrary.homeRoutineIds() ?? defaults;
+    const byId = new Map(
+      [...this.builtInRoutines, ...this.routineLibrary.customRoutines()].map((r) => [r.id, r]),
+    );
+    return ids.flatMap((id) => byId.get(id) ?? []);
+  });
+
   readonly hasSessionInProgress = computed(() => this.storage.currentSession() !== null);
   readonly totalSessions = computed(() => this.storage.sessions().length);
   readonly lastSession = computed(() => {
@@ -58,12 +77,18 @@ export class Dashboard {
     return (Date.now() - new Date(latest.date).getTime()) / 86400000 >= 7;
   });
 
-  getDayTile(dayType: string): string {
-    return categoryTileClass(dayType);
+  getRoutineTile(routine: Routine): string {
+    return categoryTileClass(routine.builtInDayType ?? 'routine');
   }
 
-  getDayIcon(dayType: string): IconName {
-    return categoryIcon(dayType);
+  getRoutineIcon(routine: Routine): IconName {
+    return categoryIcon(routine.builtInDayType ?? 'routine');
+  }
+
+  getRoutineSubtitle(routine: Routine): string {
+    if (routine.builtInDayType) return this.muscleLabels.get(routine.builtInDayType) ?? '';
+    const count = routine.exercises.length;
+    return `${count} exercise${count === 1 ? '' : 's'}`;
   }
 
   getDayTypeLabel(dayType: string): string {
@@ -83,8 +108,13 @@ export class Dashboard {
     return days[new Date(iso).getDay()];
   }
 
-  startWorkout(day: DayInfo): void {
-    this.router.navigate(['/workout', day.dayType]);
+  startRoutine(routine: Routine): void {
+    if (routine.source === 'built-in' && routine.builtInDayType) {
+      // Built-in days keep their live choice-group selection UX
+      this.router.navigate(['/workout', routine.builtInDayType]);
+    } else {
+      this.router.navigate(['/workout/routine', routine.id]);
+    }
   }
 
   startAdditional(): void {

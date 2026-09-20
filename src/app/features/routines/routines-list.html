@@ -24,46 +24,8 @@
     </div>
   </header>
 
-  <!-- Built-in routines -->
+  <!-- Custom routines first: they are the ones the user actually maintains -->
   <section class="mb-6">
-    <h2 class="text-sm font-semibold text-gray-300 mb-3">Built-in</h2>
-    <div class="space-y-3">
-      @for (routine of builtInRoutines; track routine.id) {
-        <div class="relative">
-          <button (click)="startRoutine(routine)"
-            class="w-full bg-gray-900 hover:bg-gray-800/70 rounded-xl p-4 text-left transition-colors">
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-                [class]="getTile(routine)">
-                <app-icon [name]="getIcon(routine)" class="w-6 h-6" />
-              </div>
-              <div class="flex-1 min-w-0">
-                <h3 class="font-semibold text-white">{{ routine.name }}</h3>
-                <p class="text-sm text-gray-400">{{ getSubtitle(routine) }}</p>
-              </div>
-              <button (click)="toggleMenu(routine.id, $event)"
-                class="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-gray-300 transition-colors"
-                aria-label="Routine actions">
-                <app-icon name="dots-vertical" class="w-5 h-5" [strokeWidth]="2.5" />
-              </button>
-            </div>
-          </button>
-
-          @if (menuOpenFor() === routine.id) {
-            <div class="absolute right-2 top-14 z-[60] bg-gray-800 rounded-xl shadow-xl shadow-black/40 overflow-hidden">
-              <button (click)="duplicateRoutine(routine, $event)"
-                class="block w-full text-left px-4 py-3 text-sm text-gray-200 hover:bg-gray-700 transition-colors">
-                Duplicate to customize
-              </button>
-            </div>
-          }
-        </div>
-      }
-    </div>
-  </section>
-
-  <!-- Custom routines -->
-  <section>
     <h2 class="text-sm font-semibold text-gray-300 mb-3">My routines</h2>
 
     @if (customRoutines().length === 0) {
@@ -88,7 +50,12 @@
                 <app-icon [name]="getIcon(routine)" class="w-6 h-6" />
               </div>
               <div class="flex-1 min-w-0">
-                <h3 class="font-semibold text-white truncate">{{ routine.name }}</h3>
+                <div class="flex items-center gap-1.5 min-w-0">
+                  <h3 class="font-semibold text-white truncate">{{ routine.name }}</h3>
+                  @if (isOnHome(routine.id)) {
+                    <app-icon name="home" class="w-3.5 h-3.5 text-gray-500 flex-shrink-0" [strokeWidth]="2" />
+                  }
+                </div>
                 <p class="text-sm text-gray-400">{{ getSubtitle(routine) }}</p>
               </div>
               <button (click)="toggleMenu(routine.id, $event)"
@@ -101,6 +68,10 @@
 
           @if (menuOpenFor() === routine.id) {
             <div class="absolute right-2 top-14 z-[60] bg-gray-800 rounded-xl shadow-xl shadow-black/40 overflow-hidden">
+              <button (click)="toggleHome(routine, $event)"
+                class="block w-full text-left px-4 py-3 text-sm text-gray-200 hover:bg-gray-700 transition-colors">
+                {{ isOnHome(routine.id) ? 'Remove from Home' : 'Show on Home' }}
+              </button>
               <button (click)="editRoutine(routine, $event)"
                 class="block w-full text-left px-4 py-3 text-sm text-gray-200 hover:bg-gray-700 transition-colors">
                 Edit
@@ -112,6 +83,53 @@
               <button (click)="deleteRoutine(routine, $event)"
                 class="block w-full text-left px-4 py-3 text-sm text-rose-400 hover:bg-gray-700 transition-colors">
                 Delete
+              </button>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- Built-in routines -->
+  <section>
+    <h2 class="text-sm font-semibold text-gray-300 mb-3">Built-in</h2>
+    <div class="space-y-3">
+      @for (routine of builtInRoutines; track routine.id) {
+        <div class="relative">
+          <button (click)="startRoutine(routine)"
+            class="w-full bg-gray-900 hover:bg-gray-800/70 rounded-xl p-4 text-left transition-colors">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+                [class]="getTile(routine)">
+                <app-icon [name]="getIcon(routine)" class="w-6 h-6" />
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-1.5 min-w-0">
+                  <h3 class="font-semibold text-white">{{ routine.name }}</h3>
+                  @if (isOnHome(routine.id)) {
+                    <app-icon name="home" class="w-3.5 h-3.5 text-gray-500 flex-shrink-0" [strokeWidth]="2" />
+                  }
+                </div>
+                <p class="text-sm text-gray-400">{{ getSubtitle(routine) }}</p>
+              </div>
+              <button (click)="toggleMenu(routine.id, $event)"
+                class="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-gray-300 transition-colors"
+                aria-label="Routine actions">
+                <app-icon name="dots-vertical" class="w-5 h-5" [strokeWidth]="2.5" />
+              </button>
+            </div>
+          </button>
+
+          @if (menuOpenFor() === routine.id) {
+            <div class="absolute right-2 top-14 z-[60] bg-gray-800 rounded-xl shadow-xl shadow-black/40 overflow-hidden">
+              <button (click)="toggleHome(routine, $event)"
+                class="block w-full text-left px-4 py-3 text-sm text-gray-200 hover:bg-gray-700 transition-colors">
+                {{ isOnHome(routine.id) ? 'Remove from Home' : 'Show on Home' }}
+              </button>
+              <button (click)="duplicateRoutine(routine, $event)"
+                class="block w-full text-left px-4 py-3 text-sm text-gray-200 hover:bg-gray-700 transition-colors">
+                Duplicate to customize
               </button>
             </div>
           }

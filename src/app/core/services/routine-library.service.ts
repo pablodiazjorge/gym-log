@@ -2,22 +2,34 @@ import { Injectable, signal } from '@angular/core';
 import { Routine, RoutineExerciseConfig } from '../models/routine.model';
 
 const ROUTINES_KEY = 'gym_custom_routines';
+const HOME_ROUTINES_KEY = 'gym_home_routines';
 
 /**
  * CRUD store for user-created custom routines, persisted in localStorage.
  * Built-in routines are NOT stored here — they are derived at read time by
  * RoutineService.getBuiltInRoutines(); combine both at the call site.
+ *
+ * Also owns which routines the Home screen shows (`homeRoutineIds`): an
+ * ordered id list over BOTH sources, so a custom routine can replace or sit
+ * next to the built-in days.
  */
 @Injectable({ providedIn: 'root' })
 export class RoutineLibraryService {
   /** All user-created routines */
   readonly customRoutines = signal<Routine[]>([]);
 
+  /**
+   * Ordered ids of the routines pinned to Home. `null` = the user never
+   * customized the selection, and Home falls back to the built-in days —
+   * that distinction is why this is not simply an empty array.
+   */
+  readonly homeRoutineIds = signal<string[] | null>(null);
+
   constructor() {
     this.loadRoutines();
   }
 
-  /** Load custom routines from localStorage */
+  /** Load custom routines and the Home selection from localStorage */
   loadRoutines(): void {
     try {
       const raw = localStorage.getItem(ROUTINES_KEY);
@@ -28,6 +40,32 @@ export class RoutineLibraryService {
       console.warn('Failed to load custom routines from localStorage, starting empty');
       this.customRoutines.set([]);
     }
+    try {
+      const raw = localStorage.getItem(HOME_ROUTINES_KEY);
+      const parsed: unknown = raw ? JSON.parse(raw) : null;
+      this.homeRoutineIds.set(
+        Array.isArray(parsed) && parsed.every((id) => typeof id === 'string') ? parsed : null,
+      );
+    } catch {
+      console.warn('Failed to load the Home routine selection, falling back to built-ins');
+      this.homeRoutineIds.set(null);
+    }
+  }
+
+  /** The Home selection, falling back to the given built-in defaults */
+  homeIdsOrDefault(defaults: readonly string[]): string[] {
+    return this.homeRoutineIds() ?? [...defaults];
+  }
+
+  /**
+   * Pin a routine to Home or remove it. The first toggle materializes the
+   * default built-in selection so the rest of it survives the edit.
+   */
+  toggleHomeRoutine(id: string, defaults: readonly string[]): void {
+    const current = this.homeIdsOrDefault(defaults);
+    const next = current.includes(id) ? current.filter((x) => x !== id) : [...current, id];
+    this.homeRoutineIds.set(next);
+    this.persistHomeRoutineIds();
   }
 
   /**
@@ -96,10 +134,15 @@ export class RoutineLibraryService {
     this.persistRoutines();
   }
 
-  /** Delete a custom routine by id */
+  /** Delete a custom routine by id (and drop it from the Home selection) */
   deleteRoutine(id: string): void {
     this.customRoutines.update((list) => list.filter((r) => r.id !== id));
     this.persistRoutines();
+    const home = this.homeRoutineIds();
+    if (home?.includes(id)) {
+      this.homeRoutineIds.set(home.filter((x) => x !== id));
+      this.persistHomeRoutineIds();
+    }
   }
 
   /** Look up a CUSTOM routine by id (built-ins live in RoutineService) */
@@ -121,5 +164,14 @@ export class RoutineLibraryService {
 
   private persistRoutines(): void {
     localStorage.setItem(ROUTINES_KEY, JSON.stringify(this.customRoutines()));
+  }
+
+  private persistHomeRoutineIds(): void {
+    const ids = this.homeRoutineIds();
+    if (ids === null) {
+      localStorage.removeItem(HOME_ROUTINES_KEY);
+    } else {
+      localStorage.setItem(HOME_ROUTINES_KEY, JSON.stringify(ids));
+    }
   }
 }

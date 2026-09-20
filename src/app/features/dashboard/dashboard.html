@@ -79,27 +79,35 @@
     </div>
   </a>
 
-  <!-- Training days -->
+  <!-- Sessions pinned to Home (Routines tab → card menu → Show on Home) -->
   <div class="mb-6">
-    <h2 class="text-sm font-semibold text-gray-300 mb-3">Sessions</h2>
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="text-sm font-semibold text-gray-300">Sessions</h2>
+      <a routerLink="/routines" class="text-xs font-medium text-emerald-400 hover:text-emerald-300 transition-colors">Edit</a>
+    </div>
     <div class="grid grid-cols-1 gap-3">
-      @for (day of trainingDays; track day.label) {
-        <button (click)="startWorkout(day)"
+      @for (routine of homeRoutines(); track routine.id) {
+        <button (click)="startRoutine(routine)"
           class="w-full bg-gray-900 hover:bg-gray-800/70 rounded-xl p-4 text-left transition-colors">
           <div class="flex items-center gap-4">
             <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-              [class]="getDayTile(day.dayType)">
-              <app-icon [name]="getDayIcon(day.dayType)" class="w-6 h-6" />
+              [class]="getRoutineTile(routine)">
+              <app-icon [name]="getRoutineIcon(routine)" class="w-6 h-6" />
             </div>
             <div class="flex-1 min-w-0">
               <div class="flex justify-between items-center mb-1">
-                <h3 class="font-semibold text-white">{{ day.label }}</h3>
+                <h3 class="font-semibold text-white truncate">{{ routine.name }}</h3>
                 <app-icon name="chevron-right" class="w-5 h-5 text-gray-600 flex-shrink-0" />
               </div>
-              <p class="text-sm text-gray-400 truncate">{{ day.muscleLabel }}</p>
+              <p class="text-sm text-gray-400 truncate">{{ getRoutineSubtitle(routine) }}</p>
             </div>
           </div>
         </button>
+      } @empty {
+        <a routerLink="/routines" class="block bg-gray-900/60 rounded-xl p-6 text-center transition-colors hover:bg-gray-900">
+          <p class="text-gray-400 text-sm">Nothing pinned to Home yet</p>
+          <p class="text-gray-600 text-xs mt-1">Pick routines in the Routines tab — card menu → Show on Home</p>
+        </a>
       }
     </div>
   </div>

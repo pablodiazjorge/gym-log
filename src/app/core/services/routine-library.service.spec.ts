@@ -101,4 +101,47 @@ describe('RoutineLibraryService', () => {
       expect(service.customRoutines()).toHaveLength(2);
     });
   });
+
+  describe('Home routine selection', () => {
+    const DEFAULTS = ['built-in-push', 'built-in-pull', 'built-in-legs', 'built-in-abs'];
+
+    it('falls back to the built-in defaults until customized', () => {
+      expect(service.homeRoutineIds()).toBeNull();
+      expect(service.homeIdsOrDefault(DEFAULTS)).toEqual(DEFAULTS);
+    });
+
+    it('materializes the defaults on the first toggle so the rest survive', () => {
+      service.toggleHomeRoutine('built-in-abs', DEFAULTS);
+      expect(service.homeRoutineIds()).toEqual(['built-in-push', 'built-in-pull', 'built-in-legs']);
+
+      service.toggleHomeRoutine('routine-123', DEFAULTS);
+      expect(service.homeIdsOrDefault(DEFAULTS)).toEqual([
+        'built-in-push',
+        'built-in-pull',
+        'built-in-legs',
+        'routine-123',
+      ]);
+    });
+
+    it('persists the selection and reloads it in a fresh instance', () => {
+      service.toggleHomeRoutine('built-in-push', DEFAULTS);
+      const fresh = new RoutineLibraryService();
+      expect(fresh.homeRoutineIds()).toEqual(['built-in-pull', 'built-in-legs', 'built-in-abs']);
+    });
+
+    it('drops a deleted custom routine from the selection', () => {
+      const created = service.createRoutine({ name: 'Upper', exercises: [config()] });
+      service.toggleHomeRoutine(created.id, DEFAULTS);
+      expect(service.homeIdsOrDefault(DEFAULTS)).toContain(created.id);
+
+      service.deleteRoutine(created.id);
+      expect(service.homeIdsOrDefault(DEFAULTS)).not.toContain(created.id);
+    });
+
+    it('ignores a malformed stored selection', () => {
+      localStorage.setItem('gym_home_routines', JSON.stringify({ not: 'an array' }));
+      const fresh = new RoutineLibraryService();
+      expect(fresh.homeRoutineIds()).toBeNull();
+    });
+  });
 });
