@@ -1,10 +1,11 @@
 import { Component, input, output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { WorkoutSet } from '../../core/models/workout.model';
+import { Icon } from '../../shared/components/icon';
 
 @Component({
   selector: 'app-set-input',
-  imports: [FormsModule],
+  imports: [FormsModule, Icon],
   templateUrl: './set-input.html',
   styleUrl: './set-input.css',
 })

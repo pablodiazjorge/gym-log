@@ -4,9 +4,10 @@
     <div class="flex-1 flex flex-col items-center justify-center p-6 pb-nav">
       <div class="w-full max-w-md">
         <div class="text-center mb-8">
-          <h1 class="text-2xl font-bold mb-2">
-            {{ dayType() === 'push' ? '💪 Push' : dayType() === 'pull' ? '🏋️ Pull' : dayType() === 'legs' ? '🦵 Legs' : '🪨 Abs' }}
-          </h1>
+          <div class="w-12 h-12 rounded-xl mx-auto mb-3 flex items-center justify-center" [class]="dayTileClass">
+            <app-icon [name]="dayIcon" class="w-6 h-6" />
+          </div>
+          <h1 class="text-2xl font-bold mb-2 tracking-tight">{{ dayLabel() }}</h1>
           <p class="text-gray-400 text-sm">Pick at least one exercise to start</p>
         </div>
 
@@ -19,13 +20,9 @@
                   <button
                     (click)="selectExercise(group.groupId, option.id)"
                     class="w-full text-left p-4 rounded-xl border transition-all"
-                    [class.border-pink-500]="selectedChoices()[group.groupId] === option.id && dayType() === 'abs'"
-                    [class.border-amber-500]="selectedChoices()[group.groupId] === option.id && dayType() === 'legs'"
-                    [class.bg-pink-500/10]="selectedChoices()[group.groupId] === option.id && dayType() === 'abs'"
-                    [class.bg-amber-500/10]="selectedChoices()[group.groupId] === option.id && dayType() === 'legs'"
-                    [class.border-gray-800]="selectedChoices()[group.groupId] !== option.id"
-                    [class.bg-gray-900]="selectedChoices()[group.groupId] !== option.id"
-                    [class.hover:border-gray-600]="selectedChoices()[group.groupId] !== option.id">
+                    [class]="selectedChoices()[group.groupId] === option.id
+                      ? choiceSelectedClass
+                      : 'border-transparent bg-gray-900 hover:bg-gray-800/70'">
                     <p class="font-medium text-white">{{ option.name }}</p>
                     <p class="text-xs text-gray-500 mt-0.5">
                       {{ option.targetSets }} sets × {{ option.targetRepsMin }}-{{ option.targetRepsMax }} reps
@@ -41,14 +38,9 @@
         <button (click)="confirmSelection()"
           [disabled]="!hasAnySelection()"
           class="w-full mt-8 py-4 rounded-xl font-bold transition-colors min-h-[48px]"
-          [class.text-white]="hasAnySelection()"
-          [class.bg-amber-600]="dayType() === 'legs' && hasAnySelection()"
-          [class.hover:bg-amber-500]="dayType() === 'legs' && hasAnySelection()"
-          [class.bg-pink-600]="dayType() === 'abs' && hasAnySelection()"
-          [class.hover:bg-pink-500]="dayType() === 'abs' && hasAnySelection()"
-          [class.bg-gray-800]="!hasAnySelection()"
-          [class.text-gray-500]="!hasAnySelection()"
-          [class.cursor-not-allowed]="!hasAnySelection()">
+          [class]="hasAnySelection()
+            ? 'bg-accent hover:bg-emerald-400 text-accent-ink'
+            : 'bg-gray-900 text-gray-600 cursor-not-allowed'">
           Start workout
         </button>
 
@@ -66,7 +58,7 @@
       @for (ex of exercises(); track ex.templateId; let i = $index) {
         <button (click)="goToExercise(i)"
           class="w-2.5 h-2.5 rounded-full transition-all duration-200"
-          [class.bg-emerald-500]="ex.sets.every(s => s.completed)"
+          [class.bg-accent/60]="ex.sets.every(s => s.completed)"
           [class.bg-gray-700]="!ex.sets.every(s => s.completed) && i !== currentExerciseIndex()"
           [class.w-7]="i === currentExerciseIndex() && !ex.sets.every(s => s.completed)"
           [class]="i === currentExerciseIndex() && !ex.sets.every(s => s.completed) ? accentDotClass : ''"
@@ -78,19 +70,17 @@
     @if (isSummary()) {
       <div class="flex-1 overflow-y-auto p-4 pb-nav space-y-5">
         <div class="text-center py-8">
-          <div class="w-20 h-20 bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg class="w-10 h-10 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
+          <div class="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <app-icon name="check-circle" class="w-10 h-10 text-emerald-400" />
           </div>
-          <h2 class="text-2xl font-bold text-white">Workout complete!</h2>
+          <h2 class="text-2xl font-bold text-white tracking-tight">Workout complete!</h2>
           <p class="text-gray-400 mt-1 text-sm">
             {{ dayLabel() }} · {{ durationMinutes() }} min
           </p>
         </div>
         <div class="space-y-2">
           @for (ex of exercises(); track ex.templateId) {
-            <div class="bg-gray-900 border border-gray-800 rounded-xl p-4">
+            <div class="bg-gray-900 rounded-xl p-4">
               <div class="flex items-center justify-between">
                 <p class="text-sm font-medium text-gray-200">{{ ex.exerciseName }}</p>
                 @if (getMaxWeight(ex) > 0) {
@@ -107,9 +97,7 @@
         </div>
 
         <!-- Bodyweight weekly check-in -->
-        <div class="bg-gray-900 border rounded-xl p-4"
-          [class.border-gray-800]="!shouldPromptBodyWeight()"
-          [class.border-sky-700/50]="shouldPromptBodyWeight()">
+        <div class="bg-gray-900 rounded-xl p-4">
           @if (bodyWeightVisible()) {
             <div class="flex items-center justify-between gap-3">
               <div class="min-w-0">
@@ -124,7 +112,7 @@
                 <input id="bodyWeight" type="number" step="0.1" min="0"
                   [ngModel]="session.bodyWeightKg" (ngModelChange)="setBodyWeight($event)"
                   [placeholder]="bodyWeightPrefill() ?? ''"
-                  class="w-20 bg-gray-800 border border-gray-700 rounded-lg p-2 text-center text-base font-bold text-white placeholder-gray-600 focus:outline-none focus:border-gray-500 tabular-nums" />
+                  class="w-20 bg-gray-800 rounded-lg p-2 text-center text-base font-bold text-white placeholder-gray-600 focus:outline-none tabular-nums" />
                 <button (click)="adjustBodyWeight(0.1)"
                   class="w-8 h-8 bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center justify-center text-sm font-bold text-white transition-colors">+</button>
               </div>
@@ -138,23 +126,21 @@
         </div>
 
         <!-- Session notes -->
-        <div class="bg-gray-900 border border-gray-800 rounded-xl p-4">
+        <div class="bg-gray-900 rounded-xl p-4">
           <label class="block text-xs font-medium text-gray-400 mb-2" for="sessionNotes">Notes</label>
           <textarea id="sessionNotes" [ngModel]="session.notes" (ngModelChange)="setNotes($event)" rows="3"
             placeholder="How did it feel? Any discomfort? Technique notes?..."
-            class="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-gray-500 resize-none transition-colors"></textarea>
+            class="w-full bg-gray-800 rounded-lg p-3 text-sm text-gray-200 placeholder-gray-600 focus:outline-none resize-none transition-colors"></textarea>
         </div>
 
         <div class="flex gap-2">
           <button (click)="finishWorkout()"
-            class="flex-1 py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl min-h-[48px] transition-colors">
+            class="flex-1 py-4 bg-accent hover:bg-emerald-400 text-accent-ink font-bold rounded-xl min-h-[48px] transition-colors">
             Save & close
           </button>
           <button (click)="exportCurrentSession()"
-            class="w-14 flex items-center justify-center bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl border border-gray-700 transition-colors min-h-[48px]">
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-            </svg>
+            class="w-14 flex items-center justify-center bg-gray-900 hover:bg-gray-800 text-gray-300 rounded-xl transition-colors min-h-[48px]">
+            <app-icon name="download" class="w-5 h-5" />
           </button>
         </div>
       </div>
@@ -163,25 +149,21 @@
     <!-- Active workout -->
     @if (!isSummary()) {
       <!-- Sticky header -->
-      <header class="bg-gray-900/95 backdrop-blur border-b border-gray-800 px-4 py-3 sticky top-0 z-40">
+      <header class="bg-gray-900/95 backdrop-blur px-4 py-3 sticky top-0 z-40">
         <div class="flex items-center justify-between mb-2">
           <button (click)="goToPrevious()" [disabled]="currentExerciseIndex() === 0"
             class="p-2 -ml-2 text-gray-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed min-h-[48px] min-w-[48px] transition-colors">
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
-            </svg>
+            <app-icon name="chevron-left" class="w-5 h-5" [strokeWidth]="2" />
           </button>
           <div class="text-center">
-            <p class="text-xs font-semibold uppercase tracking-wider" [ngClass]="accentTextClass">
+            <p class="text-xs font-semibold" [ngClass]="accentTextClass">
               {{ dayLabel() }}
             </p>
             <h1 class="text-lg font-bold">Exercise {{ currentExerciseIndex() + 1 }}/{{ exerciseCount() }}</h1>
           </div>
           <button (click)="discardWorkout()"
             class="p-2 -mr-2 text-gray-500 hover:text-rose-400 min-h-[48px] min-w-[48px] transition-colors">
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-            </svg>
+            <app-icon name="trash" class="w-5 h-5" />
           </button>
         </div>
         <div class="text-center">
@@ -191,9 +173,7 @@
               <button (click)="openSwap()"
                 class="w-11 h-11 -my-2 flex items-center justify-center rounded-lg text-gray-500 hover:text-white hover:bg-gray-800 transition-colors"
                 aria-label="Swap exercise" title="Swap exercise">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/>
-                </svg>
+                <app-icon name="swap" class="w-4 h-4" [strokeWidth]="2" />
               </button>
             }
           </div>
@@ -224,13 +204,16 @@
       <main class="flex-1 overflow-y-auto p-4 space-y-3">
         <!-- Rest time for this exercise (one value for all its sets) -->
         @if (currentExercise(); as ex) {
-          <div class="bg-sky-900/20 border border-sky-800/30 rounded-xl p-3 flex items-center justify-between">
-            <span class="text-xs text-sky-400 font-medium">Rest between sets</span>
+          <div class="bg-gray-900 rounded-xl p-3 flex items-center justify-between">
+            <span class="text-xs text-gray-400 font-medium flex items-center gap-1.5">
+              <app-icon name="timer" class="w-4 h-4 text-gray-500" />
+              Rest
+            </span>
             <div class="flex items-center gap-2">
               @for (preset of [60, 90, 120, 180]; track preset) {
                 <button (click)="setRestSeconds(preset)"
                   class="px-2 py-1 rounded-lg text-xs font-medium transition-colors"
-                  [class.bg-sky-600]="ex.restSeconds === preset"
+                  [class.bg-gray-700]="ex.restSeconds === preset"
                   [class.text-white]="ex.restSeconds === preset"
                   [class.bg-gray-800]="ex.restSeconds !== preset"
                   [class.text-gray-400]="ex.restSeconds !== preset"
@@ -240,10 +223,10 @@
               }
               <div class="flex items-center gap-1 ml-1">
                 <button (click)="adjustRestSeconds(-15)"
-                  class="w-7 h-7 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center justify-center text-sm font-bold text-white transition-colors">−</button>
-                <span class="text-sm font-semibold text-sky-300 w-10 text-center tabular-nums">{{ ex.restSeconds ?? '—' }}</span>
+                  class="w-7 h-7 bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center justify-center text-sm font-bold text-white transition-colors">−</button>
+                <span class="text-sm font-semibold text-gray-200 w-10 text-center tabular-nums">{{ ex.restSeconds ?? '—' }}</span>
                 <button (click)="adjustRestSeconds(15)"
-                  class="w-7 h-7 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center justify-center text-sm font-bold text-white transition-colors">+</button>
+                  class="w-7 h-7 bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center justify-center text-sm font-bold text-white transition-colors">+</button>
               </div>
             </div>
           </div>
@@ -260,11 +243,11 @@
              completed ones are records and the way to drop those is Skip. -->
         <div class="flex gap-2 pt-1">
           <button (click)="addSet()"
-            class="flex-1 min-h-[44px] bg-gray-900 border border-dashed border-gray-700 hover:border-gray-500 text-gray-400 hover:text-white rounded-xl text-sm font-medium transition-colors">
+            class="flex-1 min-h-[44px] bg-gray-900 hover:bg-gray-800 text-gray-400 hover:text-white rounded-xl text-sm font-medium transition-colors">
             + Add set
           </button>
           <button (click)="removeLastSet()" [disabled]="!canRemoveLastSet()"
-            class="min-h-[44px] px-4 bg-gray-900 border border-gray-800 text-gray-500 hover:text-rose-400 disabled:opacity-30 disabled:hover:text-gray-500 rounded-xl text-sm font-medium transition-colors"
+            class="min-h-[44px] px-4 bg-gray-900 hover:bg-gray-800 text-gray-500 hover:text-rose-400 disabled:opacity-30 disabled:hover:text-gray-500 rounded-xl text-sm font-medium transition-colors"
             title="Remove the last set (only while it is still open)">
             − Set
           </button>
@@ -272,34 +255,28 @@
       </main>
 
       <!-- Sticky footer -->
-      <footer class="bg-gray-900/95 backdrop-blur border-t border-gray-800 px-4 py-3 sticky bottom-0 pb-16">
+      <footer class="bg-gray-900/95 backdrop-blur px-4 py-3 sticky bottom-0 pb-16">
         <div class="flex items-center justify-between mb-3">
           <button (click)="goToPrevious()" [disabled]="currentExerciseIndex() === 0"
             class="text-sm text-gray-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1 min-h-[48px] px-3 transition-colors">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
-            </svg>
+            <app-icon name="chevron-left" class="w-4 h-4" [strokeWidth]="2" />
             Previous
           </button>
           <button (click)="goToSummary()"
-            class="text-sm text-gray-500 hover:text-gray-300 min-h-[48px] px-2 transition-colors">
+            class="text-sm text-gray-500 hover:text-gray-300 min-h-[48px] px-2 transition-colors tabular-nums">
             {{ durationMinutes() }} min · Finish
           </button>
           @if (!isLastExercise()) {
             <button (click)="goToNext()"
               class="text-sm text-gray-400 hover:text-white flex items-center gap-1 min-h-[48px] px-3 transition-colors">
               Next
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-              </svg>
+              <app-icon name="chevron-right" class="w-4 h-4" [strokeWidth]="2" />
             </button>
           } @else {
             <button (click)="goToSummary()"
               class="text-sm text-emerald-400 hover:text-emerald-300 font-medium flex items-center gap-1 min-h-[48px] px-3 transition-colors">
               Complete
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-              </svg>
+              <app-icon name="check" class="w-4 h-4" [strokeWidth]="2.25" />
             </button>
           }
         </div>

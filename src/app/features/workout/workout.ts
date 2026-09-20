@@ -11,6 +11,15 @@ import { WorkoutSession, WorkoutExercise, WorkoutSet, ExerciseTemplate } from '.
 import { buildSetsForExercise } from '../../core/services/progression.util';
 import { elapsedMinutes, minutesSince } from '../../shared/elapsed-minutes';
 import { ExercisePicker } from '../../shared/components/exercise-picker';
+import { Icon } from '../../shared/components/icon';
+import { IconName } from '../../shared/components/icon-paths';
+import {
+  categoryIcon,
+  categorySelectedClass,
+  categorySolidClass,
+  categoryTextClass,
+  categoryTileClass,
+} from '../../shared/theme';
 import { SetInput } from './set-input';
 import {
   appendSet,
@@ -32,7 +41,7 @@ type WorkoutSource =
 
 @Component({
   selector: 'app-workout',
-  imports: [SetInput, NgClass, FormsModule, ExercisePicker],
+  imports: [SetInput, NgClass, FormsModule, ExercisePicker, Icon],
   templateUrl: './workout.html',
   styleUrl: './workout.css',
 })
@@ -85,49 +94,26 @@ export class Workout {
     return ex ? ex.sets.every((s) => s.completed) : false;
   });
 
-  /** Tailwind border class for the hero card */
-  get accentBorderClass(): string {
-    switch (this.dayType()) {
-      case 'push': return 'border-blue-500/30';
-      case 'pull': return 'border-emerald-500/30';
-      case 'legs': return 'border-amber-500/30';
-      case 'abs': return 'border-pink-500/30';
-      case 'routine': return 'border-violet-500/30';
-      default: return 'border-zinc-700';
-    }
-  }
-
-  get accentBgClass(): string {
-    switch (this.dayType()) {
-      case 'push': return 'from-blue-500/5 to-transparent';
-      case 'pull': return 'from-emerald-500/5 to-transparent';
-      case 'legs': return 'from-amber-500/5 to-transparent';
-      case 'abs': return 'from-pink-500/5 to-transparent';
-      case 'routine': return 'from-violet-500/5 to-transparent';
-      default: return 'from-zinc-800 to-transparent';
-    }
-  }
-
+  // Category styling, delegated to the single map in shared/theme.ts
   get accentTextClass(): string {
-    switch (this.dayType()) {
-      case 'push': return 'text-blue-400';
-      case 'pull': return 'text-emerald-400';
-      case 'legs': return 'text-amber-400';
-      case 'abs': return 'text-pink-400';
-      case 'routine': return 'text-violet-400';
-      default: return 'text-zinc-400';
-    }
+    return categoryTextClass(this.dayType());
   }
 
   get accentDotClass(): string {
-    switch (this.dayType()) {
-      case 'push': return 'bg-blue-500';
-      case 'pull': return 'bg-emerald-500';
-      case 'legs': return 'bg-amber-500';
-      case 'abs': return 'bg-pink-500';
-      case 'routine': return 'bg-violet-500';
-      default: return 'bg-zinc-500';
-    }
+    return categorySolidClass(this.dayType());
+  }
+
+  get dayTileClass(): string {
+    return categoryTileClass(this.dayType());
+  }
+
+  get dayIcon(): IconName {
+    return categoryIcon(this.dayType());
+  }
+
+  /** Selected state of a choice-group option, tinted by the day's category */
+  get choiceSelectedClass(): string {
+    return categorySelectedClass(this.dayType());
   }
 
   constructor() {

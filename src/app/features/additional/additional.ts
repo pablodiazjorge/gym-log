@@ -6,12 +6,14 @@ import { StorageService } from '../../core/services/storage.service';
 import { ExerciseTemplate, WorkoutSession, WorkoutExercise, WorkoutSet } from '../../core/models/workout.model';
 import { elapsedMinutes, minutesSince } from '../../shared/elapsed-minutes';
 import { FormsModule } from '@angular/forms';
+import { Icon } from '../../shared/components/icon';
+import { categoryBadgeClass, categorySelectedClass } from '../../shared/theme';
 
 type Category = 'push' | 'pull' | 'legs' | 'abs';
 
 @Component({
   selector: 'app-additional',
-  imports: [FormsModule],
+  imports: [FormsModule, Icon],
   templateUrl: './additional.html',
   styleUrl: './additional.css',
 })
@@ -30,12 +32,12 @@ export class Additional {
   /** IDs of the selected exercises (multi-select) */
   readonly selectedTemplateIds = signal<string[]>([]);
 
-  readonly categories: { value: Category | 'all'; label: string; emoji: string }[] = [
-    { value: 'all', label: 'All', emoji: '🏋️' },
-    { value: 'push', label: 'Push', emoji: '💪' },
-    { value: 'pull', label: 'Pull', emoji: '🏋️' },
-    { value: 'legs', label: 'Legs', emoji: '🦵' },
-    { value: 'abs', label: 'Abs', emoji: '🪨' },
+  readonly categories: { value: Category | 'all'; label: string }[] = [
+    { value: 'all', label: 'All' },
+    { value: 'push', label: 'Push' },
+    { value: 'pull', label: 'Pull' },
+    { value: 'legs', label: 'Legs' },
+    { value: 'abs', label: 'Abs' },
   ];
 
   readonly filteredExercises = computed(() => {
@@ -110,57 +112,12 @@ export class Additional {
     }
   }
 
-  getCategoryEmoji(cat: string): string {
-    switch (cat) {
-      case 'push': return '💪';
-      case 'pull': return '🏋️';
-      case 'legs': return '🦵';
-      case 'abs': return '🪨';
-      default: return '🏃';
-    }
-  }
-
   getCategoryAccent(cat: string): string {
-    switch (cat) {
-      case 'push': return 'border-blue-500/30 bg-blue-500/5';
-      case 'pull': return 'border-emerald-500/30 bg-emerald-500/5';
-      case 'legs': return 'border-amber-500/30 bg-amber-500/5';
-      case 'abs': return 'border-pink-500/30 bg-pink-500/5';
-      default: return 'border-gray-700 bg-gray-900';
-    }
+    return categorySelectedClass(cat);
   }
 
   getCategoryBadge(cat: string): string {
-    switch (cat) {
-      case 'push': return 'bg-blue-500/20 text-blue-300';
-      case 'pull': return 'bg-emerald-500/20 text-emerald-300';
-      case 'legs': return 'bg-amber-500/20 text-amber-300';
-      case 'abs': return 'bg-pink-500/20 text-pink-300';
-      default: return 'bg-gray-700 text-gray-400';
-    }
-  }
-
-  getAccentBtnClass(): string {
-    const t = this.currentTemplate();
-    if (!t) return 'bg-gray-800 text-gray-500 cursor-not-allowed';
-    switch (t.category) {
-      case 'push': return 'bg-blue-600 hover:bg-blue-500';
-      case 'pull': return 'bg-emerald-600 hover:bg-emerald-500';
-      case 'legs': return 'bg-amber-600 hover:bg-amber-500';
-      case 'abs': return 'bg-pink-600 hover:bg-pink-500';
-      default: return 'bg-gray-600';
-    }
-  }
-
-  /** Accent class by category */
-  getAccentClassByCategory(cat: string): string {
-    switch (cat) {
-      case 'push': return 'bg-blue-600 hover:bg-blue-500';
-      case 'pull': return 'bg-emerald-600 hover:bg-emerald-500';
-      case 'legs': return 'bg-amber-600 hover:bg-amber-500';
-      case 'abs': return 'bg-pink-600 hover:bg-pink-500';
-      default: return 'bg-gray-600';
-    }
+    return categoryBadgeClass(cat);
   }
 
   // ─── Selection actions ───
