@@ -20,7 +20,7 @@ import {
   categoryTextClass,
   categoryTileClass,
 } from '../../shared/theme';
-import { SetInput } from './set-input';
+import { SetInput } from '../../shared/components/set-input';
 import {
   appendSet,
   canRemoveLastSet,

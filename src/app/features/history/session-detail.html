@@ -1,115 +1,269 @@
 <div class="min-h-dvh bg-gray-950 text-white p-4 pb-nav">
-  @if (session(); as session) {
-    <!-- Header -->
-    <div class="mb-6">
-      <div class="flex items-center gap-2 mb-2">
-        <span class="text-xs px-2 py-1 rounded font-medium"
-          [class]="getBadgeClass(session.dayType)">
-          {{ getDayLabel(session.dayType, session.date) }}
-        </span>
-        @if (!session.completed) {
-          <span class="text-xs px-2 py-1 rounded bg-amber-900/30 text-amber-400 font-medium">Incomplete</span>
-        }
-      </div>
-      <h2 class="text-xl font-bold text-white">{{ formatDate(session.date) }}</h2>
-      <div class="flex items-center gap-3 mt-1 text-sm text-gray-400">
-        <span>{{ session.exercises.length }} exercises</span>
-        @if (session.durationMinutes) { <span>{{ session.durationMinutes }} min</span> }
-        @if (session.bodyWeightKg) { <span>{{ session.bodyWeightKg }} kg</span> }
-      </div>
-      @if (session.notes) {
-        <p class="text-sm text-gray-500 italic mt-1">{{ session.notes }}</p>
-      }
-    </div>
+  @if (editing()) {
+    <!-- ===== Edit mode: everything acts on a draft until Save (ADR-0014) ===== -->
 
-    <!-- Exercises -->
-    <div class="space-y-3 mb-6">
-      @for (exercise of session.exercises; track exercise.templateId) {
-        <div class="bg-gray-900 rounded-xl overflow-hidden">
-          <div class="flex items-center justify-between p-4 pb-2">
-            <div class="min-w-0">
-              <p class="text-sm font-medium text-gray-200">{{ exercise.exerciseName }}</p>
-              @if (exercise.restSeconds) {
-                <p class="text-xs text-sky-400/70">{{ exercise.restSeconds }}s rest</p>
+    <!-- Exercise picker overlay (same shared picker as routines and the in-workout swap) -->
+    @if (isPicking()) {
+      <div class="mb-6">
+        <app-exercise-picker
+          [exclude]="draftTemplateIds()"
+          [initialCategory]="pickerCategory()"
+          (categoryChanged)="pickerCategory.set($event)"
+          (picked)="onExercisePicked($event)"
+          (closed)="closePicker()"
+        />
+      </div>
+    }
+
+    @if (!isPicking() && draft(); as d) {
+      <header class="mb-6">
+        <h2 class="text-xl font-bold text-white">Edit session</h2>
+        <p class="text-sm text-gray-500">
+          Fix anything you got wrong — nothing is saved until you tap Save.
+        </p>
+      </header>
+
+      <!-- Session fields -->
+      <section class="bg-gray-900 rounded-xl p-4 mb-6 space-y-3">
+        <div class="grid grid-cols-2 gap-3">
+          <label class="block">
+            <span class="text-xs text-gray-500 font-medium">Date</span>
+            <input
+              type="date"
+              [ngModel]="dateInputValue()"
+              (ngModelChange)="setDate($event)"
+              class="mt-1 w-full bg-gray-800 rounded-lg p-2.5 text-sm text-white focus:outline-none"
+            />
+          </label>
+          <label class="block">
+            <span class="text-xs text-gray-500 font-medium">Duration (min)</span>
+            <input
+              type="number"
+              inputmode="numeric"
+              min="0"
+              [ngModel]="d.durationMinutes"
+              (ngModelChange)="setDuration($event)"
+              class="mt-1 w-full bg-gray-800 rounded-lg p-2.5 text-sm text-white text-center tabular-nums focus:outline-none"
+            />
+          </label>
+        </div>
+        <label class="block">
+          <span class="text-xs text-gray-500 font-medium">Bodyweight (kg)</span>
+          <input
+            type="number"
+            inputmode="decimal"
+            step="0.1"
+            min="0"
+            [ngModel]="d.bodyWeightKg"
+            (ngModelChange)="setBodyWeight($event)"
+            class="mt-1 w-full bg-gray-800 rounded-lg p-2.5 text-sm text-white text-center tabular-nums focus:outline-none"
+          />
+        </label>
+        <label class="block">
+          <span class="text-xs text-gray-500 font-medium">Notes</span>
+          <textarea
+            rows="2"
+            [ngModel]="d.notes"
+            (ngModelChange)="setNotes($event)"
+            class="mt-1 w-full bg-gray-800 rounded-lg p-2.5 text-sm text-white focus:outline-none resize-none"
+          ></textarea>
+        </label>
+      </section>
+
+      <!-- Exercises -->
+      <div class="space-y-4 mb-6">
+        @for (exercise of d.exercises; track exercise.templateId; let exIndex = $index) {
+          <section>
+            <div class="flex items-center justify-between mb-2 px-1">
+              <p class="text-sm font-semibold text-gray-200 truncate">
+                {{ exercise.exerciseName }}
+              </p>
+              <button
+                (click)="removeExercise(exIndex)"
+                aria-label="Remove exercise"
+                class="w-8 h-8 rounded-lg bg-rose-600/10 hover:bg-rose-600/20 text-rose-400 flex items-center justify-center flex-shrink-0 transition-colors"
+              >
+                <app-icon name="trash" class="w-4 h-4" />
+              </button>
+            </div>
+
+            <div class="space-y-2">
+              @for (set of exercise.sets; track set.setNumber; let setIndex = $index) {
+                <div class="flex items-start gap-2">
+                  <div class="flex-1 min-w-0">
+                    <app-set-input
+                      [set]="set"
+                      (setCompleted)="refreshDraft()"
+                      (setReopened)="refreshDraft()"
+                      (setChanged)="refreshDraft()"
+                    />
+                  </div>
+                  <button
+                    (click)="removeSet(exIndex, setIndex)"
+                    aria-label="Remove set"
+                    class="w-8 h-8 mt-2 rounded-lg bg-gray-900 hover:bg-rose-600/20 text-gray-600 hover:text-rose-400 flex items-center justify-center flex-shrink-0 transition-colors"
+                  >
+                    <app-icon name="x" class="w-4 h-4" />
+                  </button>
+                </div>
               }
             </div>
-            @if (getMaxWeight(exercise) > 0) {
-              <span class="text-emerald-400 font-bold text-sm">{{ getMaxWeight(exercise) }} kg</span>
-            }
-          </div>
 
-          <div class="px-4 pb-3 overflow-x-auto">
-            <table class="w-full text-xs">
-              <thead>
-                <tr class="text-gray-500">
-                  <th class="text-left font-medium pb-2 w-6">#</th>
-                  <th class="text-left font-medium pb-2">Type</th>
-                  <th class="text-right font-medium pb-2">Weight</th>
-                  <th class="text-right font-medium pb-2">Reps</th>
-                  <th class="text-right font-medium pb-2">RIR</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (set of exercise.sets; track set.setNumber) {
-                  <tr class="border-t border-gray-800/50">
-                    <td class="py-2 text-gray-500">{{ set.setNumber }}</td>
-                    <td class="py-2">
-                      @if (set.skipped) {
-                        <!-- Skipped sets keep their weight/reps now, so without
-                             this badge they read as sets actually performed. -->
-                        <span class="text-[10px] px-1.5 py-0.5 bg-rose-900/40 text-rose-400 rounded">Skipped</span>
-                      } @else if (set.isWarmup) {
-                        <span class="text-[10px] px-1.5 py-0.5 bg-amber-900/30 text-amber-400 rounded">Warm-up</span>
-                      } @else {
-                        <span class="text-[10px] px-1.5 py-0.5 bg-gray-800 text-gray-500 rounded">Work</span>
-                      }
-                    </td>
-                    <td class="py-2 text-right font-medium tabular-nums"
-                      [class.text-gray-200]="!set.skipped"
-                      [class.text-gray-600]="set.skipped"
-                      [class.line-through]="set.skipped">{{ set.weightKg }} kg</td>
-                    <td class="py-2 text-right tabular-nums"
-                      [class.text-gray-200]="!set.skipped"
-                      [class.text-gray-600]="set.skipped"
-                      [class.line-through]="set.skipped">
-                      {{ set.reps }}
-                      @if ((set.partialReps ?? 0) > 0) {
-                        <span class="text-violet-400">+{{ set.partialReps }}</span>
-                      }
-                      @if ((set.eccentricSeconds ?? 0) > 0) {
-                        <span class="text-cyan-400 text-[10px]"> {{ set.eccentricSeconds }}s ecc</span>
-                      }
-                    </td>
-                    <td class="py-2 text-right text-gray-500 tabular-nums">{{ set.rir }}</td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
+            <button
+              (click)="addSetTo(exIndex)"
+              class="mt-2 w-full py-2.5 bg-gray-900 hover:bg-gray-800 text-gray-300 text-sm font-medium rounded-xl min-h-[44px] flex items-center justify-center gap-2 transition-colors"
+            >
+              <app-icon name="plus" class="w-4 h-4" />
+              Add set
+            </button>
+          </section>
+        }
+      </div>
+
+      <!-- Add exercise -->
+      <button
+        (click)="openPicker()"
+        class="w-full mb-6 py-3 bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium rounded-xl min-h-[48px] flex items-center justify-center gap-2 transition-colors"
+      >
+        <app-icon name="plus" class="w-5 h-5" />
+        Add exercise
+      </button>
+
+      <!-- Save / Cancel -->
+      <div class="flex gap-2">
+        <button
+          (click)="saveEdit()"
+          class="flex-1 py-3 bg-accent hover:bg-emerald-400 text-accent-ink font-bold rounded-xl min-h-[48px] flex items-center justify-center gap-2 transition-colors"
+        >
+          <app-icon name="check" class="w-5 h-5" />
+          Save changes
+        </button>
+        <button
+          (click)="cancelEdit()"
+          class="py-3 px-5 bg-gray-900 hover:bg-gray-800 text-gray-300 text-sm font-medium rounded-xl min-h-[48px] flex items-center justify-center transition-colors"
+        >
+          Cancel
+        </button>
+      </div>
+    }
+  } @else {
+    @if (session(); as session) {
+      <!-- Header -->
+      <div class="mb-6">
+        <div class="flex items-center gap-2 mb-2">
+          <span class="text-xs px-2 py-1 rounded font-medium"
+            [class]="getBadgeClass(session.dayType)">
+            {{ getDayLabel(session.dayType, session.date) }}
+          </span>
+          @if (!session.completed) {
+            <span class="text-xs px-2 py-1 rounded bg-amber-900/30 text-amber-400 font-medium">Incomplete</span>
+          }
         </div>
-      }
-    </div>
+        <h2 class="text-xl font-bold text-white">{{ formatDate(session.date) }}</h2>
+        <div class="flex items-center gap-3 mt-1 text-sm text-gray-400">
+          <span>{{ session.exercises.length }} exercises</span>
+          @if (session.durationMinutes) { <span>{{ session.durationMinutes }} min</span> }
+          @if (session.bodyWeightKg) { <span>{{ session.bodyWeightKg }} kg</span> }
+        </div>
+        @if (session.notes) {
+          <p class="text-sm text-gray-500 italic mt-1">{{ session.notes }}</p>
+        }
+      </div>
 
-    <!-- Actions -->
-    <div class="flex gap-2">
-      <button (click)="exportSession()"
-        class="flex-1 py-3 bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium rounded-xl min-h-[48px] flex items-center justify-center gap-2 transition-colors">
-        <app-icon name="download" class="w-5 h-5" />
-        Export
-      </button>
-      <button (click)="deleteSession()"
-        class="py-3 px-4 bg-rose-600/10 hover:bg-rose-600/20 text-rose-400 rounded-xl min-h-[48px] flex items-center justify-center transition-colors">
-        <app-icon name="trash" class="w-5 h-5" />
-      </button>
-    </div>
-  }
+      <!-- Exercises -->
+      <div class="space-y-3 mb-6">
+        @for (exercise of session.exercises; track exercise.templateId) {
+          <div class="bg-gray-900 rounded-xl overflow-hidden">
+            <div class="flex items-center justify-between p-4 pb-2">
+              <div class="min-w-0">
+                <p class="text-sm font-medium text-gray-200">{{ exercise.exerciseName }}</p>
+                @if (exercise.restSeconds) {
+                  <p class="text-xs text-sky-400/70">{{ exercise.restSeconds }}s rest</p>
+                }
+              </div>
+              @if (getMaxWeight(exercise) > 0) {
+                <span class="text-emerald-400 font-bold text-sm">{{ getMaxWeight(exercise) }} kg</span>
+              }
+            </div>
 
-  @if (!session()) {
-    <div class="text-center py-16">
-      <p class="text-gray-500 text-sm">Session not found</p>
-      <a routerLink="/history" class="inline-block mt-3 py-2 px-4 bg-gray-900 hover:bg-gray-800 text-gray-300 text-sm rounded-xl transition-colors">
-        Back to history
-      </a>
-    </div>
+            <div class="px-4 pb-3 overflow-x-auto">
+              <table class="w-full text-xs">
+                <thead>
+                  <tr class="text-gray-500">
+                    <th class="text-left font-medium pb-2 w-6">#</th>
+                    <th class="text-left font-medium pb-2">Type</th>
+                    <th class="text-right font-medium pb-2">Weight</th>
+                    <th class="text-right font-medium pb-2">Reps</th>
+                    <th class="text-right font-medium pb-2">RIR</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (set of exercise.sets; track set.setNumber) {
+                    <tr class="border-t border-gray-800/50">
+                      <td class="py-2 text-gray-500">{{ set.setNumber }}</td>
+                      <td class="py-2">
+                        @if (set.skipped) {
+                          <!-- Skipped sets keep their weight/reps now, so without
+                               this badge they read as sets actually performed. -->
+                          <span class="text-[10px] px-1.5 py-0.5 bg-rose-900/40 text-rose-400 rounded">Skipped</span>
+                        } @else if (set.isWarmup) {
+                          <span class="text-[10px] px-1.5 py-0.5 bg-amber-900/30 text-amber-400 rounded">Warm-up</span>
+                        } @else {
+                          <span class="text-[10px] px-1.5 py-0.5 bg-gray-800 text-gray-500 rounded">Work</span>
+                        }
+                      </td>
+                      <td class="py-2 text-right font-medium tabular-nums"
+                        [class.text-gray-200]="!set.skipped"
+                        [class.text-gray-600]="set.skipped"
+                        [class.line-through]="set.skipped">{{ set.weightKg }} kg</td>
+                      <td class="py-2 text-right tabular-nums"
+                        [class.text-gray-200]="!set.skipped"
+                        [class.text-gray-600]="set.skipped"
+                        [class.line-through]="set.skipped">
+                        {{ set.reps }}
+                        @if ((set.partialReps ?? 0) > 0) {
+                          <span class="text-violet-400">+{{ set.partialReps }}</span>
+                        }
+                        @if ((set.eccentricSeconds ?? 0) > 0) {
+                          <span class="text-cyan-400 text-[10px]"> {{ set.eccentricSeconds }}s ecc</span>
+                        }
+                      </td>
+                      <td class="py-2 text-right text-gray-500 tabular-nums">{{ set.rir }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Actions -->
+      <div class="flex gap-2">
+        <button (click)="startEdit()"
+          class="flex-1 py-3 bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium rounded-xl min-h-[48px] flex items-center justify-center gap-2 transition-colors">
+          <app-icon name="pencil" class="w-5 h-5" />
+          Edit
+        </button>
+        <button (click)="exportSession()"
+          class="flex-1 py-3 bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium rounded-xl min-h-[48px] flex items-center justify-center gap-2 transition-colors">
+          <app-icon name="download" class="w-5 h-5" />
+          Export
+        </button>
+        <button (click)="deleteSession()"
+          class="py-3 px-4 bg-rose-600/10 hover:bg-rose-600/20 text-rose-400 rounded-xl min-h-[48px] flex items-center justify-center transition-colors">
+          <app-icon name="trash" class="w-5 h-5" />
+        </button>
+      </div>
+    }
+
+    @if (!session()) {
+      <div class="text-center py-16">
+        <p class="text-gray-500 text-sm">Session not found</p>
+        <a routerLink="/history" class="inline-block mt-3 py-2 px-4 bg-gray-900 hover:bg-gray-800 text-gray-300 text-sm rounded-xl transition-colors">
+          Back to history
+        </a>
+      </div>
+    }
   }
 </div>

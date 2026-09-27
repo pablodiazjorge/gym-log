@@ -98,7 +98,9 @@ Both build the session through one path that asks `ProgressionService` for per-e
 targets ([ADR-0005](docs/adr/0005-builtin-and-custom-routines.md)). Mid-workout the user can
 swap the current exercise or add/drop a set; these edit the live session only, never the routine,
 and a swap keeps every performed set under the original exercise
-([ADR-0013](docs/adr/0013-in-session-edits-never-touch-the-routine.md)).
+([ADR-0013](docs/adr/0013-in-session-edits-never-touch-the-routine.md)). A saved session can
+later be repaired from `/history/:sessionId` → Edit — draft-based, any set or exercise, under the
+inverse rules ([ADR-0014](docs/adr/0014-history-edits-correct-the-record.md)).
 
 **Progression suggestions.** `progression.util.ts` implements double progression autoregulated by
 RIR trend: hold / add reps / add weight / aggressive step, scaled by experience level, preserving
