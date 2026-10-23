@@ -81,7 +81,10 @@ export class Workout {
   readonly isSelecting = computed(() => this.choiceGroups().length > 0 && !this.session());
 
   readonly exercises = computed(() => this.session()?.exercises ?? []);
-  readonly currentExercise = computed(() => this.exercises()[this.currentExerciseIndex()] ?? null);
+  /** null when the index is out of range (no exercises yet): the array type hides that */
+  readonly currentExercise = computed<WorkoutExercise | null>(
+    () => this.exercises()[this.currentExerciseIndex()] ?? null,
+  );
   readonly exerciseCount = computed(() => this.exercises().length);
   readonly isLastExercise = computed(() => this.currentExerciseIndex() >= this.exerciseCount() - 1);
   readonly allCompleted = computed(() => this.exercises().every((ex) => ex.sets.every((s) => s.completed)));
