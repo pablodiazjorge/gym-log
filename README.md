@@ -11,7 +11,7 @@ in your browser, and whatever you log stays in that browser's storage.
 
 ## Demo
 
-https://github.com/user-attachments/assets/802c5101-e4e7-45cb-bf88-4a1e48907185
+https://github.com/user-attachments/assets/2369f21b-54b2-432c-a8ed-6015d3bac9ca
 
 Twenty seconds of the real app: a set logged in one tap, the next session pre-filled, an
 exercise's progress charted, and the data staying on the device. Same invented example data as
