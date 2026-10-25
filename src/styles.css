@@ -216,6 +216,15 @@
   padding-bottom: var(--nav-clearance);
 }
 
+/*
+ * The same for a sticky footer that has to sit just above the dock. Its pb-16
+ * was 4rem, short of the 4.875rem dock, so the dock covered half of the
+ * footer's last button (Discard session).
+ */
+.pb-dock {
+  padding-bottom: calc(var(--app-nav-h) + 0.5rem);
+}
+
 .safe-bottom {
   padding-bottom: var(--safe-bottom);
 }
