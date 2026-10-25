@@ -16,6 +16,8 @@ interface Lift {
   /** Work-set weight in week 1, and the weekly step after it */
   startKg: number;
   stepKg: number;
+  /** Load step of the machine or dumbbells: the catalog entry's weightIncrementKg */
+  incrementKg: number;
   workSets: number;
   reps: number;
   warmup?: boolean;
@@ -32,6 +34,7 @@ const DAYS: { dayType: 'push' | 'pull' | 'legs'; weekday: number; lifts: Lift[] 
         exerciseName: 'Incline Machine Press',
         startKg: 45,
         stepKg: 1.25,
+        incrementKg: 2.5,
         workSets: 3,
         reps: 9,
         warmup: true,
@@ -42,6 +45,7 @@ const DAYS: { dayType: 'push' | 'pull' | 'legs'; weekday: number; lifts: Lift[] 
         exerciseName: 'Pec Deck / Chest Fly Machine',
         startKg: 30,
         stepKg: 1.25,
+        incrementKg: 2.5,
         workSets: 3,
         reps: 12,
         restSeconds: 90,
@@ -51,6 +55,7 @@ const DAYS: { dayType: 'push' | 'pull' | 'legs'; weekday: number; lifts: Lift[] 
         exerciseName: 'Incline Bench Lateral Raises',
         startKg: 6,
         stepKg: 0.25,
+        incrementKg: 2,
         workSets: 3,
         reps: 14,
         restSeconds: 75,
@@ -60,6 +65,7 @@ const DAYS: { dayType: 'push' | 'pull' | 'legs'; weekday: number; lifts: Lift[] 
         exerciseName: 'Cable Triceps Pushdown',
         startKg: 20,
         stepKg: 0.75,
+        incrementKg: 2.5,
         workSets: 3,
         reps: 12,
         restSeconds: 75,
@@ -75,6 +81,7 @@ const DAYS: { dayType: 'push' | 'pull' | 'legs'; weekday: number; lifts: Lift[] 
         exerciseName: 'Lat Pulldown (bar & straps, wide pronated grip)',
         startKg: 50,
         stepKg: 1.25,
+        incrementKg: 2.5,
         workSets: 3,
         reps: 10,
         warmup: true,
@@ -85,6 +92,7 @@ const DAYS: { dayType: 'push' | 'pull' | 'legs'; weekday: number; lifts: Lift[] 
         exerciseName: 'T-Bar Row (neutral shoulder-width grip)',
         startKg: 35,
         stepKg: 1.25,
+        incrementKg: 2.5,
         workSets: 3,
         reps: 10,
         restSeconds: 120,
@@ -94,6 +102,7 @@ const DAYS: { dayType: 'push' | 'pull' | 'legs'; weekday: number; lifts: Lift[] 
         exerciseName: 'Incline Bench Biceps Curl',
         startKg: 10,
         stepKg: 0.25,
+        incrementKg: 2,
         workSets: 3,
         reps: 11,
         restSeconds: 75,
@@ -103,6 +112,7 @@ const DAYS: { dayType: 'push' | 'pull' | 'legs'; weekday: number; lifts: Lift[] 
         exerciseName: 'Rear Delt Fly',
         startKg: 25,
         stepKg: 0.75,
+        incrementKg: 2.5,
         workSets: 3,
         reps: 14,
         restSeconds: 60,
@@ -118,6 +128,7 @@ const DAYS: { dayType: 'push' | 'pull' | 'legs'; weekday: number; lifts: Lift[] 
         exerciseName: 'Machine Hack Squat',
         startKg: 60,
         stepKg: 2.5,
+        incrementKg: 5,
         workSets: 3,
         reps: 8,
         warmup: true,
@@ -128,6 +139,7 @@ const DAYS: { dayType: 'push' | 'pull' | 'legs'; weekday: number; lifts: Lift[] 
         exerciseName: 'Seated Leg Curl',
         startKg: 35,
         stepKg: 1.25,
+        incrementKg: 2.5,
         workSets: 3,
         reps: 11,
         restSeconds: 90,
@@ -137,6 +149,7 @@ const DAYS: { dayType: 'push' | 'pull' | 'legs'; weekday: number; lifts: Lift[] 
         exerciseName: 'Hip Thrust',
         startKg: 70,
         stepKg: 2.5,
+        incrementKg: 2.5,
         workSets: 3,
         reps: 10,
         restSeconds: 120,
@@ -146,6 +159,7 @@ const DAYS: { dayType: 'push' | 'pull' | 'legs'; weekday: number; lifts: Lift[] 
         exerciseName: 'Standing Machine Calf Raise',
         startKg: 50,
         stepKg: 1.25,
+        incrementKg: 2.5,
         workSets: 2,
         reps: 14,
         restSeconds: 60,
@@ -154,17 +168,17 @@ const DAYS: { dayType: 'push' | 'pull' | 'legs'; weekday: number; lifts: Lift[] 
   },
 ];
 
-/** Round to the 1.25 kg plates the progression engine assumes */
-const plate = (kg: number) => Math.round(kg / 1.25) * 1.25;
+/** Round to a load the exercise can actually be set to (no 53.75 kg on a 2.5 kg stack) */
+const load = (kg: number, step: number) => Math.round(kg / step) * step;
 
 function setsFor(lift: Lift, week: number) {
-  const weightKg = plate(lift.startKg + lift.stepKg * week);
+  const weightKg = load(lift.startKg + lift.stepKg * week, lift.incrementKg);
   const sets = [];
   if (lift.warmup) {
     sets.push({
       setNumber: 1,
       isWarmup: true,
-      weightKg: plate(weightKg * 0.6),
+      weightKg: load(weightKg * 0.6, lift.incrementKg),
       reps: 10,
       rir: 4,
       completed: true,

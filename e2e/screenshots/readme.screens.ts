@@ -31,6 +31,14 @@ test('workout', async ({ page }) => {
   // Close the warm-up so the picture shows a logged set above the open ones
   await page.getByRole('button', { name: 'Set completed' }).first().click();
   await expect(page.getByRole('button', { name: 'Edit set 1' })).toBeVisible();
+  // Scroll as a user would: the open set starts just below the sticky exercise
+  // header, so its "Set completed" is not hidden under the sticky footer
+  await page.evaluate(() => {
+    const card = document.querySelector('[aria-label="Set 2 weight in kg"]')!.closest('.rounded-xl')!;
+    const header = document.querySelector('header.sticky.z-40')!;
+    const top = card.getBoundingClientRect().top - header.getBoundingClientRect().bottom - 8;
+    window.scrollTo(0, window.scrollY + top);
+  });
   await page.screenshot(shot('workout'));
 });
 
