@@ -5,7 +5,7 @@ Status: Accepted
 
 ## Context
 
-The original spec (see [docs/history/project_plan.md](../history/project_plan.md)) deliberately
+The original spec (see [docs/process/project_plan.md](../process/project_plan.md)) deliberately
 hardcoded the PPL+Abs routine to avoid UI complexity. Real daily use revealed the need for
 user-configurable routines (own sets/reps/RIR/rest per exercise) without losing the zero-friction
 built-in quick start.

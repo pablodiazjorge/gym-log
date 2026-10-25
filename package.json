@@ -11,9 +11,13 @@
     "lint": "ng lint",
     "typecheck": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.spec.json --noEmit && tsc -p e2e/tsconfig.json",
     "test:e2e": "playwright test",
+    "screenshots": "playwright test -c playwright.screenshots.config.ts",
     "verify": "npm run lint && npm run typecheck && npm test && npm run build"
   },
   "private": true,
+  "engines": {
+    "node": "^22.22.3 || ^24.15.0 || >=26.0.0"
+  },
   "packageManager": "npm@10.9.8",
   "dependencies": {
     "@angular/common": "^22.0.0",

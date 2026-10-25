@@ -2,9 +2,10 @@
 
 ## Overview
 
-Gym Tracker is a personal, single-user, mobile-first workout tracker. It is a **pure client-side
-Angular application**: there is no backend, no database server and no authentication — by design
-(see [ADR-0001](docs/adr/0001-client-only-architecture.md)). Everything runs in the browser:
+gym-log (called Gym Tracker inside the app) is a personal, single-user, mobile-first workout
+tracker. It is a **pure client-side Angular application**: there is no backend, no database
+server and no authentication — by design (see [ADR-0001](docs/adr/0001-client-only-architecture.md)).
+Everything runs in the browser:
 
 ```
 UI (standalone components, Tailwind)
@@ -50,7 +51,7 @@ src/app/
 │       └── export.service.ts           # JSON export/import
 ├── features/            # one folder per routed screen
 │   ├── dashboard/       # home: quick-start cards, resume banner, export/import
-│   ├── workout/         # guided logging flow (day-based or routine-based)
+│   ├── workout/         # guided logging flow (day-based or routine-based); pure logic in workout-flow.util.ts
 │   ├── routines/        # routines list + editor
 │   ├── exercise-library/# enable/disable catalog exercises
 │   ├── profile/         # profile form + computed level panel
@@ -138,6 +139,8 @@ adopts the profile when none exists locally.
 | [0010](docs/adr/0010-narrow-testing-scope.md)             | Tests target critical logic only (superseded by 0016) |
 | [0011](docs/adr/0011-curated-catalog-with-enabled-subset.md) | Curated catalog with user-enabled subset          |
 | [0012](docs/adr/0012-v2-format-clean-break.md)            | One-time v2 clean break (supersedes 0008)            |
+| [0013](docs/adr/0013-in-session-edits-never-touch-the-routine.md) | In-session edits act on the live session, never the routine |
+| [0014](docs/adr/0014-history-edits-correct-the-record.md) | History edits correct the record                     |
 | [0015](docs/adr/0015-ci-pipeline.md)                      | CI on every push and PR (supersedes 0009)            |
 | [0016](docs/adr/0016-e2e-for-the-key-flows.md)            | Unit tests for logic, e2e + axe for 3 key flows (supersedes 0010) |
 
