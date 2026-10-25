@@ -54,6 +54,7 @@
 
           <!-- Delete -->
           <button (click)="deleteSession(session.id, $event)"
+            [attr.aria-label]="'Delete the session of ' + formatDate(session.date)"
             class="w-10 flex items-center justify-center text-gray-600 hover:text-rose-400 hover:bg-rose-400/5 transition-colors flex-shrink-0">
             <app-icon name="trash" class="w-4 h-4" />
           </button>

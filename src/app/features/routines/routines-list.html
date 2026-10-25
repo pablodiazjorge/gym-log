@@ -43,7 +43,7 @@
       @for (routine of customRoutines(); track routine.id) {
         <div class="relative">
           <button (click)="startRoutine(routine)"
-            class="w-full bg-gray-900 hover:bg-gray-800/70 rounded-xl p-4 text-left transition-colors">
+            class="w-full bg-gray-900 hover:bg-gray-800/70 rounded-xl p-4 pr-[4.5rem] text-left transition-colors">
             <div class="flex items-center gap-4">
               <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
                 [class]="getTile(routine)">
@@ -58,12 +58,13 @@
                 </div>
                 <p class="text-sm text-gray-400">{{ getSubtitle(routine) }}</p>
               </div>
-              <button (click)="toggleMenu(routine.id, $event)"
-                class="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-gray-300 transition-colors"
-                aria-label="Routine actions">
-                <app-icon name="dots-vertical" class="w-5 h-5" [strokeWidth]="2.5" />
-              </button>
             </div>
+          </button>
+          <!-- Sibling of the card, not inside it: a button cannot contain a button -->
+          <button (click)="toggleMenu(routine.id, $event)"
+            class="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center text-gray-500 hover:text-gray-300 transition-colors"
+            [attr.aria-label]="'Actions for ' + routine.name">
+            <app-icon name="dots-vertical" class="w-5 h-5" [strokeWidth]="2.5" />
           </button>
 
           @if (menuOpenFor() === routine.id) {
@@ -98,7 +99,7 @@
       @for (routine of builtInRoutines; track routine.id) {
         <div class="relative">
           <button (click)="startRoutine(routine)"
-            class="w-full bg-gray-900 hover:bg-gray-800/70 rounded-xl p-4 text-left transition-colors">
+            class="w-full bg-gray-900 hover:bg-gray-800/70 rounded-xl p-4 pr-[4.5rem] text-left transition-colors">
             <div class="flex items-center gap-4">
               <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
                 [class]="getTile(routine)">
@@ -113,12 +114,13 @@
                 </div>
                 <p class="text-sm text-gray-400">{{ getSubtitle(routine) }}</p>
               </div>
-              <button (click)="toggleMenu(routine.id, $event)"
-                class="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-gray-300 transition-colors"
-                aria-label="Routine actions">
-                <app-icon name="dots-vertical" class="w-5 h-5" [strokeWidth]="2.5" />
-              </button>
             </div>
+          </button>
+          <!-- Sibling of the card, not inside it: a button cannot contain a button -->
+          <button (click)="toggleMenu(routine.id, $event)"
+            class="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center text-gray-500 hover:text-gray-300 transition-colors"
+            [attr.aria-label]="'Actions for ' + routine.name">
+            <app-icon name="dots-vertical" class="w-5 h-5" [strokeWidth]="2.5" />
           </button>
 
           @if (menuOpenFor() === routine.id) {
