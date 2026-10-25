@@ -3,12 +3,12 @@
   "exportDate": "2026-09-06T10:00:00+02:00",
   "appName": "GymTracker",
   "user": {
-    "name": "Pablo",
-    "age": 28,
-    "heightCm": 178,
-    "bodyWeightStartKg": 67.0,
-    "bodyWeightCurrentKg": 67.8,
-    "bodyFatStart": 15.0,
+    "name": "Alex",
+    "age": 31,
+    "heightCm": 172,
+    "bodyWeightStartKg": 74.0,
+    "bodyWeightCurrentKg": 74.8,
+    "bodyFatStart": 18.0,
     "goal": "lean_bulk"
   },
   "routine": {
@@ -24,7 +24,7 @@
       "dayType": "push",
       "dayVariant": "A",
       "durationMinutes": 42,
-      "bodyWeightKg": 67.0,
+      "bodyWeightKg": 74.0,
       "notes": "Primer día. Pesos conservadores, enfocado en técnica.",
       "completed": true,
       "exercises": [
@@ -219,7 +219,7 @@
       "dayType": "legs",
       "dayVariant": "A",
       "durationMinutes": 38,
-      "bodyWeightKg": 67.0,
+      "bodyWeightKg": 74.0,
       "notes": "Primer día de piernas en 6 meses. Muy conservador.",
       "completed": true,
       "exercises": [
@@ -345,7 +345,7 @@
       "dayType": "pull",
       "dayVariant": "A",
       "durationMinutes": 40,
-      "bodyWeightKg": 67.0,
+      "bodyWeightKg": 74.0,
       "notes": "Primer pull. El antebrazo se cargó en el jalón. Necesito straps.",
       "completed": true,
       "exercises": [
@@ -525,7 +525,7 @@
       "dayType": "push",
       "dayVariant": "A",
       "durationMinutes": 45,
-      "bodyWeightKg": 67.2,
+      "bodyWeightKg": 74.2,
       "notes": "Mejor sensación que la semana pasada. Técnica más fluida.",
       "completed": true,
       "exercises": [
@@ -729,7 +729,7 @@
       "dayType": "legs",
       "dayVariant": "A",
       "durationMinutes": 40,
-      "bodyWeightKg": 67.2,
+      "bodyWeightKg": 74.2,
       "notes": "Agujetas de la semana pasada ya pasaron. Mejor rango en hack.",
       "completed": true,
       "exercises": [
@@ -855,7 +855,7 @@
       "dayType": "pull",
       "dayVariant": "B",
       "durationMinutes": 42,
-      "bodyWeightKg": 67.2,
+      "bodyWeightKg": 74.2,
       "notes": "Variante B. Usé straps en el jalón, mucho mejor.",
       "completed": true,
       "exercises": [
@@ -1035,7 +1035,7 @@
       "dayType": "push",
       "dayVariant": "A",
       "durationMinutes": 48,
-      "bodyWeightKg": 67.4,
+      "bodyWeightKg": 74.4,
       "notes": "Última semana de adaptación. Pesos ya se sienten naturales.",
       "completed": true,
       "exercises": [
@@ -1239,7 +1239,7 @@
       "dayType": "push",
       "dayVariant": "A",
       "durationMinutes": 55,
-      "bodyWeightKg": 67.8,
+      "bodyWeightKg": 74.8,
       "notes": "Primera semana a 5 días. Volumen completo. Me siento fuerte.",
       "completed": true,
       "exercises": [
@@ -1443,7 +1443,7 @@
       "dayType": "pull",
       "dayVariant": "A",
       "durationMinutes": 52,
-      "bodyWeightKg": 67.8,
+      "bodyWeightKg": 74.8,
       "notes": "Pull A. Jalón con straps desde el principio. Mucho mejor.",
       "completed": true,
       "exercises": [
@@ -1623,7 +1623,7 @@
       "dayType": "legs",
       "dayVariant": "A",
       "durationMinutes": 50,
-      "bodyWeightKg": 67.8,
+      "bodyWeightKg": 74.8,
       "notes": "Legs. Ya subí a 4 series en hack. Piernas respondiendo bien.",
       "completed": true,
       "exercises": [
@@ -1794,7 +1794,7 @@
       "dayType": "push",
       "dayVariant": "B",
       "durationMinutes": 55,
-      "bodyWeightKg": 67.8,
+      "bodyWeightKg": 74.8,
       "notes": "Push B. Tríceps con cuerda en vez de barra. Más cómodo en muñeca.",
       "completed": true,
       "exercises": [
@@ -1998,7 +1998,7 @@
       "dayType": "pull",
       "dayVariant": "B",
       "durationMinutes": 50,
-      "bodyWeightKg": 67.8,
+      "bodyWeightKg": 74.8,
       "notes": "Pull B. Remo en T ocupado, usé remo sentado en máquina. Bien igual.",
       "completed": true,
       "exercises": [

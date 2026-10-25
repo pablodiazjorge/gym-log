@@ -2,9 +2,10 @@
 
 ## Overview
 
-Gym Tracker is a personal, single-user, mobile-first workout tracker. It is a **pure client-side
-Angular application**: there is no backend, no database server and no authentication — by design
-(see [ADR-0001](docs/adr/0001-client-only-architecture.md)). Everything runs in the browser:
+gym-log (called Gym Tracker inside the app) is a personal, single-user, mobile-first workout
+tracker. It is a **pure client-side Angular application**: there is no backend, no database
+server and no authentication — by design (see [ADR-0001](docs/adr/0001-client-only-architecture.md)).
+Everything runs in the browser:
 
 ```
 UI (standalone components, Tailwind)
@@ -19,8 +20,10 @@ localStorage  ←→  manual JSON export/import (backup & analysis channel)
 ## System context
 
 - **Who**: a single user (the author), logging workouts on a phone at the gym.
-- **Where**: static hosting (Vercel), deployed manually from the main branch — no CI
-  ([ADR-0009](docs/adr/0009-no-ci-pipeline.md)).
+- **Where**: static hosting (Vercel), deployed manually from the main branch. GitHub Actions
+  runs lint, typecheck, unit tests and the build on every push and pull request
+  ([ADR-0015](docs/adr/0015-ci-pipeline.md), superseding the no-CI
+  [ADR-0009](docs/adr/0009-no-ci-pipeline.md)).
 - **Data flow**: data never leaves the device except through the explicit JSON export, which is
   simultaneously the backup mechanism and the input for external analysis (the schema is kept
   intentionally flat and pandas/AI-friendly).
@@ -48,7 +51,7 @@ src/app/
 │       └── export.service.ts           # JSON export/import
 ├── features/            # one folder per routed screen
 │   ├── dashboard/       # home: quick-start cards, resume banner, export/import
-│   ├── workout/         # guided logging flow (day-based or routine-based)
+│   ├── workout/         # guided logging flow (day-based or routine-based); pure logic in workout-flow.util.ts
 │   ├── routines/        # routines list + editor
 │   ├── exercise-library/# enable/disable catalog exercises
 │   ├── profile/         # profile form + computed level panel
@@ -132,15 +135,19 @@ adopts the profile when none exists locally.
 | [0006](docs/adr/0006-additional-flow-stays-ephemeral.md)  | `/additional` stays ephemeral, separate from routines |
 | [0007](docs/adr/0007-advisory-progression.md)             | Progression suggestions are advisory, never enforced |
 | [0008](docs/adr/0008-stable-template-ids.md)              | Exercise template ids are stable, exempt from renames |
-| [0009](docs/adr/0009-no-ci-pipeline.md)                   | No CI pipeline; manual deploy to Vercel              |
-| [0010](docs/adr/0010-narrow-testing-scope.md)             | Tests target critical logic only                     |
+| [0009](docs/adr/0009-no-ci-pipeline.md)                   | No CI pipeline (superseded by 0015)                  |
+| [0010](docs/adr/0010-narrow-testing-scope.md)             | Tests target critical logic only (superseded by 0016) |
 | [0011](docs/adr/0011-curated-catalog-with-enabled-subset.md) | Curated catalog with user-enabled subset          |
 | [0012](docs/adr/0012-v2-format-clean-break.md)            | One-time v2 clean break (supersedes 0008)            |
+| [0013](docs/adr/0013-in-session-edits-never-touch-the-routine.md) | In-session edits act on the live session, never the routine |
+| [0014](docs/adr/0014-history-edits-correct-the-record.md) | History edits correct the record                     |
+| [0015](docs/adr/0015-ci-pipeline.md)                      | CI on every push and PR (supersedes 0009)            |
+| [0016](docs/adr/0016-e2e-for-the-key-flows.md)            | Unit tests for logic, e2e + axe for 3 key flows (supersedes 0010) |
 
 ## Non-goals
 
 - Multi-user, accounts, auth
 - Backend sync / cloud storage / conflict resolution
 - i18n framework (single-language English UI)
-- e2e test suite or coverage mandates
+- Coverage mandates, or e2e beyond the three key flows ([ADR-0016](docs/adr/0016-e2e-for-the-key-flows.md))
 - Native app packaging

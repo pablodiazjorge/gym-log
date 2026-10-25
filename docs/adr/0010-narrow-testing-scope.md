@@ -1,7 +1,7 @@
 # ADR-0010: Testing scope is intentionally narrow — critical logic only
 
 Date: 2026-08-08
-Status: Accepted
+Status: Superseded by [ADR-0016](0016-e2e-for-the-key-flows.md)
 
 ## Context
 

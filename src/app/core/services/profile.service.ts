@@ -1,5 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import {
+  BenchmarkLift,
   ComputedLevelResult,
   ExperienceLevel,
   MovementCategory,
@@ -15,6 +16,73 @@ import {
 } from './progression.util';
 
 const PROFILE_KEY = 'gym_user_profile';
+/** Where a malformed stored profile goes instead of being overwritten by the next save */
+const PROFILE_QUARANTINE_KEY = 'gym_user_profile_quarantine';
+
+const LEVELS: readonly ExperienceLevel[] = ['beginner', 'intermediate', 'advanced'];
+
+/**
+ * Minimum shape the app relies on. `JSON.parse` returns `any` and the
+ * `UserProfile` annotation is erased at runtime, so a hand-edited, truncated or
+ * imported value is otherwise trusted as-is:
+ * - `resolveLevel` returns `experienceLevelManual` straight into the
+ *   aggressiveness table, so an absent or unknown level throws on the workout
+ *   screen;
+ * - `getComputedLevel` and the profile form iterate `benchmarkLifts`, so a
+ *   non-array throws and a non-numeric lift turns the estimated 1RM into NaN.
+ * Every other field is optional and read with a fallback. What the app adopts
+ * from storage or an import is `normalizeProfile`, which only rejects the
+ * level and repairs the lifts.
+ */
+export function isValidProfile(value: unknown): value is UserProfile {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const p = value as Partial<UserProfile>;
+  if (!LEVELS.includes(p.experienceLevelManual as ExperienceLevel)) return false;
+  if (p.benchmarkLifts === undefined) return true;
+  return Array.isArray(p.benchmarkLifts) && p.benchmarkLifts.every(isValidLift);
+}
+
+function isValidLift(lift: unknown): lift is BenchmarkLift {
+  if (!lift || typeof lift !== 'object') return false;
+  const l = lift as Partial<BenchmarkLift>;
+  return Number.isFinite(l.weightKg) && Number.isFinite(l.reps);
+}
+
+/**
+ * The profile to adopt from storage or an import: null when the experience
+ * level is unusable, otherwise the profile with only its broken benchmark lifts
+ * repaired or dropped. The form saves catalog lifts as they are and its number
+ * inputs emit null when emptied, so a profile could be stored with
+ * `weightKg: null`; rejecting all of it for that looks to the user as if the
+ * profile had been deleted.
+ * - A catalog lift (with `templateId`) takes its value from logged history, so
+ *   unusable manual numbers become 0, which is how `estimate1Rm` already
+ *   treated null.
+ * - Any other broken lift is dropped.
+ */
+export function normalizeProfile(value: unknown): UserProfile | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const p = value as UserProfile;
+  if (!LEVELS.includes(p.experienceLevelManual)) return null;
+  if (p.benchmarkLifts === undefined || isValidProfile(value)) return p;
+  const lifts: unknown[] = Array.isArray(p.benchmarkLifts) ? p.benchmarkLifts : [];
+  return {
+    ...p,
+    benchmarkLifts: lifts.flatMap((lift): BenchmarkLift[] => {
+      if (isValidLift(lift)) return [lift];
+      if (!lift || typeof lift !== 'object') return [];
+      const l = lift as BenchmarkLift;
+      if (typeof l.templateId !== 'string' || !l.templateId) return [];
+      return [
+        {
+          ...l,
+          weightKg: Number.isFinite(l.weightKg) ? l.weightKg : 0,
+          reps: Number.isFinite(l.reps) ? l.reps : 0,
+        },
+      ];
+    }),
+  };
+}
 
 @Injectable({ providedIn: 'root' })
 export class ProfileService {
@@ -28,22 +96,43 @@ export class ProfileService {
     this.loadProfile();
   }
 
-  /** Load the profile from localStorage */
+  /**
+   * Load the profile from localStorage. A malformed one is repaired by
+   * `normalizeProfile` (only its broken lifts change) or, when even the level
+   * is unusable, ignored, and the app behaves as if no profile was ever
+   * configured. Either way the original is copied to a backup key first: the
+   * next save overwrites it, so without that copy the loss would be silent and
+   * permanent.
+   */
   loadProfile(): void {
     try {
       const raw = localStorage.getItem(PROFILE_KEY);
-      if (raw) {
-        this.profile.set(JSON.parse(raw) as UserProfile);
+      if (!raw) return;
+      const parsed: unknown = JSON.parse(raw);
+      const profile = normalizeProfile(parsed);
+      if (!isValidProfile(parsed)) {
+        console.warn(
+          `${profile ? 'Repaired' : 'Ignoring'} a malformed profile — see ${PROFILE_QUARANTINE_KEY}`,
+        );
+        try {
+          localStorage.setItem(PROFILE_QUARANTINE_KEY, raw);
+        } catch {
+          /* quota — the warning above is the best we can do */
+        }
       }
+      this.profile.set(profile);
     } catch {
       console.warn('Failed to load profile from localStorage, starting empty');
       this.profile.set(null);
     }
   }
 
-  /** Save (replace) the profile */
+  /** Save (replace) the profile, with its broken lifts repaired as on load */
   saveProfile(profile: UserProfile): void {
-    const stamped: UserProfile = { ...profile, updatedAt: new Date().toISOString() };
+    const stamped: UserProfile = {
+      ...(normalizeProfile(profile) ?? profile),
+      updatedAt: new Date().toISOString(),
+    };
     this.profile.set(stamped);
     localStorage.setItem(PROFILE_KEY, JSON.stringify(stamped));
   }

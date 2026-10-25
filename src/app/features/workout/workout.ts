@@ -28,16 +28,31 @@ import {
   removeLastPendingSet,
   swapExercise,
 } from './session-edit.util';
+import {
+  DayType,
+  RoutineContext,
+  WorkoutSource,
+  allSetsCompleted,
+  anyExerciseSelected,
+  buildWorkoutSession,
+  countOpenSets,
+  daysSince,
+  emptySelection,
+  firstOpenExerciseIndex,
+  labelForDay,
+  maxWorkWeight,
+  openSetsWarning,
+  resolveDayTemplates,
+  resumedStartTime,
+  roundBodyWeight,
+  routineToPlan,
+  warmupSetCount,
+  withSetReplaced,
+  workSetCount,
+} from './workout-flow.util';
 
 import { NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-
-type DayType = 'push' | 'pull' | 'legs' | 'abs';
-
-/** Where this workout was started from */
-type WorkoutSource =
-  | { kind: 'day'; dayType: DayType }
-  | { kind: 'routine'; routineId: string };
 
 @Component({
   selector: 'app-workout',
@@ -69,11 +84,7 @@ export class Workout {
     return src.kind === 'day' ? src.dayType : 'routine';
   });
 
-  readonly dayLabel = computed(() => {
-    const dt = this.dayType();
-    if (dt === 'routine') return this.routineName() || 'Routine';
-    return dt.charAt(0).toUpperCase() + dt.slice(1);
-  });
+  readonly dayLabel = computed(() => labelForDay(this.dayType(), this.routineName()));
 
   // ─── Selection phase (day-based workouts only) ───
   readonly choiceGroups = signal<{ groupId: string; label: string; options: ExerciseTemplate[] }[]>([]);
@@ -81,10 +92,13 @@ export class Workout {
   readonly isSelecting = computed(() => this.choiceGroups().length > 0 && !this.session());
 
   readonly exercises = computed(() => this.session()?.exercises ?? []);
-  readonly currentExercise = computed(() => this.exercises()[this.currentExerciseIndex()] ?? null);
+  /** null when the index is out of range (no exercises yet): the array type hides that */
+  readonly currentExercise = computed<WorkoutExercise | null>(
+    () => this.exercises()[this.currentExerciseIndex()] ?? null,
+  );
   readonly exerciseCount = computed(() => this.exercises().length);
   readonly isLastExercise = computed(() => this.currentExerciseIndex() >= this.exerciseCount() - 1);
-  readonly allCompleted = computed(() => this.exercises().every((ex) => ex.sets.every((s) => s.completed)));
+  readonly allCompleted = computed(() => allSetsCompleted(this.exercises()));
   readonly hasWarmupSets = computed(() => this.currentExercise()?.sets.some((s) => s.isWarmup) ?? false);
   readonly durationMinutes = elapsedMinutes(this.startTime);
   readonly completedCount = computed(() => this.currentExercise()?.sets.filter((s) => s.completed).length ?? 0);
@@ -154,9 +168,7 @@ export class Workout {
     const choices = this.exerciseLibrary.getChoicesForDay(src.dayType);
     if (choices.length > 0) {
       this.choiceGroups.set(choices);
-      const init: Record<string, string> = {};
-      for (const c of choices) init[c.groupId] = '';
-      this.selectedChoices.set(init);
+      this.selectedChoices.set(emptySelection(choices));
     } else {
       const templates = this.routineService.getExercisesForDay(src.dayType);
       this.createNewSessionFromPlan(templates);
@@ -197,28 +209,16 @@ export class Workout {
   confirmSelection(): void {
     const src = this.source();
     if (src.kind !== 'day') return;
-    const selected = this.selectedChoices();
-    const selectedIds = new Set(Object.values(selected).filter(Boolean));
-
-    // Fixed day members (no choice group) + the chosen alternatives. Chosen
-    // ids are resolved from the full catalog since enabled variations may not
-    // belong to the built-in day list.
-    const fixed = this.routineService
-      .getExercisesForDay(src.dayType)
-      .filter((t) => !t.choiceGroup);
-    const chosen = [...selectedIds]
-      .map((id) => this.routineService.getTemplateById(id))
-      .filter((t): t is ExerciseTemplate => !!t);
-    const templates = [...fixed, ...chosen].sort((a, b) => a.order - b.order);
-
+    const templates = resolveDayTemplates(
+      this.routineService.getExercisesForDay(src.dayType),
+      this.selectedChoices(),
+      (id) => this.routineService.getTemplateById(id),
+    );
     this.createNewSessionFromPlan(templates);
   }
 
   /** Is at least one exercise selected? */
-  readonly hasAnySelection = computed(() => {
-    const sel = this.selectedChoices();
-    return Object.values(sel).some((id) => id !== '');
-  });
+  readonly hasAnySelection = computed(() => anyExerciseSelected(this.selectedChoices()));
 
   /** Resolve a custom routine into effective templates and create the session */
   private createSessionFromRoutine(routineId: string): void {
@@ -230,70 +230,25 @@ export class Workout {
       return;
     }
     this.routineName.set(routine.name);
-
-    // Merge each config with its catalog template: the routine's own
-    // sets/reps/RIR/rest override the template defaults. The catalog's
-    // strength range is stripped — a routine is "configured exactly as you
-    // want", so its authored rep range always wins, even under strength focus
-    // (the focus still applies its weight-priority threshold within it).
-    const templates: ExerciseTemplate[] = [];
-    const restByTemplateId = new Map<string, number | undefined>();
-    for (const config of [...routine.exercises].sort((a, b) => a.order - b.order)) {
-      const catalog = this.routineService.getTemplateById(config.templateId);
-      if (!catalog) continue; // template removed from catalog — skip gracefully
-      templates.push({
-        ...catalog,
-        targetSets: config.targetSets,
-        targetRepsMin: config.targetRepsMin,
-        targetRepsMax: config.targetRepsMax,
-        strengthRepsMin: undefined,
-        strengthRepsMax: undefined,
-        hasWarmupSets: config.hasWarmupSets,
-        warmupSets: config.warmupSets,
-        targetRirMin: config.targetRirMin ?? catalog.targetRirMin,
-        targetRirMax: config.targetRirMax ?? catalog.targetRirMax,
-      });
-      restByTemplateId.set(config.templateId, config.restSeconds);
-    }
-    this.createNewSessionFromPlan(templates, { routineId: routine.id, restByTemplateId });
+    // The routine's own sets/reps/RIR/rest override the catalog defaults
+    const { templates, context } = routineToPlan(routine, (id) =>
+      this.routineService.getTemplateById(id),
+    );
+    this.createNewSessionFromPlan(templates, context);
   }
 
   /**
-   * Build the session from effective templates. Set values are pre-filled from
-   * the progression engine's suggestions (advisory only — everything stays
-   * editable in the set-input UI, exactly like the old copy-last-session flow).
+   * Build the session from effective templates, pre-filled from the
+   * progression engine's suggestions (advisory only — see buildWorkoutSession).
    */
   private createNewSessionFromPlan(
     templates: ExerciseTemplate[],
-    routineContext?: { routineId: string; restByTemplateId: Map<string, number | undefined> },
+    routineContext?: RoutineContext,
   ): void {
     const src = this.source();
     const suggestions = this.progression.getSuggestionsForTemplates(templates);
-    // A routine is authored deliberately, so its structure (how many sets, how
-    // many of them warm-ups) always wins over whatever shape the last session
-    // happened to have. Day-based workouts keep the old behaviour: the catalog
-    // template is a default, so the user's own habits may extend it.
-    const planIsAuthoritative = !!routineContext;
-
-    const exercises: WorkoutExercise[] = templates.map((template) => {
-      const suggestion = suggestions.get(template.id);
-      const sets = buildSetsForExercise(template, suggestion?.setTargets ?? [], planIsAuthoritative);
-
-      const restSeconds =
-        routineContext?.restByTemplateId.get(template.id) ?? suggestion?.restSeconds;
-
-      return { templateId: template.id, exerciseName: template.name, restSeconds, sets };
-    });
-
     const dayType = src.kind === 'day' ? src.dayType : 'routine';
-    const s: WorkoutSession = {
-      id: `ws-${new Date().toISOString().slice(0, 10)}-${dayType}-${String(Date.now()).slice(-4)}`,
-      date: new Date().toISOString(),
-      dayType,
-      exercises,
-      routineId: routineContext?.routineId,
-      completed: false,
-    };
+    const s = buildWorkoutSession(templates, suggestions, dayType, routineContext);
     this.session.set(s);
     this.storage.saveCurrentSession(s);
     this.startTime.set(Date.now());
@@ -303,22 +258,17 @@ export class Workout {
     const existing = this.storage.currentSession();
     if (existing) {
       this.session.set(existing);
-      // Without this the clock restarted on every resume and the saved duration
-      // only covered the last stretch. Capped at 4 h: resuming the next day
-      // would otherwise record a session lasting hundreds of minutes.
-      const startedAt = new Date(existing.date).getTime();
-      const elapsedMs = Date.now() - startedAt;
-      if (!Number.isNaN(startedAt) && elapsedMs >= 0 && elapsedMs <= 4 * 3600_000) {
-        this.startTime.set(startedAt);
-      }
+      // Keep the original start so the saved duration covers the whole
+      // session, not just the last stretch (capped — see resumedStartTime).
+      const startedAt = resumedStartTime(existing.date, Date.now());
+      if (startedAt !== null) this.startTime.set(startedAt);
       if (existing.dayType === 'routine' && existing.routineId) {
         const routine =
           this.routineLibrary.getRoutineById(existing.routineId) ??
           this.routineService.getBuiltInRoutines().find((r) => r.id === existing.routineId);
         this.routineName.set(routine?.name ?? 'Routine');
       }
-      const idx = existing.exercises.findIndex((ex) => ex.sets.some((s) => !s.completed));
-      this.currentExerciseIndex.set(idx >= 0 ? idx : 0);
+      this.currentExerciseIndex.set(firstOpenExerciseIndex(existing.exercises));
       if (this.allCompleted()) this.isSummary.set(true);
     } else {
       this.router.navigate(['/']);
@@ -366,23 +316,17 @@ export class Workout {
   }
 
   /**
-   * Replace a set in the current exercise by set number.
-   *
-   * The exercise object is replaced, not mutated: `currentExercise` is a
-   * computed, and a computed that re-evaluates to an `Object.is`-equal value
-   * does not bump its version, so every signal derived from it (completedCount,
-   * hasWarmupSets, totalSetCount, currentExerciseDone) kept serving a stale
-   * cache until the exercise index changed.
+   * Replace a set in the current exercise by set number. The exercise object
+   * is replaced, not mutated, so every signal derived from `currentExercise`
+   * (completedCount, hasWarmupSets, totalSetCount, currentExerciseDone) sees
+   * the change — see withSetReplaced.
    */
   private replaceSet(updatedSet: WorkoutSet): WorkoutExercise | null {
     const s = this.session();
     const index = this.currentExerciseIndex();
     const current = s?.exercises[index];
     if (!s || !current) return null;
-    const updated: WorkoutExercise = {
-      ...current,
-      sets: current.sets.map((st) => (st.setNumber === updatedSet.setNumber ? updatedSet : st)),
-    };
+    const updated = withSetReplaced(current, updatedSet);
     const exercises = [...s.exercises];
     exercises[index] = updated;
     const next: WorkoutSession = { ...s, exercises };
@@ -524,11 +468,9 @@ export class Workout {
   readonly bodyWeightOpen = signal(false);
 
   /** Days since the last session-logged bodyweight (Infinity = never logged) */
-  private readonly daysSinceBodyWeight = computed(() => {
-    const latest = this.profileService.getLatestLoggedBodyWeight();
-    if (!latest) return Infinity;
-    return (Date.now() - new Date(latest.date).getTime()) / 86400000;
-  });
+  private readonly daysSinceBodyWeight = computed(() =>
+    daysSince(this.profileService.getLatestLoggedBodyWeight()?.date, Date.now()),
+  );
 
   /** Weekly check-in: highlight the field when no weight was logged in ≥7 days */
   readonly shouldPromptBodyWeight = computed(() => this.daysSinceBodyWeight() >= 7);
@@ -552,7 +494,7 @@ export class Workout {
   setBodyWeight(value: number | null): void {
     const s = this.session();
     if (!s) return;
-    s.bodyWeightKg = value != null && value > 0 ? Math.round(value * 10) / 10 : undefined;
+    s.bodyWeightKg = roundBodyWeight(value);
     this.persistCurrent();
   }
 
@@ -600,16 +542,9 @@ export class Workout {
     if (!s) return;
     // A set reopened for editing and never re-completed would be saved as
     // incomplete and vanish from every metric. Say so before it's too late.
-    const pending = s.exercises.reduce(
-      (n, ex) => n + ex.sets.filter((st) => !st.completed).length,
-      0,
-    );
+    const pending = countOpenSets(s.exercises);
     if (pending > 0) {
-      const ok = confirm(
-        `${pending} set${pending === 1 ? '' : 's'} still open.\n\n` +
-          'They will be saved as not completed and left out of your stats.\n\n' +
-          'OK — save anyway.  Cancel — go back and finish them.',
-      );
+      const ok = confirm(openSetsWarning(pending));
       if (!ok) {
         this.isSummary.set(false);
         return;
@@ -634,11 +569,8 @@ export class Workout {
     if (s) this.exportService.exportSession(s);
   }
 
-  /** Skipped sets keep their pre-filled weight now, so they must be excluded here */
-  getMaxWeight(ex: WorkoutExercise): number {
-    const ws = ex.sets.filter((st) => !st.isWarmup && st.completed && !st.skipped);
-    return ws.length > 0 ? Math.max(...ws.map((st) => st.weightKg)) : 0;
-  }
-  getWorkCount(ex: WorkoutExercise): number { return ex.sets.filter((s) => !s.isWarmup && !s.skipped).length; }
-  getWarmupCount(ex: WorkoutExercise): number { return ex.sets.filter((s) => s.isWarmup && !s.skipped).length; }
+  // Summary counts (pure, see workout-flow.util)
+  readonly getMaxWeight = maxWorkWeight;
+  readonly getWorkCount = workSetCount;
+  readonly getWarmupCount = warmupSetCount;
 }

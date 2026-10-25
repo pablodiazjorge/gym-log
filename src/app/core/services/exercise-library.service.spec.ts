@@ -46,21 +46,21 @@ describe('ExerciseLibraryService', () => {
 
   describe('getChoicesForDay (enabled-aware)', () => {
     it('matches the built-in groups by default', () => {
-      const base = routineService.getChoicesForDay('push', 'A');
-      const enabledAware = service.getChoicesForDay('push', 'A');
+      const base = routineService.getChoicesForDay('push');
+      const enabledAware = service.getChoicesForDay('push');
       expect(enabledAware.map((g) => g.groupId)).toEqual(base.map((g) => g.groupId));
       expect(enabledAware[0].options.map((o) => o.id)).toEqual(base[0].options.map((o) => o.id));
     });
 
     it('adds enabled catalog variations to their choice group', () => {
       service.setEnabled('flat-barbell-bench-press', true);
-      const pushMain = service.getChoicesForDay('push', 'A').find((g) => g.groupId === 'push-main')!;
+      const pushMain = service.getChoicesForDay('push').find((g) => g.groupId === 'push-main')!;
       expect(pushMain.options.some((o) => o.id === 'flat-barbell-bench-press')).toBe(true);
     });
 
     it('filters disabled built-in options out', () => {
       service.setEnabled('flat-machine-press', false);
-      const pushMain = service.getChoicesForDay('push', 'A').find((g) => g.groupId === 'push-main')!;
+      const pushMain = service.getChoicesForDay('push').find((g) => g.groupId === 'push-main')!;
       expect(pushMain.options.some((o) => o.id === 'flat-machine-press')).toBe(false);
       expect(pushMain.options.length).toBeGreaterThan(0);
     });
@@ -70,7 +70,7 @@ describe('ExerciseLibraryService', () => {
         service.setEnabled(id, false);
       }
       service.setEnabled('flat-barbell-bench-press', true);
-      const pushMain = service.getChoicesForDay('push', 'A').find((g) => g.groupId === 'push-main')!;
+      const pushMain = service.getChoicesForDay('push').find((g) => g.groupId === 'push-main')!;
       expect(pushMain.options.map((o) => o.id)).toEqual(['flat-barbell-bench-press']);
     });
 
@@ -79,7 +79,7 @@ describe('ExerciseLibraryService', () => {
       for (const id of ['incline-machine-press', 'flat-machine-press', 'incline-smith-press']) {
         service.setEnabled(id, false);
       }
-      const pushMain = service.getChoicesForDay('push', 'A').find((g) => g.groupId === 'push-main')!;
+      const pushMain = service.getChoicesForDay('push').find((g) => g.groupId === 'push-main')!;
       expect(pushMain.options.length).toBe(3); // full built-in fallback
     });
   });

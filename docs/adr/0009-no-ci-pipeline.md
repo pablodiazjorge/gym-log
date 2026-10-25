@@ -1,7 +1,7 @@
 # ADR-0009: No CI pipeline; manual deploy to Vercel
 
 Date: 2026-08-08
-Status: Accepted
+Status: Superseded by [ADR-0015](0015-ci-pipeline.md)
 
 ## Context
 

@@ -90,7 +90,7 @@ const tokenCache = new Map<string, string>();
 export function themeToken(name: string): string {
   let value = tokenCache.get(name);
   if (value === undefined) {
-    value = getComputedStyle(document.documentElement).getPropertyValue(name).trim() || '#75807a';
+    value = getComputedStyle(document.documentElement).getPropertyValue(name).trim() || '#8a948e';
     tokenCache.set(name, value);
   }
   return value;

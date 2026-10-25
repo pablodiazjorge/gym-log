@@ -8,9 +8,16 @@
     "watch": "ng build --watch --configuration development",
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "ng lint"
+    "lint": "ng lint",
+    "typecheck": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.spec.json --noEmit && tsc -p e2e/tsconfig.json",
+    "test:e2e": "playwright test",
+    "screenshots": "playwright test -c playwright.screenshots.config.ts",
+    "verify": "npm run lint && npm run typecheck && npm test && npm run build"
   },
   "private": true,
+  "engines": {
+    "node": "^22.22.3 || ^24.15.0 || >=26.0.0"
+  },
   "packageManager": "npm@10.9.8",
   "dependencies": {
     "@angular/common": "^22.0.0",
@@ -31,7 +38,10 @@
     "@angular/build": "^22.0.3",
     "@angular/cli": "^22.0.3",
     "@angular/compiler-cli": "^22.0.0",
+    "@axe-core/playwright": "^4.13.0",
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.64.1",
+    "@types/node": "^22.20.5",
     "angular-eslint": "22.1.0",
     "eslint": "^10.6.0",
     "jsdom": "^30.0.1",
