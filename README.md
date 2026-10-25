@@ -9,6 +9,14 @@ byte of your data on your own device.
 **Live demo: [gym-log.pablodiazjorge.com](https://gym-log.pablodiazjorge.com/)** — it runs entirely
 in your browser, and whatever you log stays in that browser's storage.
 
+## Demo
+
+https://github.com/user-attachments/assets/802c5101-e4e7-45cb-bf88-4a1e48907185
+
+Twenty seconds of the real app: a set logged in one tap, the next session pre-filled, an
+exercise's progress charted, and the data staying on the device. Same invented example data as
+the screenshots.
+
 ## Screenshots
 
 | Home | Logging a set | Exercise progress |

@@ -43,6 +43,10 @@ prefixes of the history before Conventional Commits.
   a button inside a button.
 - The specs typecheck again; the checks against the author's real exports are opt-in
   (`GYM_LOG_REAL_DATA=1`).
+- The sticky footer of a workout clears the floating dock, so "Discard session" is no longer
+  half hidden under it.
+- A new page opens at the top instead of keeping the previous page's scroll (an exercise opened
+  from the bottom of Analysis started halfway down); Back returns to where you were.
 - The 28 bugs confirmed by the audit of 14 August 2026 [018–019]
   ([docs/process/](docs/process/)).
 
