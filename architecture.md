@@ -19,8 +19,10 @@ localStorage  ←→  manual JSON export/import (backup & analysis channel)
 ## System context
 
 - **Who**: a single user (the author), logging workouts on a phone at the gym.
-- **Where**: static hosting (Vercel), deployed manually from the main branch — no CI
-  ([ADR-0009](docs/adr/0009-no-ci-pipeline.md)).
+- **Where**: static hosting (Vercel), deployed manually from the main branch. GitHub Actions
+  runs lint, typecheck, unit tests and the build on every push and pull request
+  ([ADR-0015](docs/adr/0015-ci-pipeline.md), superseding the no-CI
+  [ADR-0009](docs/adr/0009-no-ci-pipeline.md)).
 - **Data flow**: data never leaves the device except through the explicit JSON export, which is
   simultaneously the backup mechanism and the input for external analysis (the schema is kept
   intentionally flat and pandas/AI-friendly).
@@ -132,10 +134,11 @@ adopts the profile when none exists locally.
 | [0006](docs/adr/0006-additional-flow-stays-ephemeral.md)  | `/additional` stays ephemeral, separate from routines |
 | [0007](docs/adr/0007-advisory-progression.md)             | Progression suggestions are advisory, never enforced |
 | [0008](docs/adr/0008-stable-template-ids.md)              | Exercise template ids are stable, exempt from renames |
-| [0009](docs/adr/0009-no-ci-pipeline.md)                   | No CI pipeline; manual deploy to Vercel              |
+| [0009](docs/adr/0009-no-ci-pipeline.md)                   | No CI pipeline (superseded by 0015)                  |
 | [0010](docs/adr/0010-narrow-testing-scope.md)             | Tests target critical logic only                     |
 | [0011](docs/adr/0011-curated-catalog-with-enabled-subset.md) | Curated catalog with user-enabled subset          |
 | [0012](docs/adr/0012-v2-format-clean-break.md)            | One-time v2 clean break (supersedes 0008)            |
+| [0015](docs/adr/0015-ci-pipeline.md)                      | CI on every push and PR (supersedes 0009)            |
 
 ## Non-goals
 

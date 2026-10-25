@@ -8,7 +8,9 @@
     "watch": "ng build --watch --configuration development",
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "ng lint"
+    "lint": "ng lint",
+    "typecheck": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.spec.json --noEmit",
+    "verify": "npm run lint && npm run typecheck && npm test && npm run build"
   },
   "private": true,
   "packageManager": "npm@10.9.8",
