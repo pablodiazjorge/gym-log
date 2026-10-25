@@ -3,6 +3,33 @@ import { Routine, RoutineExerciseConfig } from '../models/routine.model';
 
 const ROUTINES_KEY = 'gym_custom_routines';
 const HOME_ROUTINES_KEY = 'gym_home_routines';
+/** Where malformed stored routines go instead of being lost on the next save */
+const ROUTINES_QUARANTINE_KEY = 'gym_custom_routines_quarantine';
+
+/**
+ * Enough shape for this service, the routines list and the session builder to
+ * be safe. Same reasoning as `isValidSession`: the `Routine` annotation is
+ * erased at runtime, and a routine with no exercises, or an exercise without a
+ * usable set count or rep range, breaks the workout screen when started.
+ */
+export function isValidRoutine(value: unknown): value is Routine {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const r = value as Partial<Routine>;
+  if (typeof r.id !== 'string' || !r.id) return false;
+  if (typeof r.name !== 'string' || !r.name.trim()) return false;
+  if (!Array.isArray(r.exercises) || r.exercises.length === 0) return false;
+  return r.exercises.every(
+    (ex) =>
+      !!ex &&
+      typeof ex === 'object' &&
+      typeof ex.templateId === 'string' &&
+      Number.isFinite(ex.targetSets) &&
+      ex.targetSets >= 1 &&
+      Number.isFinite(ex.targetRepsMin) &&
+      Number.isFinite(ex.targetRepsMax) &&
+      ex.targetRepsMin <= ex.targetRepsMax,
+  );
+}
 
 /**
  * CRUD store for user-created custom routines, persisted in localStorage.
@@ -29,12 +56,28 @@ export class RoutineLibraryService {
     this.loadRoutines();
   }
 
-  /** Load custom routines and the Home selection from localStorage */
+  /**
+   * Load custom routines and the Home selection from localStorage. Malformed
+   * routines are left out and copied to a backup key first: the next save
+   * persists the filtered list, so without that copy the loss would be
+   * permanent and silent (the same rule as `StorageService.loadSessions`).
+   */
   loadRoutines(): void {
     try {
       const raw = localStorage.getItem(ROUTINES_KEY);
       if (raw) {
-        this.customRoutines.set(JSON.parse(raw) as Routine[]);
+        const parsed: unknown = JSON.parse(raw);
+        const all: unknown[] = Array.isArray(parsed) ? parsed : [];
+        const valid = all.filter(isValidRoutine);
+        if (valid.length !== all.length || !Array.isArray(parsed)) {
+          console.warn(`Ignoring malformed custom routines — see ${ROUTINES_QUARANTINE_KEY}`);
+          try {
+            localStorage.setItem(ROUTINES_QUARANTINE_KEY, raw);
+          } catch {
+            /* quota — the warning above is the best we can do */
+          }
+        }
+        this.customRoutines.set(valid);
       }
     } catch {
       console.warn('Failed to load custom routines from localStorage, starting empty');
@@ -150,11 +193,13 @@ export class RoutineLibraryService {
     return this.customRoutines().find((r) => r.id === id);
   }
 
-  /** Import routines from an export file, skipping duplicates by id */
+  /** Import routines from an export file, skipping duplicates by id and malformed entries */
   importRoutines(incoming: Routine[]): number {
     const current = this.customRoutines();
     const existingIds = new Set(current.map((r) => r.id));
-    const fresh = incoming.filter((r) => r.source === 'custom' && !existingIds.has(r.id));
+    const fresh = incoming.filter(
+      (r) => isValidRoutine(r) && r.source === 'custom' && !existingIds.has(r.id),
+    );
     if (fresh.length > 0) {
       this.customRoutines.set([...current, ...fresh]);
       this.persistRoutines();

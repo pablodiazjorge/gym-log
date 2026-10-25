@@ -5,38 +5,9 @@ import { UserProfile } from '../models/profile.model';
 import { BodyMeasurement } from '../models/measurement.model';
 import { isValidSession } from './storage.service';
 import { MeasurementService, isValidMeasurement } from './measurement.service';
-import { ProfileService } from './profile.service';
-import { RoutineLibraryService } from './routine-library.service';
+import { ProfileService, normalizeProfile } from './profile.service';
+import { RoutineLibraryService, isValidRoutine } from './routine-library.service';
 import { ExerciseLibraryService } from './exercise-library.service';
-
-const LEVELS = ['beginner', 'intermediate', 'advanced'];
-
-/** The fields the progression engine indexes by; anything else is optional */
-export function isValidProfile(value: unknown): value is UserProfile {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
-  const p = value as Partial<UserProfile>;
-  return LEVELS.includes(p.experienceLevelManual as string);
-}
-
-/** Enough shape for RoutineLibraryService and the session builder to be safe */
-export function isValidRoutine(value: unknown): value is Routine {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
-  const r = value as Partial<Routine>;
-  if (typeof r.id !== 'string' || !r.id) return false;
-  if (typeof r.name !== 'string' || !r.name.trim()) return false;
-  if (!Array.isArray(r.exercises) || r.exercises.length === 0) return false;
-  return r.exercises.every(
-    (ex) =>
-      !!ex &&
-      typeof ex === 'object' &&
-      typeof ex.templateId === 'string' &&
-      Number.isFinite(ex.targetSets) &&
-      ex.targetSets >= 1 &&
-      Number.isFinite(ex.targetRepsMin) &&
-      Number.isFinite(ex.targetRepsMax) &&
-      ex.targetRepsMin <= ex.targetRepsMax,
-  );
-}
 
 /** Result of parsing an import file */
 export interface ImportResult {
@@ -94,8 +65,9 @@ export class ExportService {
             // A profile without experienceLevelManual makes resolveLevel return
             // undefined, which then indexes the aggressiveness table with it and
             // throws on the workout screen — on a fresh device, where the
-            // imported profile is the one that gets adopted.
-            user: isValidProfile(data.user) ? data.user : undefined,
+            // imported profile is the one that gets adopted. Broken lifts are
+            // repaired or dropped instead of costing the whole profile.
+            user: normalizeProfile(data.user) ?? undefined,
             routines,
             enabledExerciseIds: Array.isArray(data.enabledExerciseIds)
               ? data.enabledExerciseIds.filter((id): id is string => typeof id === 'string')
