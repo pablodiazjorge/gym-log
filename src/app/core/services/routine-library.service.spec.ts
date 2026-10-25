@@ -2,6 +2,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { RoutineLibraryService, isValidRoutine } from './routine-library.service';
 import { Routine, RoutineExerciseConfig } from '../models/routine.model';
 
+/**
+ * The real exports live in the git-ignored docs/personal-progress/ folder, so CI and
+ * fresh clones do not have them. Opt in locally with GYM_LOG_REAL_DATA=1.
+ */
+const withRealData = it.skipIf(process.env['GYM_LOG_REAL_DATA'] !== '1');
+
 const config = (overrides: Partial<RoutineExerciseConfig> = {}): RoutineExerciseConfig => ({
   templateId: 'incline-machine-press',
   order: 1,
@@ -207,7 +213,7 @@ describe('isValidRoutine', () => {
     expect(isValidRoutine(halfWritten)).toBe(false);
   });
 
-  it('accepts the real routines of the export', async () => {
+  withRealData('accepts the real routines of the export', async () => {
     const { readFileSync } = await import('node:fs');
     const data = JSON.parse(readFileSync('docs/personal-progress/gym_data_v2.json', 'utf8'));
     expect(data.routines.filter((r: unknown) => !isValidRoutine(r))).toEqual([]);

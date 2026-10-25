@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { isValidSession } from './storage.service';
 
+/**
+ * The real exports live in the git-ignored docs/personal-progress/ folder, so CI and
+ * fresh clones do not have them. Opt in locally with GYM_LOG_REAL_DATA=1.
+ */
+const withRealData = it.skipIf(process.env['GYM_LOG_REAL_DATA'] !== '1');
+
 // Data-integrity guard (ADR-0010 scope): a malformed entry used to be persisted
 // as-is and then crash History and Analysis on every load — and History is the
 // only screen offering deleteSession(), so the app was stuck.
@@ -60,7 +66,7 @@ describe('isValidSession', () => {
     expect(isValidSession({ ...valid(), exercises: [{ exerciseName: 'x', sets: [] }] })).toBe(false);
   });
 
-  it('accepts every session of the real export', async () => {
+  withRealData('accepts every session of the real export', async () => {
     const { readFileSync } = await import('node:fs');
     const data = JSON.parse(
       readFileSync('docs/personal-progress/exports/gym_data_2026-08-14.json', 'utf8'),

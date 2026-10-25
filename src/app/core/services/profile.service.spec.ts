@@ -5,6 +5,12 @@ import { StorageService } from './storage.service';
 import { MeasurementService } from './measurement.service';
 import { UserProfile } from '../models/profile.model';
 
+/**
+ * The real exports live in the git-ignored docs/personal-progress/ folder, so CI and
+ * fresh clones do not have them. Opt in locally with GYM_LOG_REAL_DATA=1.
+ */
+const withRealData = it.skipIf(process.env['GYM_LOG_REAL_DATA'] !== '1');
+
 // Data-integrity guard (ADR-0010 scope): the stored profile used to be read
 // with `JSON.parse(raw) as UserProfile`, so a hand-edited or truncated value
 // reached the progression engine unchecked.
@@ -81,7 +87,7 @@ describe('isValidProfile', () => {
     expect(isValidProfile(profile({ benchmarkLifts: [lift({ weightKg: NaN })] }))).toBe(false);
   });
 
-  it('accepts the real profile of the export', async () => {
+  withRealData('accepts the real profile of the export', async () => {
     const { readFileSync } = await import('node:fs');
     const data = JSON.parse(readFileSync('docs/personal-progress/gym_data_v2.json', 'utf8'));
     expect(isValidProfile(data.user)).toBe(true);
