@@ -92,4 +92,4 @@ persistence. Design decisions are documented as ADRs — see [architecture.md](a
   natural follow-up.
 - Strength-standard classification is calibrated for free-weight reference lifts; machine numbers
   make it approximate.
-- No e2e test suite (deliberate — see ADR-0010).
+- End-to-end tests cover the three key flows, on Chromium only (see ADR-0016).

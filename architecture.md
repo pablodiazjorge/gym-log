@@ -135,15 +135,16 @@ adopts the profile when none exists locally.
 | [0007](docs/adr/0007-advisory-progression.md)             | Progression suggestions are advisory, never enforced |
 | [0008](docs/adr/0008-stable-template-ids.md)              | Exercise template ids are stable, exempt from renames |
 | [0009](docs/adr/0009-no-ci-pipeline.md)                   | No CI pipeline (superseded by 0015)                  |
-| [0010](docs/adr/0010-narrow-testing-scope.md)             | Tests target critical logic only                     |
+| [0010](docs/adr/0010-narrow-testing-scope.md)             | Tests target critical logic only (superseded by 0016) |
 | [0011](docs/adr/0011-curated-catalog-with-enabled-subset.md) | Curated catalog with user-enabled subset          |
 | [0012](docs/adr/0012-v2-format-clean-break.md)            | One-time v2 clean break (supersedes 0008)            |
 | [0015](docs/adr/0015-ci-pipeline.md)                      | CI on every push and PR (supersedes 0009)            |
+| [0016](docs/adr/0016-e2e-for-the-key-flows.md)            | Unit tests for logic, e2e + axe for 3 key flows (supersedes 0010) |
 
 ## Non-goals
 
 - Multi-user, accounts, auth
 - Backend sync / cloud storage / conflict resolution
 - i18n framework (single-language English UI)
-- e2e test suite or coverage mandates
+- Coverage mandates, or e2e beyond the three key flows ([ADR-0016](docs/adr/0016-e2e-for-the-key-flows.md))
 - Native app packaging
