@@ -50,6 +50,11 @@ prefixes of the history before Conventional Commits.
 - The 28 bugs confirmed by the audit of 14 August 2026 [018–019]
   ([docs/process/](docs/process/)).
 
+### Security
+
+- Angular 22.2.7 (CLI and build 22.2.8), zod 4.6.6 and postcss 8.5.33 close the ten Dependabot
+  alerts on runtime dependencies.
+
 ## [1.0.0] - 2026-08-08
 
 ### Added
